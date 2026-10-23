@@ -68,7 +68,13 @@ namespace HaxeUICs
         public bool IsPassword => PasswordChar != '\0';
 
         public void SetMultiline(bool multiline) => AcceptsReturn = multiline;
-        public void SetWordWrap(bool wrap) => TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap;
+        public void SetWordWrap(bool wrap)
+        {
+            TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap;
+            // A hidden scrollbar still lets the text be as wide as it likes, so it never wraps;
+            // a disabled one holds it to the box's width.
+            ScrollViewer.SetHorizontalScrollBarVisibility(this, wrap ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Hidden);
+        }
         public void SetPassword(bool password) => PasswordChar = password ? '•' : '\0';
         public void SetSelectionColor(uint argb) => SelectionBrush = new SolidColorBrush(Color.FromUInt32(argb));
 

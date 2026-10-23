@@ -193,4 +193,40 @@ class TestTextInput extends utest.Test {
 		TestDriver.pump(2);
 		return field;
 	}
+
+	function testTextAreaWrapsWhenAsked() {
+		var ta = longTextArea();
+		ta.wrap = true;
+		Screen.instance.addComponent(ta);
+		TestDriver.pump(3);
+		var input = ta.getTextInput().inputNative;
+		Assert.isTrue(input.ExtentWidth <= 150, 'extent ${input.ExtentWidth}');
+		Assert.isTrue(input.ExtentHeight > 40, 'extent ${input.ExtentHeight}');
+	}
+
+	function testTextAreaWrapsByDefault() {
+		// TextArea declares wrap = true, and html5 wraps every textarea
+		var ta = longTextArea();
+		Screen.instance.addComponent(ta);
+		TestDriver.pump(3);
+		var input = ta.getTextInput().inputNative;
+		Assert.isTrue(input.ExtentWidth <= 150, 'extent ${input.ExtentWidth}');
+	}
+
+	function testTextAreaWithoutWrapScrollsSideways() {
+		var ta = longTextArea();
+		ta.wrap = false;
+		Screen.instance.addComponent(ta);
+		TestDriver.pump(3);
+		var input = ta.getTextInput().inputNative;
+		Assert.isTrue(input.ExtentWidth > 150, 'extent ${input.ExtentWidth}');
+	}
+
+	static function longTextArea():TextArea {
+		var ta = new TextArea();
+		ta.width = 150;
+		ta.height = 90;
+		ta.text = "A textarea with enough words in it to wrap across several lines, and then some more.";
+		return ta;
+	}
 }
