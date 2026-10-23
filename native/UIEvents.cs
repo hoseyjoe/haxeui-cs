@@ -174,36 +174,110 @@ namespace HaxeUICs
         }
     }
 
-    /// <summary>Avalonia keys as the browser-style key codes HaxeUI uses.</summary>
+    /// <summary>
+    /// Avalonia keys as the browser's key codes, which HaxeUI and its apps compare against.
+    /// Avalonia's own Key values are WPF's enum, not key codes: a key with no browser code is 0.
+    /// </summary>
     public static class KeyCodes
     {
         public static int FromKey(Key key)
         {
-            if (key >= Avalonia.Input.Key.A && key <= Avalonia.Input.Key.Z) return 65 + (key - Avalonia.Input.Key.A);
-            if (key >= Avalonia.Input.Key.D0 && key <= Avalonia.Input.Key.D9) return 48 + (key - Avalonia.Input.Key.D0);
-            if (key >= Avalonia.Input.Key.NumPad0 && key <= Avalonia.Input.Key.NumPad9) return 96 + (key - Avalonia.Input.Key.NumPad0);
-            if (key >= Avalonia.Input.Key.F1 && key <= Avalonia.Input.Key.F12) return 112 + (key - Avalonia.Input.Key.F1);
+            if (key >= Key.A && key <= Key.Z) return 65 + (key - Key.A);
+            if (key >= Key.D0 && key <= Key.D9) return 48 + (key - Key.D0);
+            if (key >= Key.NumPad0 && key <= Key.NumPad9) return 96 + (key - Key.NumPad0);
+            if (key >= Key.F1 && key <= Key.F24) return 112 + (key - Key.F1);
             switch (key)
             {
-                case Avalonia.Input.Key.Back: return 8;
-                case Avalonia.Input.Key.Tab: return 9;
-                case Avalonia.Input.Key.Enter: return 13;
-                case Avalonia.Input.Key.LeftShift: case Avalonia.Input.Key.RightShift: return 16;
-                case Avalonia.Input.Key.LeftCtrl: case Avalonia.Input.Key.RightCtrl: return 17;
-                case Avalonia.Input.Key.LeftAlt: case Avalonia.Input.Key.RightAlt: return 18;
-                case Avalonia.Input.Key.Escape: return 27;
-                case Avalonia.Input.Key.Space: return 32;
-                case Avalonia.Input.Key.PageUp: return 33;
-                case Avalonia.Input.Key.PageDown: return 34;
-                case Avalonia.Input.Key.End: return 35;
-                case Avalonia.Input.Key.Home: return 36;
-                case Avalonia.Input.Key.Left: return 37;
-                case Avalonia.Input.Key.Up: return 38;
-                case Avalonia.Input.Key.Right: return 39;
-                case Avalonia.Input.Key.Down: return 40;
-                case Avalonia.Input.Key.Insert: return 45;
-                case Avalonia.Input.Key.Delete: return 46;
-                default: return (int)key;
+                case Key.Cancel: return 3;
+                case Key.Back: return 8;
+                case Key.Tab: return 9;
+                case Key.Clear: return 12;
+                case Key.Enter: return 13;
+                case Key.LeftShift: case Key.RightShift: return 16;
+                case Key.LeftCtrl: case Key.RightCtrl: return 17;
+                case Key.LeftAlt: case Key.RightAlt: return 18;
+                case Key.Pause: return 19;
+                case Key.CapsLock: return 20;
+                case Key.KanaMode: return 21;
+                case Key.JunjaMode: return 23;
+                case Key.FinalMode: return 24;
+                case Key.HanjaMode: return 25;
+                case Key.Escape: return 27;
+                case Key.ImeConvert: return 28;
+                case Key.ImeNonConvert: return 29;
+                case Key.ImeAccept: return 30;
+                case Key.ImeModeChange: return 31;
+                case Key.Space: return 32;
+                case Key.PageUp: return 33;
+                case Key.PageDown: return 34;
+                case Key.End: return 35;
+                case Key.Home: return 36;
+                case Key.Left: return 37;
+                case Key.Up: return 38;
+                case Key.Right: return 39;
+                case Key.Down: return 40;
+                case Key.Select: return 41;
+                case Key.Print: return 42;
+                case Key.Execute: return 43;
+                case Key.PrintScreen: return 44;
+                case Key.Insert: return 45;
+                case Key.Delete: return 46;
+                case Key.Help: return 47;
+                case Key.LWin: return 91;
+                case Key.RWin: return 92;
+                case Key.Apps: return 93;
+                case Key.Sleep: return 95;
+                case Key.Multiply: return 106;
+                case Key.Add: return 107;
+                case Key.Separator: return 108;
+                case Key.Subtract: return 109;
+                case Key.Decimal: return 110;
+                case Key.Divide: return 111;
+                case Key.NumLock: return 144;
+                case Key.Scroll: return 145;
+                case Key.BrowserBack: return 166;
+                case Key.BrowserForward: return 167;
+                case Key.BrowserRefresh: return 168;
+                case Key.BrowserStop: return 169;
+                case Key.BrowserSearch: return 170;
+                case Key.BrowserFavorites: return 171;
+                case Key.BrowserHome: return 172;
+                case Key.VolumeMute: return 173;
+                case Key.VolumeDown: return 174;
+                case Key.VolumeUp: return 175;
+                case Key.MediaNextTrack: return 176;
+                case Key.MediaPreviousTrack: return 177;
+                case Key.MediaStop: return 178;
+                case Key.MediaPlayPause: return 179;
+                case Key.LaunchMail: return 180;
+                case Key.SelectMedia: return 181;
+                case Key.LaunchApplication1: return 182;
+                case Key.LaunchApplication2: return 183;
+                case Key.OemSemicolon: return 186;
+                case Key.OemPlus: return 187;
+                case Key.OemComma: return 188;
+                case Key.OemMinus: return 189;
+                case Key.OemPeriod: return 190;
+                case Key.OemQuestion: return 191;
+                case Key.OemTilde: return 192;
+                case Key.AbntC1: return 193;
+                case Key.AbntC2: return 194;
+                case Key.OemOpenBrackets: return 219;
+                case Key.OemPipe: return 220;
+                case Key.OemCloseBrackets: return 221;
+                case Key.OemQuotes: return 222;
+                case Key.Oem8: return 223;
+                case Key.OemBackslash: return 226;
+                case Key.ImeProcessed: return 229;
+                case Key.Attn: return 246;
+                case Key.CrSel: return 247;
+                case Key.ExSel: return 248;
+                case Key.EraseEof: return 249;
+                case Key.Play: return 250;
+                case Key.Zoom: return 251;
+                case Key.Pa1: return 253;
+                case Key.OemClear: return 254;
+                default: return 0;
             }
         }
     }
