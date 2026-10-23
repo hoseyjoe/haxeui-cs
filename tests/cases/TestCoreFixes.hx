@@ -1,6 +1,7 @@
 package cases;
 
 import haxe.ui.components.Button;
+import haxe.ui.data.ArrayDataSource;
 import haxe.ui.core.Component;
 import haxe.ui.events.MouseEvent;
 import haxe.ui.events.UIEvent;
@@ -35,6 +36,14 @@ class TestCoreFixes extends utest.Test {
 		component.registerEvent(UIEvent.MOVE, listener.onMove);
 		Assert.isTrue(component.hasEvent(UIEvent.MOVE, listener.onMove));
 	}
+
+	function testDataSourceSortKeepsTiesInOrder() {
+		// a table sorted by a column with equal values keeps those rows in their order, as html5 does
+		var rows = [for (i in 0...16) {n: i % 2, id: String.fromCharCode(97 + i)}];
+		var ds = ArrayDataSource.fromArray(rows);
+		ds.sort("n");
+		Assert.equals("acegikmobdfhjlnp", [for (i in 0...ds.size) ds.get(i).id].join(""));
+	}
 }
 
 private class MoveListener {
@@ -43,4 +52,5 @@ private class MoveListener {
 
 	public function onMove(e:UIEvent) {
 	}
+
 }

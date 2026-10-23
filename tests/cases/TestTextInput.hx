@@ -1,8 +1,12 @@
 package cases;
 
+import haxe.ui.ComponentBuilder;
 import haxe.ui.components.NumberStepper;
 import haxe.ui.components.TextArea;
 import haxe.ui.components.TextField;
+import haxe.ui.containers.ListView;
+import haxe.ui.containers.VBox;
+import haxe.ui.core.InteractiveComponent;
 import haxe.ui.core.Screen;
 import haxe.ui.focus.FocusManager;
 import haxe.ui.backend.cs.TestDriver;
@@ -220,6 +224,58 @@ class TestTextInput extends utest.Test {
 		TestDriver.pump(3);
 		var input = ta.getTextInput().inputNative;
 		Assert.isTrue(input.ExtentWidth > 150, 'extent ${input.ExtentWidth}');
+	}
+
+	function testAutoFocusPicksTheFirstFocusable() {
+		// html5 focuses the first focusable of a new view in child order; a TextArea last in
+		// line must not take it (core sorts children by tab index, and ties keep their order).
+		var view = new VBox();
+		var list:ListView = ComponentBuilder.fromString('<listview width="150" height="90"><data><item text="Apple" /><item text="Banana" /></data></listview>');
+		view.addComponent(list);
+		view.addComponent(ComponentBuilder.fromString('<dropdown width="140" text="Pick"><data><item text="One" /></data></dropdown>'));
+		var area = new TextArea();
+		area.text = "words";
+		view.addComponent(area);
+		Screen.instance.addComponent(view);
+		TestDriver.pump(4);
+		Assert.isTrue(FocusManager.instance.focus == list, 'focus went to ${FocusManager.instance.focus}');
+		Assert.isFalse(area.getTextInput().inputNative.IsFocused);
+	}
+
+	function testTabFollowsChildOrder() {
+		var form = new VBox();
+		var fields = [for (i in 0...5) new TextField()];
+		for (f in fields) form.addComponent(f);
+		Screen.instance.addComponent(form);
+		TestDriver.pump(2);
+		TestDriver.clickComponent(fields[0]);
+		TestDriver.pump();
+		for (i in 1...5) {
+			TestDriver.key("Tab");
+			TestDriver.pump(2);
+			Assert.isTrue(FocusManager.instance.focus == fields[i], 'tab $i went to ${fields.indexOf(cast FocusManager.instance.focus)}');
+		}
+	}
+
+	function testNativeFocusMatchesHaxeUIFocus() {
+		// a list first, then a field, then an area made in code: the gallery's page
+		var view = new VBox();
+		var list = new ListView();
+		var field = new TextField();
+		var area = new TextArea();
+		area.text = "made in code";
+		view.addComponent(list);
+		view.addComponent(field);
+		view.addComponent(area);
+		Screen.instance.addComponent(view);
+		TestDriver.pump(3);
+		for (c in ([field, area] : Array<InteractiveComponent>)) {
+			Assert.equals(c.focus, c.getTextInput().inputNative.IsFocused, 'native focus of ${c.className}');
+		}
+		TestDriver.clickComponent(area);
+		TestDriver.pump(2);
+		Assert.isTrue(area.focus && area.getTextInput().inputNative.IsFocused);
+		Assert.isFalse(field.getTextInput().inputNative.IsFocused);
 	}
 
 	static function longTextArea():TextArea {
