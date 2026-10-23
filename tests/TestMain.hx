@@ -31,7 +31,8 @@ class TestMain {
 			new cases.TestBridge(),
 			new cases.TestCoreFixes(),
 			new cases.TestLayout(),
-			new cases.TestEventLoop()
+			new cases.TestEventLoop(),
+			new cases.TestStyles()
 		];
 	}
 }

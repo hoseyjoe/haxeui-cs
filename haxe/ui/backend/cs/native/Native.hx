@@ -65,6 +65,35 @@ extern class UIPanel extends Control {
 	function MoveChild(child:Control, index:Int):Void;
 	function IndexOfChild(child:Control):Int;
 	function AddContent(content:Control):Void;
+	function ApplyStyle(style:UIStyle):Void;
+}
+
+@:native("HaxeUICs.UIStyle")
+extern class UIStyle {
+	function new():Void;
+
+	var BackgroundColor:UInt;
+	var BackgroundColorEnd:UInt;
+	var GradientStyle:Int;
+	var BackgroundOpacity:Float;
+
+	var BorderLeft:Float;
+	var BorderTop:Float;
+	var BorderRight:Float;
+	var BorderBottom:Float;
+	var BorderLeftColor:UInt;
+	var BorderTopColor:UInt;
+	var BorderRightColor:UInt;
+	var BorderBottomColor:UInt;
+	var BorderOpacity:Float;
+
+	var RadiusTL:Float;
+	var RadiusTR:Float;
+	var RadiusBR:Float;
+	var RadiusBL:Float;
+
+	var Opacity:Float;
+	var Cursor:String;
 }
 
 #if haxeui_cs_headless

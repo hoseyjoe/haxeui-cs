@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.cs.StyleMapper;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.core.Component;
 import haxe.ui.geom.Rectangle;
@@ -27,6 +28,19 @@ class ComponentImpl extends ComponentBase {
             return;
         }
         nativePanel.SetBounds(Math.NaN, Math.NaN, orNaN(width), orNaN(height));
+    }
+
+    private var _nativeStyle:UIStyle;
+
+    private override function applyStyle(style:Style) {
+        if (nativePanel == null) {
+            return;
+        }
+        if (_nativeStyle == null) {
+            _nativeStyle = new UIStyle();
+        }
+        StyleMapper.toNative(style, _nativeStyle);
+        nativePanel.ApplyStyle(_nativeStyle);
     }
 
     private override function handleVisibility(show:Bool) {

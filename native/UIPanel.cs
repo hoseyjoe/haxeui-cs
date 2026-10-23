@@ -14,6 +14,28 @@ namespace HaxeUICs
     public class UIPanel : Canvas, ICustomHitTest
     {
         int _contentCount;
+        readonly UIPainter _painter;
+        string _cursorName;
+
+        /// <summary>Takes the style to paint (the same instance may come back changed) and repaints.</summary>
+        public void ApplyStyle(UIStyle style)
+        {
+            _painter.Style = style;
+            Opacity = style.Opacity;
+            if (style.Cursor != _cursorName)
+            {
+                _cursorName = style.Cursor;
+                Cursor = UIStyle.CursorFor(style.Cursor);
+            }
+            _painter.InvalidateVisual();
+        }
+
+        public UIPanel()
+        {
+            // Panel.Render is sealed in Avalonia 12, so a painter child underneath everything does the drawing.
+            _painter = new UIPainter();
+            AddContent(_painter);
+        }
 
         public double Left { get; private set; }
         public double Top { get; private set; }
@@ -37,6 +59,8 @@ namespace HaxeUICs
             if (!double.IsNaN(height)) H = System.Math.Max(0, height);
             Width = W;
             Height = H;
+            _painter.Width = W;
+            _painter.Height = H;
             Place();
         }
 
@@ -106,6 +130,63 @@ namespace HaxeUICs
         {
             SetLeft(this, Left - ClipLeft);
             SetTop(this, Top - ClipTop);
+        }
+    }
+
+    /// <summary>Paints a UIPanel's own style (background, then border) beneath its content and children.</summary>
+    public class UIPainter : Control
+    {
+        public UIStyle Style;
+
+        public UIPainter()
+        {
+            IsHitTestVisible = false;
+        }
+
+        public override void Render(DrawingContext context)
+        {
+            var s = Style;
+            var width = Bounds.Width;
+            var height = Bounds.Height;
+            if (s == null || width <= 0 || height <= 0) return;
+            var bounds = new Rect(0, 0, width, height);
+
+            var background = s.BackgroundBrush();
+            if (background != null)
+            {
+                if (s.HasRadius)
+                    context.DrawRectangle(background, null, new RoundedRect(bounds, s.RadiusTL, s.RadiusTR, s.RadiusBR, s.RadiusBL));
+                else
+                    context.FillRectangle(background, bounds);
+            }
+
+            RenderBorder(context, s, bounds);
+        }
+
+        static void RenderBorder(DrawingContext context, UIStyle s, Rect bounds)
+        {
+            if (s.UniformBorder)
+            {
+                var size = s.BorderLeft;
+                var brush = s.BorderBrush(s.BorderLeftColor);
+                if (size <= 0 || brush == null) return;
+                // A pen is centred on its path: inset by half its width so the border sits inside.
+                var inner = bounds.Deflate(size / 2);
+                var half = size / 2;
+                context.DrawRectangle(null, new Pen(brush, size), new RoundedRect(inner,
+                    System.Math.Max(0, s.RadiusTL - half), System.Math.Max(0, s.RadiusTR - half),
+                    System.Math.Max(0, s.RadiusBR - half), System.Math.Max(0, s.RadiusBL - half)));
+                return;
+            }
+            FillSide(context, s.BorderBrush(s.BorderLeftColor), new Rect(0, 0, s.BorderLeft, bounds.Height));
+            FillSide(context, s.BorderBrush(s.BorderRightColor), new Rect(bounds.Width - s.BorderRight, 0, s.BorderRight, bounds.Height));
+            FillSide(context, s.BorderBrush(s.BorderTopColor), new Rect(0, 0, bounds.Width, s.BorderTop));
+            FillSide(context, s.BorderBrush(s.BorderBottomColor), new Rect(0, bounds.Height - s.BorderBottom, bounds.Width, s.BorderBottom));
+        }
+
+        static void FillSide(DrawingContext context, IBrush brush, Rect side)
+        {
+            if (brush != null && side.Width > 0 && side.Height > 0) context.FillRectangle(brush, side);
         }
     }
 }
