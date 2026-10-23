@@ -82,6 +82,35 @@ class TestLayout extends utest.Test {
 		Assert.isTrue(parent.childComponents[0] == c);
 	}
 
+	function testReparentWithoutRemove() {
+		// html5 and heaps move a node that is added elsewhere; HaxeUI apps rely on it.
+		var from = new VBox();
+		var to = new VBox();
+		var moved = box(20, 20);
+		from.addComponent(moved);
+		var root = new VBox();
+		root.addComponent(from);
+		root.addComponent(to);
+		Screen.instance.addComponent(root);
+		TestDriver.pump();
+		to.addComponent(moved);
+		TestDriver.pump();
+		Assert.equals(-1, from.nativePanel.IndexOfChild(moved.nativePanel));
+		Assert.equals(0, to.nativePanel.IndexOfChild(moved.nativePanel));
+	}
+
+	function testRootReparentWithoutRemove() {
+		// a root component later added into a container
+		var moved = box(20, 20);
+		Screen.instance.addComponent(moved);
+		var holder = new VBox();
+		Screen.instance.addComponent(holder);
+		TestDriver.pump();
+		holder.addComponent(moved);
+		TestDriver.pump();
+		Assert.equals(0, holder.nativePanel.IndexOfChild(moved.nativePanel));
+	}
+
 	function testClipRect() {
 		var scroll = new ScrollView();
 		scroll.width = 100;

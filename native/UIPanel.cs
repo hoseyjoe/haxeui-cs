@@ -108,8 +108,19 @@ namespace HaxeUICs
 
         public void InsertChild(Control child, int index)
         {
+            Detach(child);
             var at = _contentCount + System.Math.Clamp(index, 0, ChildCount);
             Children.Insert(at, child);
+        }
+
+        /// <summary>
+        /// HaxeUI adds a component elsewhere without removing it first (html5 and heaps move the
+        /// node); Avalonia refuses a second parent, so the old one lets go first.
+        /// </summary>
+        static void Detach(Control child)
+        {
+            if (child.Parent is UIPanel panel) panel.RemoveChild(child);
+            else if (child.Parent is Panel other) other.Children.Remove(child);
         }
 
         public void RemoveChild(Control child)
@@ -138,6 +149,7 @@ namespace HaxeUICs
         /// <summary>Adds the component's own text, image or input underneath its child panels.</summary>
         public void AddContent(Control content)
         {
+            Detach(content);
             Children.Insert(_contentCount, content);
             _contentCount++;
         }
