@@ -68,6 +68,24 @@ extern class UIPanel extends Control {
 	function ApplyStyle(style:UIStyle):Void;
 }
 
+@:native("HaxeUICs.UIText")
+extern class UIText extends Control {
+	function new():Void;
+
+	var Text:String;
+	var FontSize(default, null):Float;
+	var IsBold(default, null):Bool;
+	var MeasuredWidth(default, null):Float;
+	var MeasuredHeight(default, null):Float;
+
+	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool):Void;
+	function SetColor(argb:UInt):Void;
+	function SetAlign(align:Int):Void;
+	function SetWrap(wrap:Bool):Void;
+	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
+	function MeasureText(maxWidth:Float):Void;
+}
+
 @:native("HaxeUICs.UIStyle")
 extern class UIStyle {
 	function new():Void;

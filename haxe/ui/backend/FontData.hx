@@ -1,6 +1,4 @@
 package haxe.ui.backend;
 
-class FontData {
-    public function new() {
-    }
-}
+/** A system font family name (haxeui-cs uses fonts by name, not font files). **/
+typedef FontData = String;

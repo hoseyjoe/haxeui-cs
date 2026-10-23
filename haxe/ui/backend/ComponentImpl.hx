@@ -3,6 +3,7 @@ package haxe.ui.backend;
 import haxe.ui.backend.cs.StyleMapper;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.core.Component;
+import haxe.ui.core.TextDisplay;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
 
@@ -80,6 +81,14 @@ class ComponentImpl extends ComponentBase {
 
     private override function handleSetComponentIndex(child:Component, index:Int) {
         nativePanel.MoveChild(child.nativePanel, index);
+    }
+
+    public override function createTextDisplay(text:String = null):TextDisplay {
+        if (_textDisplay == null) {
+            super.createTextDisplay(text);
+            nativePanel.AddContent(_textDisplay.textNative);
+        }
+        return _textDisplay;
     }
 
     private static inline function orNaN(value:Null<Float>):Float {
