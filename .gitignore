@@ -1,0 +1,7 @@
+# throwaway feasibility spike (see the design doc)
+spike/
+
+# build output
+bin/
+obj/
+out/
