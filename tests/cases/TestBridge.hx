@@ -19,6 +19,15 @@ class TestBridge extends utest.Test {
 		Assert.notNull(haxe.Resource.getString("haxeui_classmap"));
 	}
 
+	function testNestedResourcesEmbedded() {
+		// a resource name with slashes is written to nested folders under Resources/
+		Assert.notNull(haxe.Resource.getString("haxeui-core/styles/default/buttons.css"));
+	}
+
+	function testDefaultThemeLoaded() {
+		Assert.isTrue(Toolkit.styleSheet.findMatchingRules(".button").length > 0);
+	}
+
 	function testToolkitInits() {
 		Assert.isTrue(Toolkit.initialized);
 		Assert.equals(800.0, Screen.instance.width);

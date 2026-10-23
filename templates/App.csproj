@@ -15,7 +15,7 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
 ::NATIVE_DIR::
-    <EmbeddedResource Include="src/Resources/*" LogicalName="Resources.%(Filename)%(Extension)" />
+::RESOURCES::
   </ItemGroup>
   <ItemGroup>
 ::PACKAGES::

@@ -36,6 +36,7 @@ private class HostListener implements IHostListener {
     }
 
     public function OnResize(width:Float, height:Float):Void {
+        @:privateAccess haxe.ui.core.Screen.instance.onHostResize();
     }
 
     public function OnClosed():Void {

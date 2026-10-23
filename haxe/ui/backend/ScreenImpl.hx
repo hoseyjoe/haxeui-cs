@@ -1,9 +1,16 @@
 package haxe.ui.backend;
 
 import haxe.ui.backend.cs.native.Native;
+import haxe.ui.core.Component;
+import haxe.ui.events.UIEvent;
 
+/** The window's root panel: root components' panels are its children, in z-order. **/
 class ScreenImpl extends ScreenBase {
+    private var _mapping:Map<String, UIEvent->Void> = new Map<String, UIEvent->Void>();
+
     public function new() {
+        // ScreenBase declares `rootComponents = []` but has no constructor to run it from.
+        rootComponents = [];
     }
 
     private override function get_width():Float {
@@ -12,5 +19,42 @@ class ScreenImpl extends ScreenBase {
 
     private override function get_height():Float {
         return Host.ClientHeight;
+    }
+
+    public override function addComponent(component:Component):Component {
+        Host.Root.InsertChild(component.nativePanel, Host.Root.ChildCount);
+        resizeComponent(component);
+        return component;
+    }
+
+    public override function removeComponent(component:Component, dispose:Bool = true, invalidate:Bool = true):Component {
+        Host.Root.RemoveChild(component.nativePanel);
+        return component;
+    }
+
+    private override function handleSetComponentIndex(child:Component, index:Int) {
+        Host.Root.MoveChild(child.nativePanel, index);
+    }
+
+    private override function supportsEvent(type:String):Bool {
+        return type == UIEvent.RESIZE;
+    }
+
+    private override function mapEvent(type:String, listener:UIEvent->Void) {
+        _mapping.set(type, listener);
+    }
+
+    private override function unmapEvent(type:String, listener:UIEvent->Void) {
+        _mapping.remove(type);
+    }
+
+    /** The window's client area changed size. **/
+    @:allow(haxe.ui.backend.AppImpl)
+    private function onHostResize() {
+        resizeRootComponents();
+        var listener = _mapping.get(UIEvent.RESIZE);
+        if (listener != null) {
+            listener(new UIEvent(UIEvent.RESIZE));
+        }
     }
 }

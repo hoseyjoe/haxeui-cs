@@ -57,7 +57,7 @@ namespace HaxeUICs
         static int _height = 600;
 
         public static Window Window { get; private set; }
-        public static Canvas Root { get; private set; }
+        public static UIPanel Root { get; private set; }
 
         public static string Title
         {
@@ -111,7 +111,7 @@ namespace HaxeUICs
                 Height = _height,
                 Background = Brushes.White,
             };
-            Root = new Canvas();
+            Root = new UIPanel();
             window.Content = Root;
             window.PropertyChanged += (s, e) =>
             {

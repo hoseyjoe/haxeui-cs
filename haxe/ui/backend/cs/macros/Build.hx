@@ -32,7 +32,7 @@ class Build {
 		var headless = Context.defined("haxeui_cs_headless");
 
 		var csproj = Path.join([out, name + ".csproj"]);
-		File.saveContent(csproj, buildProject(name, headless));
+		File.saveContent(csproj, buildProject(name, headless, resourceItems(out)));
 
 		if (Context.defined("haxeui_cs_no_dotnet")) {
 			return;
@@ -50,7 +50,7 @@ class Build {
 		}
 	}
 
-	static function buildProject(name:String, headless:Bool):String {
+	static function buildProject(name:String, headless:Bool, resources:Array<String>):String {
 		var nativeDir = Path.join([libraryRoot(), "native"]);
 		var native = [];
 		for (file in FileSystem.readDirectory(nativeDir)) {
@@ -71,7 +71,32 @@ class Build {
 			.split("::NAME::").join(name)
 			.split("::DEFINES::").join(headless ? ";HAXEUI_CS_HEADLESS" : "")
 			.split("::NATIVE_DIR::").join(native.join("\n"))
+			.split("::RESOURCES::").join(resources.join("\n"))
 			.split("::PACKAGES::").join([for (p in packages) '    <PackageReference Include="$p" Version="$AVALONIA_VERSION" />'].join("\n"));
+	}
+
+	/**
+	 * Haxe writes each resource to `src/Resources/<escaped name>`, and a name
+	 * with slashes (`haxeui-core/styles/...`) becomes nested folders. haxe.Resource
+	 * finds them by manifest name `Resources.<escaped name>` with forward
+	 * slashes, so each file is listed with exactly that logical name.
+	 */
+	static function resourceItems(out:String):Array<String> {
+		var items = [];
+		function walk(dir:String, relative:String) {
+			if (!FileSystem.exists(dir)) return;
+			for (entry in FileSystem.readDirectory(dir)) {
+				var full = Path.join([dir, entry]);
+				var rel = relative == "" ? entry : relative + "/" + entry;
+				if (FileSystem.isDirectory(full)) {
+					walk(full, rel);
+				} else {
+					items.push('    <EmbeddedResource Include="src/Resources/$rel" LogicalName="Resources.$rel" />');
+				}
+			}
+		}
+		walk(Path.join([out, "src", "Resources"]), "");
+		return items;
 	}
 
 	static function mainClassName():String {
