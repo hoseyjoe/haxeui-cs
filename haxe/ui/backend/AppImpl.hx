@@ -17,7 +17,12 @@ class AppImpl extends AppBase {
         #if haxeui_cs_headless
         Host.StartHeadless(new HostListener(onReady, onEnd, false), 800, 600);
         #else
-        Host.RunDesktop(new HostListener(onReady, onEnd, true), "", 1024, 768);
+        // Toolkit.init has already handed the app's options to the screen.
+        var options = haxe.ui.core.Screen.instance.options;
+        var width = (options != null && options.width != null) ? options.width : 1024;
+        var height = (options != null && options.height != null) ? options.height : 768;
+        var title = (options != null && options.title != null) ? options.title : "";
+        Host.RunDesktop(new HostListener(onReady, onEnd, true), title, width, height);
         #end
     }
 }

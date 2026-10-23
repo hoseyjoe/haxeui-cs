@@ -9,8 +9,13 @@ import haxe.ui.backend.cs.native.Native.Host;
  */
 class Main {
 	static function main() {
-		var app = new HaxeUIApp();
+		var app = new HaxeUIApp({width: 640, height: 480, title: "exit-app"});
 		app.ready(function() {
+			// the window must be what the options asked for
+			if (Host.ClientWidth != 640 || Host.ClientHeight != 480 || Host.Title != "exit-app") {
+				Sys.println('exit-app: window is ${Host.ClientWidth}x${Host.ClientHeight} "${Host.Title}", wanted 640x480 "exit-app"');
+				Host.Exit(2);
+			}
 			var ticks = 0;
 			var timer = new haxe.Timer(50);
 			timer.run = () -> ticks++;
