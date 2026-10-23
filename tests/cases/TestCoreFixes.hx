@@ -3,6 +3,12 @@ package cases;
 import haxe.ui.backend.cs.TestDriver;
 import haxe.ui.backend.cs.native.Native.HeadlessDriver;
 import haxe.ui.components.Button;
+import haxe.ui.components.Label;
+import haxe.ui.containers.Collapsible;
+import haxe.ui.containers.SideBar;
+import haxe.ui.containers.properties.Property;
+import haxe.ui.containers.properties.PropertyGrid;
+import haxe.ui.containers.properties.PropertyGroup;
 import haxe.ui.containers.Box;
 import haxe.ui.data.ArrayDataSource;
 import haxe.ui.core.Component;
@@ -56,6 +62,32 @@ class TestCoreFixes extends utest.Test {
 		Screen.instance.addComponent(later);
 		HeadlessDriver.Pump(3);
 		Assert.equals(50.0, later.nativePanel.W, "layout goes on after the spin");
+	}
+
+	function testCollapsibleSideBarPropertyGrid() {
+		// these three did not compile for C# at all
+		var col = new Collapsible();
+		col.width = 200; // its header is width: 100%, so unsized it measures 0 on every backend
+		col.text = "Section";
+		col.addComponent(new Label());
+		var grid = new PropertyGrid();
+		grid.width = 300;
+		var group = new PropertyGroup();
+		group.text = "Group";
+		var prop = new Property();
+		prop.label = "Name";
+		group.addComponent(prop);
+		grid.addComponent(group);
+		var bar = new SideBar();
+		for (c in ([col, grid, bar] : Array<Component>)) {
+			Screen.instance.addComponent(c);
+		}
+		TestDriver.pump(3);
+		Assert.isTrue(col.height > 0 && grid.height > 0, 'collapsible ${col.height}, grid ${grid.height}');
+		Assert.isTrue(col.collapsed, "a collapsible starts collapsed");
+		col.collapsed = false;
+		TestDriver.pump(2);
+		Assert.isFalse(col.collapsed);
 	}
 
 	function testRegisterMouseOverDoesNotRecurse() {

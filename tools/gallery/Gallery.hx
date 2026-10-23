@@ -31,6 +31,7 @@ class Gallery {
 
 	/** Classes in the walk that are not components you can put on screen. **/
 	static var NOT_COMPONENTS = [
+		"haxe.ui.containers.IVirtualContainer",
 		"haxe.ui.containers.dialogs.Dialogs",
 		"haxe.ui.containers.dialogs.OpenFileDialog",
 		"haxe.ui.containers.dialogs.OpenFolderDialog",
