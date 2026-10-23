@@ -1,6 +1,8 @@
 package haxe.ui.backend.cs;
 
 import haxe.ui.backend.cs.native.Native.UIStyle;
+import haxe.ui.filters.BoxShadow;
+import haxe.ui.filters.DropShadow;
 import haxe.ui.styles.Style;
 
 /** Copies the HaxeUI style values a native panel paints into its UIStyle. **/
@@ -30,6 +32,13 @@ class StyleMapper {
 		into.Opacity = or(style.opacity, 1);
 		into.Cursor = style.cursor;
 
+		into.ClearShadows();
+		if (style.filter != null) {
+			for (f in style.filter) {
+				shadow(f, into);
+			}
+		}
+
 		// the image itself is loaded by ComponentImpl.applyStyle; these say how to draw it
 		into.ClipL = or(style.backgroundImageClipLeft, Math.NaN);
 		into.ClipT = or(style.backgroundImageClipTop, Math.NaN);
@@ -44,6 +53,29 @@ class StyleMapper {
 			case null | "stretch": 0;
 			case _: 2;
 		};
+	}
+
+	/**
+	 * Shadows as html5 draws them (its FilterHelper): a box shadow on the component's box.
+	 * A drop-shadow's angle, strength and quality are ignored there too.
+	 */
+	static function shadow(f:haxe.ui.filters.Filter, into:UIStyle) {
+		if ((f is DropShadow)) {
+			var d:DropShadow = cast f;
+			if (d.inner) {
+				into.AddShadow(d.distance, d.distance, d.blurX, 0, withAlpha(d.color, d.alpha), true);
+			} else {
+				into.AddShadow(d.distance, d.distance + 2, d.blurX - 1, d.blurY - 1, withAlpha(d.color, d.alpha), false);
+			}
+		} else if ((f is BoxShadow)) {
+			var b:BoxShadow = cast f;
+			into.AddShadow(b.offsetX, b.offsetY, b.blurRadius, b.spreadRadius, withAlpha(b.color, b.alpha), b.inset);
+		}
+	}
+
+	static function withAlpha(rgb:Int, alpha:Float):UInt {
+		var a = Math.round(Math.max(0, Math.min(1, alpha)) * 255);
+		return cast((a << 24) | (rgb & 0xFFFFFF));
 	}
 
 	static inline function or(value:Null<Float>, fallback:Float):Float {

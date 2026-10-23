@@ -24,6 +24,31 @@ namespace HaxeUICs
         public double Opacity = 1;
         public string Cursor;
 
+        /// <summary>Box shadows around (or, inset, inside) the background's rounded rect.</summary>
+        public BoxShadows Shadows;
+        readonly System.Collections.Generic.List<BoxShadow> _shadows = new System.Collections.Generic.List<BoxShadow>();
+
+        public void ClearShadows()
+        {
+            _shadows.Clear();
+            Shadows = default;
+        }
+
+        /// <param name="argb">The colour, its alpha the shadow's opacity.</param>
+        public void AddShadow(double offsetX, double offsetY, double blur, double spread, uint argb, bool inset)
+        {
+            _shadows.Add(new BoxShadow
+            {
+                OffsetX = offsetX,
+                OffsetY = offsetY,
+                Blur = System.Math.Max(0, blur),
+                Spread = System.Math.Max(0, spread),
+                Color = Color.FromUInt32(argb),
+                IsInset = inset,
+            });
+            Shadows = _shadows.Count == 1 ? new BoxShadows(_shadows[0]) : new BoxShadows(_shadows[0], _shadows.GetRange(1, _shadows.Count - 1).ToArray());
+        }
+
         public UIImage BackgroundImage;
         /// <summary>Source rect within the image (left, top, right, bottom); NaN: the whole image.</summary>
         public double ClipL = double.NaN, ClipT = double.NaN, ClipR = double.NaN, ClipB = double.NaN;

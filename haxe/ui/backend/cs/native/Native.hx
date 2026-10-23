@@ -230,6 +230,9 @@ extern class UIStyle {
 	var Opacity:Float;
 	var Cursor:String;
 
+	function ClearShadows():Void;
+	function AddShadow(offsetX:Float, offsetY:Float, blur:Float, spread:Float, argb:UInt, inset:Bool):Void;
+
 	var BackgroundImage:UIImage;
 	var ClipL:Float;
 	var ClipT:Float;

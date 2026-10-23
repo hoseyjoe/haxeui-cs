@@ -193,7 +193,12 @@ namespace HaxeUICs
             var bounds = new Rect(0, 0, width, height);
 
             var background = s.BackgroundBrush();
-            if (background != null)
+            if (s.Shadows.Count > 0)
+            {
+                // Shadows hug the background's rounded rect, drawn with it (outside, or inset inside).
+                context.DrawRectangle(background, null, new RoundedRect(bounds, s.RadiusTL, s.RadiusTR, s.RadiusBR, s.RadiusBL), s.Shadows);
+            }
+            else if (background != null)
             {
                 if (s.HasRadius)
                     context.DrawRectangle(background, null, new RoundedRect(bounds, s.RadiusTL, s.RadiusTR, s.RadiusBR, s.RadiusBL));
