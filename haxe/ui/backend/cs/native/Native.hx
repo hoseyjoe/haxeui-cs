@@ -48,6 +48,20 @@ extern class NativeEvents {
 	static function Cancel(nativeEvent:Dynamic):Void;
 }
 
+@:native("HaxeUICs.IFileDialogListener")
+extern interface IFileDialogListener {
+	function OnFiles(paths:cs.NativeArray<String>):Void;
+	function OnCancelled():Void;
+}
+
+@:native("HaxeUICs.FileDialogs")
+extern class FileDialogs {
+	static var TestResponse:cs.NativeArray<String>;
+
+	static function OpenFiles(title:String, multiple:Bool, patterns:cs.NativeArray<String>, patternNames:cs.NativeArray<String>, listener:IFileDialogListener):Void;
+	static function SaveFile(title:String, suggestedName:String, patterns:cs.NativeArray<String>, patternNames:cs.NativeArray<String>, listener:IFileDialogListener):Void;
+}
+
 /** Avalonia's base control: only ever passed back to C#. **/
 @:native("Avalonia.Controls.Control")
 extern class Control {

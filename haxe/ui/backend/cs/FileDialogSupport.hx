@@ -1,0 +1,41 @@
+package haxe.ui.backend.cs;
+
+import haxe.ui.backend.cs.native.Native.IFileDialogListener;
+import haxe.ui.containers.dialogs.Dialogs.FileDialogExtensionInfo;
+
+/** Shared by the open and save dialogs: extension filters, and the native listener. **/
+class FileDialogSupport {
+	/** HaxeUI extensions ("lor", ".lor" or "*.lor") as glob patterns, with their labels. **/
+	public static function filters(extensions:Array<FileDialogExtensionInfo>):{patterns:cs.NativeArray<String>, names:cs.NativeArray<String>} {
+		var list = extensions != null ? extensions.filter(e -> e != null && e.extension != null && e.extension != "") : [];
+		var patterns = new cs.NativeArray<String>(list.length);
+		var names = new cs.NativeArray<String>(list.length);
+		for (i in 0...list.length) {
+			var ext = list[i].extension;
+			while (StringTools.startsWith(ext, "*") || StringTools.startsWith(ext, ".")) {
+				ext = ext.substr(1);
+			}
+			patterns[i] = "*." + ext;
+			names[i] = list[i].label;
+		}
+		return {patterns: patterns, names: names};
+	}
+}
+
+class FileDialogListener implements IFileDialogListener {
+	var onFiles:Array<String>->Void;
+	var onCancelled:Void->Void;
+
+	public function new(onFiles:Array<String>->Void, onCancelled:Void->Void) {
+		this.onFiles = onFiles;
+		this.onCancelled = onCancelled;
+	}
+
+	public function OnFiles(paths:cs.NativeArray<String>):Void {
+		onFiles([for (i in 0...paths.length) paths[i]]);
+	}
+
+	public function OnCancelled():Void {
+		onCancelled();
+	}
+}

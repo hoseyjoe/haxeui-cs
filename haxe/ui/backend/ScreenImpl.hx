@@ -24,6 +24,15 @@ class ScreenImpl extends ScreenBase {
         return Host.ClientHeight;
     }
 
+    private override function get_title():String {
+        return Host.Title;
+    }
+
+    private override function set_title(value:String):String {
+        Host.Title = value;
+        return value;
+    }
+
     public override function addComponent(component:Component):Component {
         Host.Root.InsertChild(component.nativePanel, Host.Root.ChildCount);
         resizeComponent(component);
