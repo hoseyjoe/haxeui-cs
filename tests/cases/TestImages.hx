@@ -6,12 +6,19 @@ import haxe.ui.components.Image;
 import haxe.ui.constants.ScaleMode;
 import haxe.ui.containers.Box;
 import haxe.ui.core.Screen;
+import haxe.ui.loaders.image.HttpImageLoader;
 import haxe.ui.backend.cs.TestDriver;
 import utest.Assert;
 
 /** Images from resources and bytes, image scaling, and sliced background images. **/
 class TestImages extends utest.Test {
+	function setup() {
+		sys.FileSystem.createDirectory("tests/bin/http");
+		sys.io.File.copy("tests/assets/red4x4.png", "tests/bin/http/red.png");
+	}
+
 	function teardown() {
+		TestDriver.stopHttpServer();
 		for (c in Screen.instance.rootComponents.copy()) {
 			Screen.instance.removeComponent(c);
 		}
@@ -67,5 +74,63 @@ class TestImages extends utest.Test {
 		ToolkitAssets.instance.getImage("haxeui-core/styles/shared/down-arrow-dark.png", i -> info = i);
 		TestDriver.pump();
 		Assert.notNull(info);
+	}
+
+	function testHttpImageLoadsWithoutBlocking() {
+		var port = TestDriver.startHttpServer("tests/bin/http");
+		var got:ImageInfo = null, called = false;
+		new HttpImageLoader().load('http://127.0.0.1:$port/red.png', info -> {
+			called = true;
+			got = info;
+		});
+		Assert.isFalse(called, "the load must not finish inside load()");
+		pumpUntil(() -> called, 3000);
+		Assert.isTrue(called);
+		Assert.equals(4, got != null ? got.width : -1);
+	}
+
+	function testHttpImage404GivesNull() {
+		var port = TestDriver.startHttpServer("tests/bin/http");
+		var called = false, got:ImageInfo = null;
+		new HttpImageLoader().load('http://127.0.0.1:$port/missing.png', info -> {
+			called = true;
+			got = info;
+		});
+		pumpUntil(() -> called, 3000);
+		Assert.isTrue(called);
+		Assert.isNull(got);
+	}
+
+	function testHttpImageUnreachableGivesNull() {
+		var called = false, got:ImageInfo = null;
+		new HttpImageLoader().load("http://127.0.0.1:1/none.png", info -> {
+			called = true;
+			got = info;
+		});
+		pumpUntil(() -> called, 5000);
+		Assert.isTrue(called);
+		Assert.isNull(got);
+	}
+
+	function testHttpImageAfterRemoval() {
+		// the component goes away before the response arrives: nothing throws
+		var port = TestDriver.startHttpServer("tests/bin/http");
+		var image = new Image();
+		image.resource = 'http://127.0.0.1:$port/red.png';
+		Screen.instance.addComponent(image);
+		Screen.instance.removeComponent(image);
+		pumpFor(1000);
+		Assert.pass();
+	}
+
+	static function pumpUntil(done:Void->Bool, ms:Int) {
+		var end = haxe.Timer.stamp() + ms / 1000;
+		while (!done() && haxe.Timer.stamp() < end) {
+			TestDriver.pump();
+		}
+	}
+
+	static function pumpFor(ms:Int) {
+		pumpUntil(() -> false, ms);
 	}
 }

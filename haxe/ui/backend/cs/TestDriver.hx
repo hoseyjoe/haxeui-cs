@@ -73,6 +73,15 @@ class TestDriver {
 		HeadlessDriver.TypeText(text);
 	}
 
+	/** Serves the files under `root` on 127.0.0.1 (anything else is a 404); returns the port. **/
+	public static function startHttpServer(root:String):Int {
+		return HeadlessDriver.StartHttpServer(root);
+	}
+
+	public static function stopHttpServer():Void {
+		HeadlessDriver.StopHttpServer();
+	}
+
 	public static function centerOf(c:haxe.ui.core.Component):{x:Float, y:Float} {
 		return {x: c.screenLeft + c.width / 2, y: c.screenTop + c.height / 2};
 	}

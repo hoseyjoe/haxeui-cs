@@ -10,7 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefineConstants>$(DefineConstants)::DEFINES::</DefineConstants>
-    <NoWarn>$(NoWarn);CS0108;CS0114;CS0162;CS0164;CS0168;CS0169;CS0219;CS0414;CS0649;CS0659;CS0661;CS1717;CS8981;CS0618;SYSLIB0014</NoWarn>
+    <NoWarn>$(NoWarn);CS0108;CS0114;CS0162;CS0164;CS0168;CS0169;CS0219;CS0414;CS0649;CS0659;CS0661;CS1717;CS8981;CS0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/**/*.cs" />

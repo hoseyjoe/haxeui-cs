@@ -108,6 +108,59 @@ namespace HaxeUICs
             frame?.Save(path);
         }
 
+        static System.Net.Sockets.TcpListener _http;
+
+        /// <summary>
+        /// A minimal HTTP/1.0 file server on 127.0.0.1 for tests: GET /name serves root/name, anything
+        /// else is a 404. Plain TCP, so it needs no URL reservation the way HttpListener does on Windows.
+        /// </summary>
+        public static int StartHttpServer(string root)
+        {
+            StopHttpServer();
+            var dir = System.IO.Path.GetFullPath(root);
+            var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+            listener.Start();
+            _http = listener;
+            System.Threading.Tasks.Task.Run(async () =>
+            {
+                while (true)
+                {
+                    System.Net.Sockets.TcpClient client;
+                    try { client = await listener.AcceptTcpClientAsync(); }
+                    catch { return; } // stopped
+                    _ = System.Threading.Tasks.Task.Run(() => Serve(client, dir));
+                }
+            });
+            return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        }
+
+        public static void StopHttpServer()
+        {
+            _http?.Stop();
+            _http = null;
+        }
+
+        static void Serve(System.Net.Sockets.TcpClient client, string dir)
+        {
+            using (client)
+            using (var stream = client.GetStream())
+            {
+                var reader = new System.IO.StreamReader(stream, System.Text.Encoding.ASCII, false, 1024, true);
+                var request = reader.ReadLine() ?? "";
+                while (!string.IsNullOrEmpty(reader.ReadLine())) { } // headers
+                var parts = request.Split(' ');
+                var name = parts.Length > 1 ? System.Uri.UnescapeDataString(parts[1].TrimStart('/')) : "";
+                var path = System.IO.Path.GetFullPath(System.IO.Path.Combine(dir, name));
+                byte[] body = path.StartsWith(dir) && System.IO.File.Exists(path) ? System.IO.File.ReadAllBytes(path) : null;
+                var head = body != null
+                    ? $"HTTP/1.0 200 OK\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n"
+                    : "HTTP/1.0 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                var headBytes = System.Text.Encoding.ASCII.GetBytes(head);
+                stream.Write(headBytes, 0, headBytes.Length);
+                if (body != null) stream.Write(body, 0, body.Length);
+            }
+        }
+
         /// <summary>The pixel at (x, y) of a freshly rendered frame, as ARGB (0 outside the frame).</summary>
         public static int PixelAt(int x, int y)
         {

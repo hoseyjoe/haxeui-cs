@@ -248,5 +248,7 @@ extern class HeadlessDriver {
 	static function Wheel(x:Float, y:Float, deltaY:Float):Void;
 	static function KeyStroke(name:String, ctrl:Bool, shift:Bool):Void;
 	static function TypeText(text:String):Void;
+	static function StartHttpServer(root:String):Int;
+	static function StopHttpServer():Void;
 }
 #end
