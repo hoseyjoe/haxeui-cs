@@ -55,6 +55,8 @@ window ends the process.
 dispatcher, injects clicks, wheel, keys and typing at window coordinates, and reads back rendered
 pixels. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a repeating
 `haxe.Timer`, and the process must exit by itself when the window closes.
+`haxe tests/early-add/build.hxml` checks that a component added before the window exists (as
+HaxeUIApp's preloader is) appears once it does.
 
 The parity gallery (`tools/gallery`) puts every component class core has, data-filled samples and
 style samples on pages of 24. It builds them for haxeui-cs and for haxeui-html5, the reference,

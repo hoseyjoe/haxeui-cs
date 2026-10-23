@@ -1,0 +1,10 @@
+# A component added before the window exists must appear when it does.
+# `haxe tests/early-add/build.hxml` from the repo root; exits 0 on success.
+-cp tests/early-add
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_headless
+-D haxeui_cs_run
+-cs tests/early-add/bin
+-w -WAll

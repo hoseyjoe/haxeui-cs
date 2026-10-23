@@ -57,7 +57,14 @@ namespace HaxeUICs
         static int _height = 600;
 
         public static Window Window { get; private set; }
-        public static UIPanel Root { get; private set; }
+
+        static UIPanel _root;
+
+        /// <summary>
+        /// The panel root components live in. It exists before the window does, so components added
+        /// early (HaxeUIApp's preloader) are already there when the window takes it as its content.
+        /// </summary>
+        public static UIPanel Root => _root ??= new UIPanel();
 
         public static string Title
         {
@@ -126,7 +133,6 @@ namespace HaxeUICs
                 Height = _height,
                 Background = Brushes.White,
             };
-            Root = new UIPanel();
             window.Content = Root;
             window.PropertyChanged += (s, e) =>
             {
