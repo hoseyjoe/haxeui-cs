@@ -62,6 +62,7 @@ extern class FileDialogs {
 
 	static function OpenFiles(title:String, multiple:Bool, patterns:cs.NativeArray<String>, patternNames:cs.NativeArray<String>, listener:IFileDialogListener):Void;
 	static function SaveFile(title:String, suggestedName:String, patterns:cs.NativeArray<String>, patternNames:cs.NativeArray<String>, listener:IFileDialogListener):Void;
+	static function OpenFolder(title:String, multiple:Bool, defaultPath:String, listener:IFileDialogListener):Void;
 }
 
 /** Avalonia's base control: only ever passed back to C#. **/

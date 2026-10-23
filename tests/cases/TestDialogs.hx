@@ -3,6 +3,7 @@ package cases;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.containers.dialogs.Dialog.DialogButton;
 import haxe.ui.containers.dialogs.Dialogs;
+import haxe.ui.containers.dialogs.OpenFolderDialog;
 import haxe.ui.core.Screen;
 import haxe.ui.backend.cs.TestDriver;
 import utest.Assert;
@@ -64,6 +65,28 @@ class TestDialogs extends utest.Test {
 		Screen.instance.title = "Joeditor";
 		Assert.equals("Joeditor", Host.Title);
 		Assert.equals("Joeditor", Screen.instance.title);
+	}
+
+	function testOpenFolder() {
+		var dir = sys.FileSystem.absolutePath("tests/bin");
+		FileDialogs.TestResponse = answer(dir);
+		var button:DialogButton = null;
+		var folders:Array<String> = null;
+		new OpenFolderDialog({title: "Pick"}, (b, f) -> {
+			button = b;
+			folders = f;
+		}).show();
+		TestDriver.pump();
+		Assert.isTrue(button == DialogButton.OK);
+		Assert.equals(dir, folders != null ? folders[0] : null);
+	}
+
+	function testOpenFolderCancel() {
+		FileDialogs.TestResponse = new cs.NativeArray<String>(0);
+		var button:DialogButton = null;
+		new OpenFolderDialog({}, (b, f) -> button = b).show();
+		TestDriver.pump();
+		Assert.isTrue(button == DialogButton.CANCEL);
 	}
 
 	static function answer(path:String):cs.NativeArray<String> {

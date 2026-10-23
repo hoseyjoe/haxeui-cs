@@ -73,6 +73,36 @@ namespace HaxeUICs
             Answer(path != null ? new[] { path } : System.Array.Empty<string>(), listener);
         }
 
+        /// <param name="defaultPath">The folder to start in, or null for the OS's choice.</param>
+        public static async void OpenFolder(string title, bool multiple, string defaultPath, IFileDialogListener listener)
+        {
+            if (TestResponse != null)
+            {
+                Answer(TestResponse, listener);
+                return;
+            }
+            var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+            if (storage == null || !storage.CanPickFolder)
+            {
+                listener.OnCancelled();
+                return;
+            }
+            var start = string.IsNullOrEmpty(defaultPath) ? null : await storage.TryGetFolderFromPathAsync(defaultPath);
+            var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = title,
+                AllowMultiple = multiple,
+                SuggestedStartLocation = start,
+            });
+            var paths = new List<string>();
+            foreach (var folder in folders)
+            {
+                var path = folder.TryGetLocalPath();
+                if (path != null) paths.Add(path);
+            }
+            Answer(paths.ToArray(), listener);
+        }
+
         static void Answer(string[] paths, IFileDialogListener listener)
         {
             if (paths.Length == 0 || System.Array.IndexOf(paths, null) >= 0) listener.OnCancelled();
