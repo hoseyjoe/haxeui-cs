@@ -26,8 +26,9 @@ namespace HaxeUICs
             if (style.Blur != _blur)
             {
                 _blur = style.Blur;
-                // CSS blur(n) is a Gaussian of standard deviation n; Avalonia's radius is about twice that.
-                Effect = _blur > 0 ? new BlurEffect { Radius = _blur * 2 } : null;
+                // CSS blur(n) is a Gaussian of standard deviation n; Avalonia's radius 4n matches html5's
+                // blur(n) in the gallery (measured by how far the blurred text spreads).
+                Effect = _blur > 0 ? new BlurEffect { Radius = _blur * 4 } : null;
             }
             if (style.Cursor != _cursorName)
             {
