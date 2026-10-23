@@ -56,6 +56,17 @@ dispatcher, injects clicks, wheel, keys and typing at window coordinates, and re
 pixels. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a repeating
 `haxe.Timer`, and the process must exit by itself when the window closes.
 
+The parity gallery (`tools/gallery`) puts every component class core has, data-filled samples and
+style samples on pages of 24. It builds them for haxeui-cs and for haxeui-html5, the reference,
+and sets each cs page above its html5 twin in `tools/gallery/out/compare/`:
+
+```
+haxe tools/gallery/gallery.cs.hxml
+dotnet tools/gallery/bin/bin/Debug/net10.0/Gallery.dll   # and again with --dark
+haxe tools/gallery/gallery.html5.hxml
+python -I tools/gallery/compare.py                      # needs Pillow and Microsoft Edge
+```
+
 ## How it fits together
 
 - `native/*.cs` (namespace `HaxeUICs`) is everything Avalonia: the host and its window, `UIPanel`

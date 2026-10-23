@@ -1,0 +1,14 @@
+# The parity gallery on haxeui-cs (headless). From the repo root:
+# `haxe tools/gallery/gallery.cs.hxml`, then
+# `dotnet tools/gallery/bin/bin/Debug/net10.0/Gallery.dll [--dark]`.
+-cp tools/gallery
+-main Gallery
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_headless
+-cs tools/gallery/bin
+-dce no
+-w -WAll
+--macro include('haxe.ui.components')
+# Collapsible, SideBar and the property grid do not compile for C# yet.
+--macro include('haxe.ui.containers', true, ['haxe.ui.containers.Collapsible', 'haxe.ui.containers.SideBar', 'haxe.ui.containers.properties.*'])

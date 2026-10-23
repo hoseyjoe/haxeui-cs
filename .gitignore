@@ -5,3 +5,8 @@ spike/
 bin/
 obj/
 out/
+
+# the parity gallery's builds and pictures
+tools/gallery/out/
+tools/gallery/bin/
+tools/gallery/web/gallery.js

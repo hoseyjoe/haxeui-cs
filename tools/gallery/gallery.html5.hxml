@@ -1,0 +1,10 @@
+# The parity gallery on haxeui-html5, the reference. From the repo root:
+# `haxe tools/gallery/gallery.html5.hxml`, then `python -I tools/gallery/compare.py`.
+-cp tools/gallery
+-main Gallery
+-lib haxeui-core
+-lib haxeui-html5
+-js tools/gallery/web/gallery.js
+-dce no
+--macro include('haxe.ui.components')
+--macro include('haxe.ui.containers', true, ['haxe.ui.containers.Collapsible', 'haxe.ui.containers.SideBar', 'haxe.ui.containers.properties.*'])
