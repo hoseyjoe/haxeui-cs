@@ -44,6 +44,77 @@ class TestTextInput extends utest.Test {
 		Assert.equals("a\nb", area.text);
 	}
 
+	function testTextAreaAppendThenTabOut() {
+		// Joeditor's prose box: starts with words, gets more typed at the end, commits on focus out.
+		// The same shape as Joeditor's: wrapping, auto height up to a cap, and more words than fit.
+		var initial = "Providence. The box of my grand-uncle's papers sits open on the desk: a clay bas-relief "
+			+ "still damp from a sculptor's dreams, and a file the old professor kept under lock - CTHULHU CULT, "
+			+ "in a hand that shook. The most merciful thing in the world is the inability of the mind to "
+			+ "correlate all its contents. I have correlated mine, and an expedition waits at the docks.";
+		var form = new haxe.ui.containers.VBox();
+		form.left = 20;
+		form.top = 20;
+		form.width = 320;
+		var area = new TextArea();
+		area.percentWidth = 100;
+		area.wrap = true;
+		area.styleString = "height: auto; max-height: 100px;";
+		area.text = initial;
+		var other = new TextField();
+		other.width = 200;
+		form.addComponent(area);
+		form.addComponent(other);
+		Screen.instance.addComponent(form);
+		TestDriver.pump(3);
+		var atFocusOut:String = "(never)";
+		area.registerEvent(haxe.ui.events.FocusEvent.FOCUS_OUT, e -> atFocusOut = area.text);
+
+		TestDriver.clickComponent(area);
+		Assert.equals(initial, area.text, "clicking keeps the words");
+		TestDriver.key("End", true);
+		TestDriver.type(" More.");
+		TestDriver.pump(2);
+		Assert.equals(initial + " More.", area.text, "typing reaches the box");
+		TestDriver.key("Tab");
+		TestDriver.pump(2);
+		Assert.equals(initial + " More.", atFocusOut, "focus out sees the words");
+	}
+
+	function testRemovingFocusedFieldDropsFocus() {
+		// Joeditor swaps its property panel while a field there still has focus; a later
+		// focus change must not send that removed, disposed field a FOCUS_OUT.
+		var form = new haxe.ui.containers.VBox();
+		form.left = 20;
+		form.top = 20;
+		var panel = new haxe.ui.containers.VBox();
+		var field = new TextField();
+		field.width = 200;
+		field.text = "kept";
+		panel.addComponent(field);
+		var other = new TextField();
+		other.width = 200;
+		form.addComponent(panel);
+		form.addComponent(other);
+		Screen.instance.addComponent(form);
+		TestDriver.pump(2);
+		TestDriver.clickComponent(field);
+		Assert.isTrue(field.focus);
+
+		// As a browser drops a removed element's focus: quietly. An event here would re-enter
+		// the app in the middle of whatever is tearing its panel down (Joeditor: a commit).
+		var seen:Array<String> = [];
+		field.registerEvent(haxe.ui.events.FocusEvent.FOCUS_OUT, e -> seen.push(field.text));
+		panel.removeComponent(field);
+		TestDriver.pump();
+		Assert.equals(0, seen.length, "no focus out as it is removed");
+		Assert.isFalse(field.focus, "but it no longer has the focus");
+
+		TestDriver.clickComponent(other);
+		TestDriver.pump();
+		Assert.equals(0, seen.length, "nor once it is gone");
+		Assert.isTrue(FocusManager.instance.focus == other);
+	}
+
 	function testPasswordMasks() {
 		var field = addTextField(20, 20);
 		field.password = true;
