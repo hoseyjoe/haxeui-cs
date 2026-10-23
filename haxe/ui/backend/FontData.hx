@@ -1,4 +1,7 @@
 package haxe.ui.backend;
 
-/** A system font family name (haxeui-cs uses fonts by name, not font files). **/
+/**
+ * An Avalonia font family reference: a system family name ("Segoe UI"), or the reference
+ * UIFonts gives a font loaded from a file or resource ("fonts:haxeuics#DejaVu Sans Mono").
+ */
 typedef FontData = String;

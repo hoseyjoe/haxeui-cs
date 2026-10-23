@@ -40,7 +40,8 @@ class TestMain {
 			new cases.TestGraphics(),
 			new cases.TestDialogs(),
 			new cases.TestGallery(),
-			new cases.TestKeys()
+			new cases.TestKeys(),
+			new cases.TestFonts()
 		];
 	}
 }

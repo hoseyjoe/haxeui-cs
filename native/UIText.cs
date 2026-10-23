@@ -23,7 +23,7 @@ namespace HaxeUICs
 
         public void SetFont(string family, double size, bool bold, bool italic, bool underline)
         {
-            FontFamily = string.IsNullOrEmpty(family) ? Avalonia.Media.FontFamily.Default : new Avalonia.Media.FontFamily(family);
+            FontFamily = UIFonts.ResolveFamily(family);
             FontSize = size > 0 ? size : 13;
             FontWeight = bold ? FontWeight.Bold : FontWeight.Normal;
             FontStyle = italic ? FontStyle.Italic : FontStyle.Normal;

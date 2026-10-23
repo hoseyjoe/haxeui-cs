@@ -137,6 +137,12 @@ extern class UIText extends Control {
 	function MeasureText(maxWidth:Float):Void;
 }
 
+@:native("HaxeUICs.UIFonts")
+extern class UIFonts {
+	static function FromBytes(key:String, data:haxe.io.BytesData):String;
+	static function FromFile(path:String):String;
+}
+
 @:native("HaxeUICs.UIImage")
 extern class UIImage {
 	var Width(default, null):Int;

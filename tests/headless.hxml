@@ -8,6 +8,7 @@
 -D haxeui_cs_headless
 --resource tests/assets/red4x4.png@red4x4.png
 --resource tests/assets/slice9.png@slice9.png
+--resource tests/assets/DejaVuSansMono.ttf@fonts/DejaVuSansMono.ttf
 -D haxeui_cs_run
 # Every core component and container, used or not, so the C# build covers them all.
 --macro include('haxe.ui.components')
