@@ -16,12 +16,19 @@ namespace HaxeUICs
         int _contentCount;
         readonly UIPainter _painter;
         string _cursorName;
+        double _blur;
 
         /// <summary>Takes the style to paint (the same instance may come back changed) and repaints.</summary>
         public void ApplyStyle(UIStyle style)
         {
             _painter.Style = style;
             Opacity = style.Opacity;
+            if (style.Blur != _blur)
+            {
+                _blur = style.Blur;
+                // CSS blur(n) is a Gaussian of standard deviation n; Avalonia's radius is about twice that.
+                Effect = _blur > 0 ? new BlurEffect { Radius = _blur * 2 } : null;
+            }
             if (style.Cursor != _cursorName)
             {
                 _cursorName = style.Cursor;

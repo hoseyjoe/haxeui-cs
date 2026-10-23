@@ -1,6 +1,7 @@
 package haxe.ui.backend.cs;
 
 import haxe.ui.backend.cs.native.Native.UIStyle;
+import haxe.ui.filters.Blur;
 import haxe.ui.filters.BoxShadow;
 import haxe.ui.filters.DropShadow;
 import haxe.ui.styles.Style;
@@ -33,9 +34,13 @@ class StyleMapper {
 		into.Cursor = style.cursor;
 
 		into.ClearShadows();
+		into.Blur = 0;
 		if (style.filter != null) {
 			for (f in style.filter) {
 				shadow(f, into);
+				if ((f is Blur)) {
+					into.Blur = Math.max(0, (cast f : Blur).amount);
+				}
 			}
 		}
 

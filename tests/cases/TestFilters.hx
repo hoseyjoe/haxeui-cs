@@ -52,6 +52,39 @@ class TestFilters extends utest.Test {
 		Assert.isTrue(bright(TestDriver.pixel(70, 83)) < 765, "the theme's .popup drop-shadow shows below the box");
 	}
 
+	function testBlurSoftensEdges() {
+		edge("filter: blur(4);");
+		var b = bright(TestDriver.pixel(20 + 42, 50));
+		Assert.isTrue(b > 60 && b < 720, 'grey expected next to the black stripe, got $b');
+	}
+
+	function testBlurClears() {
+		var parent = edge("filter: blur(4);");
+		parent.styleString = "border-size: 0px; padding: 0px; background-color: #FFFFFF; filter: none;";
+		TestDriver.pump(3);
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(20 + 42, 50));
+	}
+
+	/** A white box at (20, 20) holding a black 10px stripe at x 45..55 of it. **/
+	static function edge(style:String):Box {
+		var stripe = new Box();
+		stripe.left = 45;
+		stripe.top = 0;
+		stripe.width = 10;
+		stripe.height = 60;
+		stripe.styleString = "border-size: 0px; padding: 0px; background-color: #000000;";
+		var parent = new haxe.ui.containers.Absolute();
+		parent.left = 20;
+		parent.top = 20;
+		parent.width = 100;
+		parent.height = 60;
+		parent.styleString = "border-size: 0px; padding: 0px; background-color: #FFFFFF; " + style;
+		parent.addComponent(stripe);
+		Screen.instance.addComponent(parent);
+		TestDriver.pump(3);
+		return cast parent;
+	}
+
 	// text-shadow (a haxeui-cs directive): white glyphs on the white window are invisible,
 	// so every dark pixel is shadow.
 

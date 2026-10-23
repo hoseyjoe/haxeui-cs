@@ -24,6 +24,9 @@ namespace HaxeUICs
         public double Opacity = 1;
         public string Cursor;
 
+        /// <summary>CSS filter: blur(n), in px; 0 for none. It blurs the panel and everything in it.</summary>
+        public double Blur;
+
         /// <summary>Box shadows around (or, inset, inside) the background's rounded rect.</summary>
         public BoxShadows Shadows;
         readonly System.Collections.Generic.List<BoxShadow> _shadows = new System.Collections.Generic.List<BoxShadow>();
