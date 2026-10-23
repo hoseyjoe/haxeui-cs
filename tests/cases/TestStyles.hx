@@ -30,6 +30,15 @@ class TestStyles extends utest.Test {
 		Assert.equals(0xFFFF0000, TestDriver.pixel(50, 30));
 	}
 
+	function testPerSideBorderFollowsRadius() {
+		show("background-color: #FFFFFF; border-radius: 12px; border-top-size: 4px; border-top-color: #FF0000;"
+			+ " border-bottom-size: 4px; border-bottom-color: #0000FF; border-left-size: 1px; border-left-color: #000000;");
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(1, 1), "outside the rounded corner");
+		Assert.equals(0xFFFF0000, TestDriver.pixel(50, 1), "top side");
+		Assert.equals(0xFF0000FF, TestDriver.pixel(50, 58), "bottom side");
+		Assert.equals(0xFF000000, TestDriver.pixel(0, 30), "left side");
+	}
+
 	function testBorderRadius() {
 		show("background-color: #FF0000; border-radius: 20px;");
 		Assert.notEquals(0xFFFF0000, TestDriver.pixel(1, 1));

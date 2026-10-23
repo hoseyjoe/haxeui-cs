@@ -281,15 +281,73 @@ namespace HaxeUICs
                     System.Math.Max(0, s.RadiusBR - half), System.Math.Max(0, s.RadiusBL - half)));
                 return;
             }
-            FillSide(context, s.BorderBrush(s.BorderLeftColor), new Rect(0, 0, s.BorderLeft, bounds.Height));
-            FillSide(context, s.BorderBrush(s.BorderRightColor), new Rect(bounds.Width - s.BorderRight, 0, s.BorderRight, bounds.Height));
-            FillSide(context, s.BorderBrush(s.BorderTopColor), new Rect(0, 0, bounds.Width, s.BorderTop));
-            FillSide(context, s.BorderBrush(s.BorderBottomColor), new Rect(0, bounds.Height - s.BorderBottom, bounds.Width, s.BorderBottom));
+            if (!s.HasRadius)
+            {
+                FillSide(context, s.BorderBrush(s.BorderLeftColor), new Rect(0, 0, s.BorderLeft, bounds.Height));
+                FillSide(context, s.BorderBrush(s.BorderRightColor), new Rect(bounds.Width - s.BorderRight, 0, s.BorderRight, bounds.Height));
+                FillSide(context, s.BorderBrush(s.BorderTopColor), new Rect(0, 0, bounds.Width, s.BorderTop));
+                FillSide(context, s.BorderBrush(s.BorderBottomColor), new Rect(0, bounds.Height - s.BorderBottom, bounds.Width, s.BorderBottom));
+                return;
+            }
+            // Rounded: the border is the ring between the outer rounded rect and the inner one (each
+            // corner's radius less the two sides meeting there), and each side's colour fills its share
+            // of the ring: the trapezoid from its two outer corners in to its two inner ones, as CSS does.
+            double l = s.BorderLeft, t = s.BorderTop, r = s.BorderRight, b = s.BorderBottom;
+            double w = bounds.Width, h = bounds.Height;
+            var outer = RoundedPath(bounds, new Vector(s.RadiusTL, s.RadiusTL), new Vector(s.RadiusTR, s.RadiusTR),
+                new Vector(s.RadiusBR, s.RadiusBR), new Vector(s.RadiusBL, s.RadiusBL));
+            var hole = RoundedPath(new Rect(l, t, System.Math.Max(0, w - l - r), System.Math.Max(0, h - t - b)),
+                new Vector(System.Math.Max(0, s.RadiusTL - l), System.Math.Max(0, s.RadiusTL - t)),
+                new Vector(System.Math.Max(0, s.RadiusTR - r), System.Math.Max(0, s.RadiusTR - t)),
+                new Vector(System.Math.Max(0, s.RadiusBR - r), System.Math.Max(0, s.RadiusBR - b)),
+                new Vector(System.Math.Max(0, s.RadiusBL - l), System.Math.Max(0, s.RadiusBL - b)));
+            var ring = new CombinedGeometry(GeometryCombineMode.Exclude, outer, hole);
+            FillShare(context, s.BorderBrush(s.BorderTopColor), t, ring, new Point(0, 0), new Point(w, 0), new Point(w - r, t), new Point(l, t));
+            FillShare(context, s.BorderBrush(s.BorderRightColor), r, ring, new Point(w, 0), new Point(w, h), new Point(w - r, h - b), new Point(w - r, t));
+            FillShare(context, s.BorderBrush(s.BorderBottomColor), b, ring, new Point(w, h), new Point(0, h), new Point(l, h - b), new Point(w - r, h - b));
+            FillShare(context, s.BorderBrush(s.BorderLeftColor), l, ring, new Point(0, h), new Point(0, 0), new Point(l, t), new Point(l, h - b));
         }
 
         static void FillSide(DrawingContext context, IBrush brush, Rect side)
         {
             if (brush != null && side.Width > 0 && side.Height > 0) context.FillRectangle(brush, side);
+        }
+
+        /// <summary>Fills one side's share of a rounded border ring: the ring, clipped to its trapezoid.</summary>
+        static void FillShare(DrawingContext context, IBrush brush, double size, Geometry ring, Point a, Point b, Point c, Point d)
+        {
+            if (brush == null || size <= 0) return;
+            var share = new StreamGeometry();
+            using (var g = share.Open())
+            {
+                g.BeginFigure(a, true);
+                g.LineTo(b);
+                g.LineTo(c);
+                g.LineTo(d);
+                g.EndFigure(true);
+            }
+            using (context.PushGeometryClip(share))
+                context.DrawGeometry(brush, null, ring);
+        }
+
+        /// <summary>A rect with each corner rounded by its own (x, y) radii.</summary>
+        static Geometry RoundedPath(Rect r, Vector tl, Vector tr, Vector br, Vector bl)
+        {
+            var path = new StreamGeometry();
+            using (var g = path.Open())
+            {
+                g.BeginFigure(new Point(r.Left + tl.X, r.Top), true);
+                g.LineTo(new Point(r.Right - tr.X, r.Top));
+                if (tr.X > 0 && tr.Y > 0) g.ArcTo(new Point(r.Right, r.Top + tr.Y), new Size(tr.X, tr.Y), 0, false, SweepDirection.Clockwise);
+                g.LineTo(new Point(r.Right, r.Bottom - br.Y));
+                if (br.X > 0 && br.Y > 0) g.ArcTo(new Point(r.Right - br.X, r.Bottom), new Size(br.X, br.Y), 0, false, SweepDirection.Clockwise);
+                g.LineTo(new Point(r.Left + bl.X, r.Bottom));
+                if (bl.X > 0 && bl.Y > 0) g.ArcTo(new Point(r.Left, r.Bottom - bl.Y), new Size(bl.X, bl.Y), 0, false, SweepDirection.Clockwise);
+                g.LineTo(new Point(r.Left, r.Top + tl.Y));
+                if (tl.X > 0 && tl.Y > 0) g.ArcTo(new Point(r.Left + tl.X, r.Top), new Size(tl.X, tl.Y), 0, false, SweepDirection.Clockwise);
+                g.EndFigure(true);
+            }
+            return path;
         }
     }
 }
