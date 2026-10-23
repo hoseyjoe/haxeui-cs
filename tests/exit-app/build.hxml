@@ -1,0 +1,9 @@
+# Desktop-mode check: closing the window must end the process, even with a
+# repeating haxe.Timer still running. `haxe tests/exit-app/build.hxml` from the repo root.
+-cp tests/exit-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_run
+-cs tests/exit-app/bin
+-w -WAll

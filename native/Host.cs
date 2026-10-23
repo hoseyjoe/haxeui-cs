@@ -140,6 +140,11 @@ namespace HaxeUICs
             (handle as DispatcherTimer)?.Stop();
         }
 
+        public static void CloseWindow()
+        {
+            Window?.Close();
+        }
+
         public static void Exit(int code)
         {
             Environment.Exit(code);

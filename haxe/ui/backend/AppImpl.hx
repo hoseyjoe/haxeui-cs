@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.cs.Callbacks;
 import haxe.ui.backend.cs.native.Native;
 
 /**
@@ -13,25 +14,34 @@ class AppImpl extends AppBase {
     }
 
     private override function init(onReady:Void->Void, onEnd:Void->Void = null) {
-        var listener = new HostListener(onReady, onEnd);
         #if haxeui_cs_headless
-        Host.StartHeadless(listener, 800, 600);
+        Host.StartHeadless(new HostListener(onReady, onEnd, false), 800, 600);
         #else
-        Host.RunDesktop(listener, "", 1024, 768);
+        Host.RunDesktop(new HostListener(onReady, onEnd, true), "", 1024, 768);
         #end
     }
 }
 
 private class HostListener implements IHostListener {
+    /** How often the desktop drives Haxe's own main-thread events (haxe.Timer, haxe.MainLoop). **/
+    static inline var HAXE_EVENTS_INTERVAL_MS = 10;
+
     var onReady:Void->Void;
     var onEnd:Void->Void;
+    var pumpHaxeEvents:Bool;
 
-    public function new(onReady:Void->Void, onEnd:Void->Void) {
+    public function new(onReady:Void->Void, onEnd:Void->Void, pumpHaxeEvents:Bool) {
         this.onReady = onReady;
         this.onEnd = onEnd;
+        this.pumpHaxeEvents = pumpHaxeEvents;
     }
 
     public function OnReady():Void {
+        // Avalonia's loop owns the main thread, so Haxe's event loop never gets
+        // a turn unless the dispatcher gives it one.
+        if (pumpHaxeEvents) {
+            Host.StartTimer(HAXE_EVENTS_INTERVAL_MS, Callbacks.callback(() -> sys.thread.Thread.current().events.progress()));
+        }
         onReady();
     }
 
@@ -43,5 +53,8 @@ private class HostListener implements IHostListener {
         if (onEnd != null) {
             onEnd();
         }
+        // After main() returns, Haxe waits on its event loop for as long as any
+        // repeating haxe.Timer exists; a closed window is the end of the app.
+        Host.Exit(0);
     }
 }

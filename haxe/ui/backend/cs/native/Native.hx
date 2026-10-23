@@ -32,6 +32,7 @@ extern class Host {
 	static function Post(callback:ICallback):Void;
 	static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic;
 	static function StopTimer(handle:Dynamic):Void;
+	static function CloseWindow():Void;
 	static function Exit(code:Int):Void;
 }
 

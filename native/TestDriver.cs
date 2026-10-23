@@ -16,10 +16,21 @@ namespace HaxeUICs
         {
             for (var i = 0; i < frames; i++)
             {
-                Dispatcher.UIThread.RunJobs();
+                RunLoopOnce();
                 AvaloniaHeadlessPlatform.ForceRenderTimerTick();
                 Dispatcher.UIThread.RunJobs();
             }
+        }
+
+        /// <summary>
+        /// One pass of the real dispatcher loop: RunJobs alone never promotes due DispatcherTimers,
+        /// the main loop does. A lowest-priority job ends the pass once everything due has run.
+        /// </summary>
+        static void RunLoopOnce()
+        {
+            using var stop = new System.Threading.CancellationTokenSource();
+            Dispatcher.UIThread.Post(() => stop.Cancel(), DispatcherPriority.SystemIdle);
+            Dispatcher.UIThread.MainLoop(stop.Token);
         }
 
         public static void ResizeWindow(int width, int height)

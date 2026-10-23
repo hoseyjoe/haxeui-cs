@@ -30,7 +30,8 @@ class TestMain {
 		return [
 			new cases.TestBridge(),
 			new cases.TestCoreFixes(),
-			new cases.TestLayout()
+			new cases.TestLayout(),
+			new cases.TestEventLoop()
 		];
 	}
 }
