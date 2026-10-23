@@ -8,3 +8,5 @@
 -D haxeui_cs_headless
 -D haxeui_cs_run
 -cs tests/bin
+# Core's compile warnings print after the run's own output; keep the results last.
+-w -WAll
