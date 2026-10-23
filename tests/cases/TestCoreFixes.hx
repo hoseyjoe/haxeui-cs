@@ -14,6 +14,21 @@ class TestCoreFixes extends utest.Test {
 		Assert.isTrue(button.hasEvent(MouseEvent.MOUSE_OVER));
 	}
 
+	function testItemRendererAcceptsNullData() {
+		// DropDown renders its selected item before any data exists; Reflect.fields(null) throws on C#.
+		var renderer = new haxe.ui.core.ItemRenderer();
+		@:privateAccess renderer.updateValues(null);
+		Assert.pass();
+	}
+
+	function testVariantFromAnonymousObject() {
+		// DropDown's CHANGE event wraps the selected item ({text: ...}); C# refuses that cast.
+		var v = haxe.ui.util.Variant.fromDynamic({text: "Two"});
+		Assert.isTrue(v == null || v.isNull);
+		Assert.equals("x", haxe.ui.util.Variant.fromDynamic("x").toString());
+		Assert.equals(3, haxe.ui.util.Variant.fromDynamic(3).toInt());
+	}
+
 	function testHasEventWithMethodClosure() {
 		var component = new Component();
 		var listener = new MoveListener();

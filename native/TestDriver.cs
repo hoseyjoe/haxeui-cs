@@ -19,6 +19,7 @@ namespace HaxeUICs
             for (var i = 0; i < frames; i++)
             {
                 RunLoopOnce();
+                Host.RunFrame(); // one HaxeUI frame (callLater batch) per pump, whatever the wall clock did
                 AvaloniaHeadlessPlatform.ForceRenderTimerTick();
                 Dispatcher.UIThread.RunJobs();
             }
@@ -30,7 +31,11 @@ namespace HaxeUICs
         /// </summary>
         static void RunLoopOnce()
         {
-            using var stop = new System.Threading.CancellationTokenSource();
+            // Not disposed: when the time cap ends the pass, the idle job is still queued and cancels later.
+            var stop = new System.Threading.CancellationTokenSource();
+            // Normally the idle job ends the pass; a steady stream of timer work (an animation)
+            // can keep the dispatcher from ever going idle, so a pass is also capped in time.
+            stop.CancelAfter(System.TimeSpan.FromMilliseconds(50));
             Dispatcher.UIThread.Post(() => stop.Cancel(), DispatcherPriority.SystemIdle);
             Dispatcher.UIThread.MainLoop(stop.Token);
         }

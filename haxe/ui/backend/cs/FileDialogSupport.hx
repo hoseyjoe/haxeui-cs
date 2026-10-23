@@ -5,6 +5,15 @@ import haxe.ui.containers.dialogs.Dialogs.FileDialogExtensionInfo;
 
 /** Shared by the open and save dialogs: extension filters, and the native listener. **/
 class FileDialogSupport {
+	/** Only the file-name part of a suggested save name: a name carrying directories cannot steer the picker. **/
+	public static function suggestedName(name:String):String {
+		if (name == null) {
+			return null;
+		}
+		var file = haxe.io.Path.withoutDirectory(StringTools.replace(name, "\\", "/"));
+		return (file == "" || file == "." || file == "..") ? null : file;
+	}
+
 	/** HaxeUI extensions ("lor", ".lor" or "*.lor") as glob patterns, with their labels. **/
 	public static function filters(extensions:Array<FileDialogExtensionInfo>):{patterns:cs.NativeArray<String>, names:cs.NativeArray<String>} {
 		var list = extensions != null ? extensions.filter(e -> e != null && e.extension != null && e.extension != "") : [];

@@ -52,6 +52,14 @@ class TestDialogs extends utest.Test {
 		Assert.equals("saved text", sys.io.File.getContent(path));
 	}
 
+	function testSuggestedSaveNameIsOnlyAFileName() {
+		// a suggested name carrying directories ("../") must not steer the picker elsewhere
+		Assert.equals("story.lor", haxe.ui.backend.cs.FileDialogSupport.suggestedName("../../elsewhere/story.lor"));
+		Assert.equals("story.lor", haxe.ui.backend.cs.FileDialogSupport.suggestedName("C:\\stories\\story.lor"));
+		Assert.isNull(haxe.ui.backend.cs.FileDialogSupport.suggestedName(".."));
+		Assert.isNull(haxe.ui.backend.cs.FileDialogSupport.suggestedName(null));
+	}
+
 	function testScreenTitle() {
 		Screen.instance.title = "Joeditor";
 		Assert.equals("Joeditor", Host.Title);

@@ -145,6 +145,36 @@ namespace HaxeUICs
             Dispatcher.UIThread.Post(() => callback.Invoke());
         }
 
+        /// <summary>
+        /// Runs the callback with the next frame, as a browser's requestAnimationFrame: work that
+        /// re-schedules itself (HaxeUI's animations) then advances once per frame instead of spinning.
+        /// Before the window exists it is simply queued.
+        /// </summary>
+        public static void NextFrame(ICallback callback)
+        {
+            _frameQueue.Add(callback);
+            if (_frameTimer == null)
+                _frameTimer = new DispatcherTimer(System.TimeSpan.FromMilliseconds(FrameMilliseconds), DispatcherPriority.Normal, (s, e) => RunFrame());
+            if (!_frameTimer.IsEnabled) _frameTimer.Start();
+        }
+
+        const int FrameMilliseconds = 16;
+        static System.Collections.Generic.List<ICallback> _frameQueue = new System.Collections.Generic.List<ICallback>();
+        static DispatcherTimer _frameTimer;
+
+        /// <summary>Runs one frame's batch; anything queued while it runs waits for the next frame.</summary>
+        internal static void RunFrame()
+        {
+            if (_frameQueue.Count == 0)
+            {
+                _frameTimer?.Stop();
+                return;
+            }
+            var batch = _frameQueue;
+            _frameQueue = new System.Collections.Generic.List<ICallback>();
+            foreach (var callback in batch) callback.Invoke();
+        }
+
         public static object StartTimer(int milliseconds, ICallback callback)
         {
             var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(System.Math.Max(1, milliseconds)), DispatcherPriority.Normal, (s, e) => callback.Invoke());

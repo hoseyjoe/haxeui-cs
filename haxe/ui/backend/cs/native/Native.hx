@@ -30,6 +30,7 @@ extern class Host {
 	static function StartHeadless(listener:IHostListener, width:Int, height:Int):Void;
 	#end
 	static function Post(callback:ICallback):Void;
+	static function NextFrame(callback:ICallback):Void;
 	static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic;
 	static function StopTimer(handle:Dynamic):Void;
 	static function CloseWindow():Void;

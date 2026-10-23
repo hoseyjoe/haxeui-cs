@@ -7,7 +7,7 @@ import haxe.ui.backend.cs.native.Native.FileDialogs;
 class SaveFileDialogImpl extends SaveFileDialogBase {
     public override function show() {
         var filters = FileDialogSupport.filters(options.extensions);
-        var suggested = fileInfo != null ? fileInfo.name : null;
+        var suggested = FileDialogSupport.suggestedName(fileInfo != null ? fileInfo.name : null);
         FileDialogs.SaveFile(options.title, suggested, filters.patterns, filters.names, new FileDialogListener(onFiles, dialogCancelled));
     }
 

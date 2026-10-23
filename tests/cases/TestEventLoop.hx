@@ -16,6 +16,24 @@ class TestEventLoop extends utest.Test {
 		Assert.equals(1, hit);
 	}
 
+	function testSelfRepostingCallLaterRunsOncePerFrame() {
+		// HaxeUI's animations re-post a callLater from inside it (Actuator.processCallbacks),
+		// expecting "next frame" as requestAnimationFrame gives on html5 — never a busy loop.
+		var steps = 0;
+		var running = true;
+		function step() {
+			steps++;
+			if (running) {
+				Toolkit.callLater(step);
+			}
+		}
+		Toolkit.callLater(step);
+		TestDriver.pump(3);
+		running = false;
+		TestDriver.pump(2);
+		Assert.isTrue(steps >= 3 && steps <= 10, 'steps $steps');
+	}
+
 	function testUiTimerFires() {
 		var fired = 0;
 		var timer = new Timer(20, () -> fired++);
