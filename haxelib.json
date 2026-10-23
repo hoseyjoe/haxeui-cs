@@ -1,0 +1,14 @@
+{
+	"name": "haxeui-cs",
+	"url": "",
+	"license": "MIT",
+	"tags": ["ui", "gui", "cs", "dotnet", "avalonia"],
+	"description": "HaxeUI backend for Haxe's C# target, rendering through Avalonia",
+	"version": "0.1.0",
+	"classPath": "",
+	"releasenote": "",
+	"contributors": [],
+	"dependencies": {
+		"haxeui-core": ""
+	}
+}

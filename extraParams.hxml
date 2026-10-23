@@ -1,0 +1,3 @@
+-D no-compilation
+-D haxeui_cs
+--macro haxe.ui.backend.cs.macros.Build.configure()
