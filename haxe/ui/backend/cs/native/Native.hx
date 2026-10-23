@@ -34,6 +34,7 @@ extern class Host {
 	static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic;
 	static function StopTimer(handle:Dynamic):Void;
 	static function CloseWindow():Void;
+	static function CaptureWindow(path:String):Bool;
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
 }

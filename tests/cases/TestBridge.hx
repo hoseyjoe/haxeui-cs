@@ -28,6 +28,19 @@ class TestBridge extends utest.Test {
 		Assert.isTrue(Toolkit.styleSheet.findMatchingRules(".button").length > 0);
 	}
 
+	function testWindowCaptureWritesPng() {
+		// the desktop photograph (WindowCapture), usable headless too
+		var path = "tests/bin/window-capture.png";
+		if (sys.FileSystem.exists(path)) {
+			sys.FileSystem.deleteFile(path);
+		}
+		Assert.isTrue(haxe.ui.backend.cs.WindowCapture.save(path));
+		var bytes = sys.io.File.getBytes(path);
+		Assert.isTrue(bytes.length > 100);
+		Assert.equals(0x89, bytes.get(0)); // PNG signature
+		Assert.equals("PNG", bytes.getString(1, 3));
+	}
+
 	function testToolkitInits() {
 		Assert.isTrue(Toolkit.initialized);
 		Assert.equals(800.0, Screen.instance.width);

@@ -187,6 +187,17 @@ namespace HaxeUICs
             (handle as DispatcherTimer)?.Stop();
         }
 
+        /// <summary>Renders the window's content as it stands to a PNG; false when there is no window yet.</summary>
+        public static bool CaptureWindow(string path)
+        {
+            if (Window == null || Root == null) return false;
+            var size = new PixelSize(System.Math.Max(1, (int)ClientWidth), System.Math.Max(1, (int)ClientHeight));
+            using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(size);
+            bitmap.Render(Window);
+            bitmap.Save(path);
+            return true;
+        }
+
         public static void CloseWindow()
         {
             Window?.Close();
