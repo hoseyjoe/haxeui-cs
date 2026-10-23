@@ -99,6 +99,19 @@ namespace HaxeUICs
             TextAlignment = align == 1 ? TextAlignment.Center : align == 2 ? TextAlignment.Right : TextAlignment.Left;
         }
 
+        /// <summary>A shadow of the glyphs (haxeui-cs's text-shadow); argb 0 removes it.</summary>
+        public void SetShadow(double dx, double dy, double blur, uint argb)
+        {
+            Effect = argb == 0 ? null : new DropShadowEffect
+            {
+                OffsetX = dx,
+                OffsetY = dy,
+                BlurRadius = System.Math.Max(0, blur),
+                Color = Color.FromUInt32(argb | 0xFF000000u),
+                Opacity = ((argb >> 24) & 0xFF) / 255.0,
+            };
+        }
+
         /// <summary>Sets position and size; NaN leaves that value as it was.</summary>
         public void SetBounds(double left, double top, double width, double height)
         {

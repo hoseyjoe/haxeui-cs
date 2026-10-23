@@ -35,6 +35,12 @@ class TestDriver {
 		return HeadlessDriver.PixelAt(x, y);
 	}
 
+	/** ARGB of a w x h region of one freshly rendered frame, row by row. **/
+	public static function pixels(x:Int, y:Int, w:Int, h:Int):Array<Int> {
+		var data = HeadlessDriver.PixelsAt(x, y, w, h);
+		return [for (i in 0...data.length) data[i]];
+	}
+
 	// Pointer input, in window coordinates. Buttons: 0 left, 1 middle, 2 right.
 
 	public static function mouseMove(x:Float, y:Float):Void {

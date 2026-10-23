@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.cs.directives.TextShadow;
 import haxe.ui.backend.cs.native.Native;
 
 class TextDisplayImpl extends TextBase {
@@ -48,7 +49,29 @@ class TextDisplayImpl extends TextBase {
                 case _: 0;
             });
         }
+        applyShadowDirective();
         return measureTextRequired;
+    }
+
+    private var _shadowKey:String = null;
+    /** The haxeui-cs text-shadow directive, read from the style each time it is validated. **/
+    private function applyShadowDirective() {
+        var directive = (_textStyle != null && _textStyle.customDirectives != null) ? _textStyle.customDirectives.get("text-shadow") : null;
+        var shadow = directive != null ? TextShadow.parse(directive.value) : null;
+        var key = shadow == null ? "" : '${shadow.dx}|${shadow.dy}|${shadow.blur}|${shadow.argb}';
+        if (key == _shadowKey) {
+            return;
+        }
+        _shadowKey = key;
+        if (shadow == null) {
+            applyShadow(0, 0, 0, 0);
+        } else {
+            applyShadow(shadow.dx, shadow.dy, shadow.blur, shadow.argb);
+        }
+    }
+
+    private function applyShadow(dx:Float, dy:Float, blur:Float, argb:UInt) {
+        textNative.SetShadow(dx, dy, blur, argb);
     }
 
     private function applyWrap(wrap:Bool) {

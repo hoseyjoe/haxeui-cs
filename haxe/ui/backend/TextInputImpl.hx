@@ -87,6 +87,11 @@ class TextInputImpl extends TextDisplayImpl {
         inputNative.SetColor(argb);
     }
 
+    private override function applyShadow(dx:Float, dy:Float, blur:Float, argb:UInt) {
+        super.applyShadow(dx, dy, blur, argb);
+        inputNative.SetShadow(dx, dy, blur, argb);
+    }
+
     private override function applyAlign(align:Int) {
         super.applyAlign(align);
         inputNative.SetAlign(align);

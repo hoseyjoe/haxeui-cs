@@ -133,6 +133,7 @@ extern class UIText extends Control {
 	function SetColor(argb:UInt):Void;
 	function SetAlign(align:Int):Void;
 	function SetWrap(wrap:Bool):Void;
+	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;
 	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
 	function MeasureText(maxWidth:Float):Void;
 }
@@ -197,6 +198,7 @@ extern class UITextInput extends Control {
 	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool):Void;
 	function SetColor(argb:UInt):Void;
 	function SetAlign(align:Int):Void;
+	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;
 	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
 	function SetScroll(x:Float, y:Float):Void;
 	function Focus():Bool;
@@ -252,6 +254,7 @@ extern class HeadlessDriver {
 	static function ResizeWindow(width:Int, height:Int):Void;
 	static function Capture(path:String):Void;
 	static function PixelAt(x:Int, y:Int):Int;
+	static function PixelsAt(x:Int, y:Int, w:Int, h:Int):cs.NativeArray<Int>;
 	static function MouseMove(x:Float, y:Float):Void;
 	static function MouseDown(x:Float, y:Float, button:Int):Void;
 	static function MouseUp(x:Float, y:Float, button:Int):Void;

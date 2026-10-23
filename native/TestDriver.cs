@@ -161,6 +161,33 @@ namespace HaxeUICs
             }
         }
 
+        /// <summary>A w x h region of one freshly rendered frame as ARGB, row by row (0 outside the frame).</summary>
+        public static int[] PixelsAt(int x, int y, int w, int h)
+        {
+            var result = new int[System.Math.Max(0, w) * System.Math.Max(0, h)];
+            using var frame = Host.Window.CaptureRenderedFrame();
+            if (frame == null) return result;
+            using var buffer = frame.Lock();
+            for (var row = 0; row < h; row++)
+                for (var col = 0; col < w; col++)
+                {
+                    int px = x + col, py = y + row;
+                    if (px < 0 || py < 0 || px >= buffer.Size.Width || py >= buffer.Size.Height) continue;
+                    result[row * w + col] = ToArgb((uint)Marshal.ReadInt32(buffer.Address, py * buffer.RowBytes + px * 4), buffer.Format);
+                }
+            return result;
+        }
+
+        static int ToArgb(uint raw, PixelFormat format)
+        {
+            if (format == PixelFormat.Rgba8888)
+            {
+                // bytes R,G,B,A read little-endian as 0xAABBGGRR: swap red and blue into ARGB
+                raw = (raw & 0xFF00FF00u) | ((raw & 0x00FF0000u) >> 16) | ((raw & 0x000000FFu) << 16);
+            }
+            return unchecked((int)raw);
+        }
+
         /// <summary>The pixel at (x, y) of a freshly rendered frame, as ARGB (0 outside the frame).</summary>
         public static int PixelAt(int x, int y)
         {

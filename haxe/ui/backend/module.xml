@@ -1,3 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <module id="haxeui-cs" priority="-1">
+    <cssExtensions>
+        <cssDirective name="text-shadow" class="haxe.ui.backend.cs.directives.TextShadow" />
+    </cssExtensions>
 </module>

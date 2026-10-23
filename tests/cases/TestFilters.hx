@@ -1,6 +1,7 @@
 package cases;
 
 import haxe.ui.backend.cs.TestDriver;
+import haxe.ui.components.Label;
 import haxe.ui.containers.Box;
 import haxe.ui.core.Screen;
 import utest.Assert;
@@ -49,6 +50,55 @@ class TestFilters extends utest.Test {
 		b.addClass("popup");
 		TestDriver.pump(3);
 		Assert.isTrue(bright(TestDriver.pixel(70, 83)) < 765, "the theme's .popup drop-shadow shows below the box");
+	}
+
+	// text-shadow (a haxeui-cs directive): white glyphs on the white window are invisible,
+	// so every dark pixel is shadow.
+
+	function testTextShadowDrawsBehindGlyphs() {
+		var l = whiteLabel("text-shadow: 2px 2px 0px #000000;");
+		Assert.isTrue(Pixels.countWhere(around(l), p -> bright(p) < 200) > 20);
+	}
+
+	function testTextShadowAlpha() {
+		var l = whiteLabel("text-shadow: 2px 2px 0px #000000 0.5;");
+		var px = around(l);
+		Assert.equals(0, Pixels.countWhere(px, p -> bright(p) < 250), "half-alpha black is never near-black");
+		Assert.isTrue(Pixels.countWhere(px, p -> bright(p) < 520) > 20);
+	}
+
+	function testTextShadowNone() {
+		var l = whiteLabel("text-shadow: 2px 2px 0px #000000;");
+		l.styleString = "font-size: 24px; color: #FFFFFF; text-shadow: none;";
+		TestDriver.pump(3);
+		Assert.equals(0, Pixels.countWhere(around(l), p -> bright(p) < 700));
+	}
+
+	function testShadowSetBeforeText() {
+		var l = new Label();
+		l.left = 10;
+		l.top = 10;
+		l.styleString = "font-size: 24px; color: #FFFFFF; text-shadow: 2px 2px 0px #000000;";
+		Screen.instance.addComponent(l);
+		TestDriver.pump(2);
+		l.text = "MMMM";
+		TestDriver.pump(3);
+		Assert.isTrue(Pixels.countWhere(around(l), p -> bright(p) < 200) > 20);
+	}
+
+	static function whiteLabel(style:String):Label {
+		var l = new Label();
+		l.left = 10;
+		l.top = 10;
+		l.text = "MMMM";
+		l.styleString = "font-size: 24px; color: #FFFFFF; " + style;
+		Screen.instance.addComponent(l);
+		TestDriver.pump(3);
+		return l;
+	}
+
+	static function around(l:Label):Array<Int> {
+		return TestDriver.pixels(10, 10, Std.int(l.width) + 4, Std.int(l.height) + 4);
 	}
 
 	static function box(style:String):Box {
