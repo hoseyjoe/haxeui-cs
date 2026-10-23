@@ -172,7 +172,13 @@ namespace HaxeUICs
             }
             var batch = _frameQueue;
             _frameQueue = new System.Collections.Generic.List<ICallback>();
-            foreach (var callback in batch) callback.Invoke();
+            foreach (var callback in batch)
+            {
+                // Each on its own, as a browser runs requestAnimationFrame callbacks: one that throws
+                // is reported and the rest of its frame still runs.
+                try { callback.Invoke(); }
+                catch (System.Exception e) { System.Console.Error.WriteLine("haxeui-cs: a callLater threw: " + e); }
+            }
         }
 
         public static object StartTimer(int milliseconds, ICallback callback)

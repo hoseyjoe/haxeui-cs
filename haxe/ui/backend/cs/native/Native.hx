@@ -68,6 +68,7 @@ extern class FileDialogs {
 @:native("Avalonia.Controls.Control")
 extern class Control {
 	var IsVisible(default, null):Bool;
+	var IsHitTestVisible:Bool;
 }
 
 @:native("HaxeUICs.UIPanel")

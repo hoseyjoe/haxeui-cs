@@ -6,6 +6,9 @@ import haxe.ui.backend.cs.native.Native.Host;
  * Opens a real window, runs a repeating haxe.Timer, and closes the window
  * after half a second. Prints how often the haxe.Timer ticked; the process
  * must then end by itself, with exit code 0.
+ *
+ * With `--throw-on-end` the app's onEnd throws: the process must still end,
+ * with the failure reported and exit code 1 (never a hang, never a quiet 0).
  */
 class Main {
 	static function main() {
@@ -27,6 +30,10 @@ class Main {
 				Host.CloseWindow();
 			}));
 			app.start();
+		}, function() {
+			if (Sys.args().indexOf("--throw-on-end") != -1) {
+				throw "deliberate failure in onEnd";
+			}
 		});
 	}
 }

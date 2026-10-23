@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Rendering;
 
 namespace HaxeUICs
 {
@@ -30,8 +31,16 @@ namespace HaxeUICs
         /// <summary>HaxeUI's event.cancel(): the event stops here, as DOM stopPropagation does.</summary>
         public static void Cancel(object nativeEvent)
         {
-            if (nativeEvent is RoutedEventArgs routed) routed.Handled = true;
+            if (nativeEvent is ClickState click) click.Cancelled = true;
+            else if (nativeEvent is RoutedEventArgs routed) routed.Handled = true;
         }
+    }
+
+    /// <summary>One click as it bubbles from element to element: cancelling it stops the rest.</summary>
+    internal class ClickState
+    {
+        public PointerReleasedEventArgs Release;
+        public bool Cancelled;
     }
 
     /// <summary>
@@ -45,6 +54,13 @@ namespace HaxeUICs
         bool _attached;
         int _kinds;
         IPanelListener _listener;
+
+        // Clicks are made here as a browser makes them: a left press and release inside this
+        // element is a click, EVERY time, and the second press inside the double-click time also
+        // makes a double click. Avalonia's Tapped is not used: it swallows that second click.
+        bool _pressedHere;
+        int _pressClickCount;
+        static ClickState s_click;
 
         public EventRouter(Interactive target, bool handledEventsToo)
         {
@@ -69,15 +85,17 @@ namespace HaxeUICs
             _target.AddHandler(InputElement.PointerPressedEvent, (s, e) => Pointer(PressKind(e), e), bubble, _handledEventsToo);
             _target.AddHandler(InputElement.PointerReleasedEvent, (s, e) => Pointer(ReleaseKind(e), e), bubble, _handledEventsToo);
             _target.AddHandler(InputElement.PointerWheelChangedEvent, (s, e) => Pointer(EventKind.WHEEL, e, e.Delta.Y), bubble, _handledEventsToo);
-            _target.AddHandler(InputElement.TappedEvent, (s, e) => Pointer(EventKind.CLICK, e), bubble, _handledEventsToo);
-            _target.AddHandler(InputElement.DoubleTappedEvent, (s, e) => Pointer(EventKind.DBL_CLICK, e), bubble, _handledEventsToo);
+            // After the UP handler above, so UP comes before CLICK, as in a browser. Handled events
+            // too: a press a component cancelled is still the first half of a click.
+            _target.AddHandler(InputElement.PointerPressedEvent, (s, e) => PressForClick(e), bubble, true);
+            _target.AddHandler(InputElement.PointerReleasedEvent, (s, e) => ReleaseForClick(e), bubble, true);
             _target.AddHandler(InputElement.RightTappedEvent, (s, e) => Pointer(EventKind.RIGHT_CLICK, e), bubble, _handledEventsToo);
             // Keys always bubble on (a TextBox handles most of them itself), as they do in the DOM.
             _target.AddHandler(InputElement.KeyDownEvent, (s, e) => Key(EventKind.KEY_DOWN, e), bubble, true);
             _target.AddHandler(InputElement.KeyUpEvent, (s, e) => Key(EventKind.KEY_UP, e), bubble, true);
         }
 
-        void Pointer(int kind, PointerEventArgs e, double wheelDelta = 0)
+        void Pointer(int kind, PointerEventArgs e, double wheelDelta = 0, object nativeEvent = null)
         {
             if (kind == 0 || (_kinds & kind) == 0 || _listener == null) return;
             var position = e.GetPosition(Host.Root);
@@ -85,7 +103,35 @@ namespace HaxeUICs
             var modifiers = e.KeyModifiers;
             _listener.OnPointer(kind, position.X, position.Y, properties.IsLeftButtonPressed,
                 modifiers.HasFlag(KeyModifiers.Control), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt),
-                System.Math.Max(-1, System.Math.Min(1, wheelDelta)), e);
+                System.Math.Max(-1, System.Math.Min(1, wheelDelta)), nativeEvent ?? e);
+        }
+
+        void PressForClick(PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(null).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed) return;
+            _pressedHere = true;
+            _pressClickCount = e.ClickCount;
+        }
+
+        void ReleaseForClick(PointerReleasedEventArgs e)
+        {
+            if (e.InitialPressMouseButton != MouseButton.Left || !_pressedHere) return;
+            _pressedHere = false;
+            if (!Inside(e)) return;
+            if (s_click == null || s_click.Release != e) s_click = new ClickState { Release = e };
+            var click = s_click;
+            if (click.Cancelled) return;
+            Pointer(EventKind.CLICK, e, 0, click);
+            if (_pressClickCount == 2 && !click.Cancelled) Pointer(EventKind.DBL_CLICK, e, 0, click);
+        }
+
+        /// <summary>Released over this element (its own hit test, clip included): the click is its.</summary>
+        bool Inside(PointerEventArgs e)
+        {
+            if (!(_target is Visual visual)) return true;
+            var p = e.GetPosition(visual);
+            if (_target is ICustomHitTest custom) return custom.HitTest(p);
+            return new Rect(visual.Bounds.Size).Contains(p);
         }
 
         void Pointer(int kind, TappedEventArgs e)

@@ -58,11 +58,18 @@ private class HostListener implements IHostListener {
     }
 
     public function OnClosed():Void {
+        var code = 0;
         if (onEnd != null) {
-            onEnd();
+            try {
+                onEnd();
+            } catch (e:Dynamic) {
+                // reported, and still the end of the app: never a hang, never a quiet 0
+                Sys.stderr().writeString('haxeui-cs: onEnd threw: $e\n');
+                code = 1;
+            }
         }
         // After main() returns, Haxe waits on its event loop for as long as any
         // repeating haxe.Timer exists; a closed window is the end of the app.
-        Host.Exit(0);
+        Host.Exit(code);
     }
 }

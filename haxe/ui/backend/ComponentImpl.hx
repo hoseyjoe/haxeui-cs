@@ -113,6 +113,15 @@ class ComponentImpl extends ComponentBase {
         nativePanel.Listen(_input.mask, _input);
     }
 
+    private override function handleFrameworkProperty(id:String, value:Any) {
+        switch (id) {
+            case "allowMouseInteraction":
+                // pointer-events: none — clicks pass through this component and everything in it,
+                // as CSS's inherited pointer-events does on html5.
+                nativePanel.IsHitTestVisible = (value == true);
+        }
+    }
+
     private override function handleVisibility(show:Bool) {
         nativePanel.SetVisible(show);
     }

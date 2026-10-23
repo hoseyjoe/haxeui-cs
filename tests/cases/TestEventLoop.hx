@@ -34,6 +34,15 @@ class TestEventLoop extends utest.Test {
 		Assert.isTrue(steps >= 3 && steps <= 10, 'steps $steps');
 	}
 
+	function testThrowingCallLaterKeepsTheRestOfItsFrame() {
+		// as with a browser's requestAnimationFrame callbacks: one failing does not cancel the others
+		var ran = false;
+		Toolkit.callLater(() -> throw "deliberate failure in a callLater");
+		Toolkit.callLater(() -> ran = true);
+		TestDriver.pump();
+		Assert.isTrue(ran);
+	}
+
 	function testUiTimerFires() {
 		var fired = 0;
 		var timer = new Timer(20, () -> fired++);
