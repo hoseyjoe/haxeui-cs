@@ -160,7 +160,56 @@ namespace HaxeUICs
                     context.FillRectangle(background, bounds);
             }
 
+            if (s.BackgroundImage != null) RenderBackgroundImage(context, s, bounds);
+
             RenderBorder(context, s, bounds);
+        }
+
+        static void RenderBackgroundImage(DrawingContext context, UIStyle s, Rect bounds)
+        {
+            var image = s.BackgroundImage;
+            var source = s.HasClip
+                ? new Rect(s.ClipL, s.ClipT, s.ClipR - s.ClipL, s.ClipB - s.ClipT)
+                : new Rect(0, 0, image.Width, image.Height);
+            if (source.Width <= 0 || source.Height <= 0) return;
+
+            if (s.HasSlice)
+            {
+                // Source columns/rows around the centre rect; destination keeps the corners' size.
+                double[] sx = { source.X, source.X + s.SliceL, source.X + s.SliceR, source.Right };
+                double[] sy = { source.Y, source.Y + s.SliceT, source.Y + s.SliceB, source.Bottom };
+                double[] dx = { 0, s.SliceL, bounds.Width - (source.Width - s.SliceR), bounds.Width };
+                double[] dy = { 0, s.SliceT, bounds.Height - (source.Height - s.SliceB), bounds.Height };
+                for (var row = 0; row < 3; row++)
+                    for (var col = 0; col < 3; col++)
+                        DrawPart(context, image, new Rect(sx[col], sy[row], sx[col + 1] - sx[col], sy[row + 1] - sy[row]),
+                            new Rect(dx[col], dy[row], dx[col + 1] - dx[col], dy[row + 1] - dy[row]));
+                return;
+            }
+
+            switch (s.Repeat)
+            {
+                case 1:
+                    using (context.PushClip(bounds))
+                    {
+                        for (var y = 0.0; y < bounds.Height; y += source.Height)
+                            for (var x = 0.0; x < bounds.Width; x += source.Width)
+                                DrawPart(context, image, source, new Rect(x, y, source.Width, source.Height));
+                    }
+                    break;
+                case 2:
+                    DrawPart(context, image, source, new Rect(0, 0, source.Width, source.Height));
+                    break;
+                default:
+                    DrawPart(context, image, source, bounds);
+                    break;
+            }
+        }
+
+        static void DrawPart(DrawingContext context, UIImage image, Rect source, Rect destination)
+        {
+            if (source.Width > 0 && source.Height > 0 && destination.Width > 0 && destination.Height > 0)
+                context.DrawImage(image.Bitmap, source, destination);
         }
 
         static void RenderBorder(DrawingContext context, UIStyle s, Rect bounds)

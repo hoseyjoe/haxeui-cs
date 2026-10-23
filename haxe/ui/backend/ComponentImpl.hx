@@ -3,7 +3,9 @@ package haxe.ui.backend;
 import haxe.ui.backend.cs.StyleMapper;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.core.Component;
+import haxe.ui.core.ImageDisplay;
 import haxe.ui.core.TextDisplay;
+import haxe.ui.util.Variant;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
 
@@ -41,7 +43,41 @@ class ComponentImpl extends ComponentBase {
             _nativeStyle = new UIStyle();
         }
         StyleMapper.toNative(style, _nativeStyle);
+        applyBackgroundImage(style.backgroundImage);
         nativePanel.ApplyStyle(_nativeStyle);
+    }
+
+    private var _backgroundImageId:String = null;
+    private function applyBackgroundImage(image:Variant) {
+        if (image == null) {
+            _backgroundImageId = null;
+            _nativeStyle.BackgroundImage = null;
+        } else if (image.isImageData) {
+            _backgroundImageId = null;
+            _nativeStyle.BackgroundImage = image.toImageData();
+        } else {
+            var id = image.toString();
+            if (id == _backgroundImageId) {
+                return;
+            }
+            _backgroundImageId = id;
+            _nativeStyle.BackgroundImage = null;
+            Toolkit.assets.getImage(id, function(info) {
+                if (_backgroundImageId != id) {
+                    return; // the style moved on while this loaded
+                }
+                _nativeStyle.BackgroundImage = info != null ? info.data : null;
+                nativePanel.ApplyStyle(_nativeStyle);
+            });
+        }
+    }
+
+    public override function createImageDisplay():ImageDisplay {
+        if (_imageDisplay == null) {
+            super.createImageDisplay();
+            nativePanel.AddContent(_imageDisplay.imageNative);
+        }
+        return _imageDisplay;
     }
 
     private override function handleVisibility(show:Bool) {

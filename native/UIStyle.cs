@@ -24,6 +24,17 @@ namespace HaxeUICs
         public double Opacity = 1;
         public string Cursor;
 
+        public UIImage BackgroundImage;
+        /// <summary>Source rect within the image (left, top, right, bottom); NaN: the whole image.</summary>
+        public double ClipL = double.NaN, ClipT = double.NaN, ClipR = double.NaN, ClipB = double.NaN;
+        /// <summary>The 9-slice centre rect within the (clipped) source (left, top, right, bottom); NaN: no slicing.</summary>
+        public double SliceL = double.NaN, SliceT = double.NaN, SliceR = double.NaN, SliceB = double.NaN;
+        /// <summary>0 stretch, 1 repeat, 2 natural size.</summary>
+        public int Repeat;
+
+        internal bool HasClip => !double.IsNaN(ClipL) && !double.IsNaN(ClipT) && !double.IsNaN(ClipR) && !double.IsNaN(ClipB);
+        internal bool HasSlice => !double.IsNaN(SliceL) && !double.IsNaN(SliceT) && !double.IsNaN(SliceR) && !double.IsNaN(SliceB);
+
         internal IBrush BackgroundBrush()
         {
             if (BackgroundColor == 0) return null;

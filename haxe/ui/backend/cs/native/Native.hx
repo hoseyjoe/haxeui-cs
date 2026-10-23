@@ -86,6 +86,26 @@ extern class UIText extends Control {
 	function MeasureText(maxWidth:Float):Void;
 }
 
+@:native("HaxeUICs.UIImage")
+extern class UIImage {
+	var Width(default, null):Int;
+	var Height(default, null):Int;
+
+	static function FromBytes(data:haxe.io.BytesData):UIImage;
+}
+
+@:native("HaxeUICs.UIImageView")
+extern class UIImageView extends Control {
+	function new():Void;
+
+	var W(default, null):Float;
+	var H(default, null):Float;
+
+	function SetImage(image:UIImage):Void;
+	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
+	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
+}
+
 @:native("HaxeUICs.UIStyle")
 extern class UIStyle {
 	function new():Void;
@@ -112,6 +132,17 @@ extern class UIStyle {
 
 	var Opacity:Float;
 	var Cursor:String;
+
+	var BackgroundImage:UIImage;
+	var ClipL:Float;
+	var ClipT:Float;
+	var ClipR:Float;
+	var ClipB:Float;
+	var SliceL:Float;
+	var SliceT:Float;
+	var SliceR:Float;
+	var SliceB:Float;
+	var Repeat:Int;
 }
 
 #if haxeui_cs_headless

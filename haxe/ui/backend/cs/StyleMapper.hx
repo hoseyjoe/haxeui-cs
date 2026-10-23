@@ -29,6 +29,21 @@ class StyleMapper {
 
 		into.Opacity = or(style.opacity, 1);
 		into.Cursor = style.cursor;
+
+		// the image itself is loaded by ComponentImpl.applyStyle; these say how to draw it
+		into.ClipL = or(style.backgroundImageClipLeft, Math.NaN);
+		into.ClipT = or(style.backgroundImageClipTop, Math.NaN);
+		into.ClipR = or(style.backgroundImageClipRight, Math.NaN);
+		into.ClipB = or(style.backgroundImageClipBottom, Math.NaN);
+		into.SliceL = or(style.backgroundImageSliceLeft, Math.NaN);
+		into.SliceT = or(style.backgroundImageSliceTop, Math.NaN);
+		into.SliceR = or(style.backgroundImageSliceRight, Math.NaN);
+		into.SliceB = or(style.backgroundImageSliceBottom, Math.NaN);
+		into.Repeat = switch (style.backgroundImageRepeat) {
+			case "repeat": 1;
+			case null | "stretch": 0;
+			case _: 2;
+		};
 	}
 
 	static inline function or(value:Null<Float>, fallback:Float):Float {

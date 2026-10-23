@@ -33,7 +33,8 @@ class TestMain {
 			new cases.TestLayout(),
 			new cases.TestEventLoop(),
 			new cases.TestStyles(),
-			new cases.TestText()
+			new cases.TestText(),
+			new cases.TestImages()
 		];
 	}
 }

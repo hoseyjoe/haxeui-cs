@@ -6,6 +6,8 @@
 -lib haxeui-core
 -lib haxeui-cs
 -D haxeui_cs_headless
+--resource tests/assets/red4x4.png@red4x4.png
+--resource tests/assets/slice9.png@slice9.png
 -D haxeui_cs_run
 -cs tests/bin
 # Core's compile warnings print after the run's own output; keep the results last.
