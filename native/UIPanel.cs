@@ -52,6 +52,15 @@ namespace HaxeUICs
 
         EventRouter _events;
 
+        /// <summary>The component's canvas drawing, painted over its style and under its children.</summary>
+        public void SetGraphics(UIGraphics graphics)
+        {
+            if (_painter.Graphics != null) _painter.Graphics.Changed = null;
+            _painter.Graphics = graphics;
+            if (graphics != null) graphics.Changed = _painter.InvalidateVisual;
+            _painter.InvalidateVisual();
+        }
+
         /// <summary>Forwards the input kinds in the mask (EventKind flags) to the listener; 0 stops it.</summary>
         public void Listen(int kinds, IPanelListener listener)
         {
@@ -150,6 +159,7 @@ namespace HaxeUICs
     public class UIPainter : Control
     {
         public UIStyle Style;
+        public UIGraphics Graphics;
 
         public UIPainter()
         {
@@ -157,6 +167,12 @@ namespace HaxeUICs
         }
 
         public override void Render(DrawingContext context)
+        {
+            RenderStyle(context);
+            Graphics?.Render(context);
+        }
+
+        void RenderStyle(DrawingContext context)
         {
             var s = Style;
             var width = Bounds.Width;

@@ -79,6 +79,26 @@ extern class UIPanel extends Control {
 	function AddContent(content:Control):Void;
 	function ApplyStyle(style:UIStyle):Void;
 	function Listen(kinds:Int, listener:IPanelListener):Void;
+	function SetGraphics(graphics:UIGraphics):Void;
+}
+
+@:native("HaxeUICs.UIGraphics")
+extern class UIGraphics {
+	function new():Void;
+
+	function Clear():Void;
+	function MoveTo(x:Float, y:Float):Void;
+	function LineTo(x:Float, y:Float):Void;
+	function CurveTo(controlX:Float, controlY:Float, anchorX:Float, anchorY:Float):Void;
+	function CubicCurveTo(controlX1:Float, controlY1:Float, controlX2:Float, controlY2:Float, anchorX:Float, anchorY:Float):Void;
+	function Circle(x:Float, y:Float, radius:Float):Void;
+	function Rectangle(x:Float, y:Float, width:Float, height:Float):Void;
+	function StrokeStyle(has:Bool, argb:UInt, thickness:Float):Void;
+	function FillStyle(has:Bool, argb:UInt):Void;
+	function BeginPath():Void;
+	function ClosePath():Void;
+	function Image(image:UIImage, x:Float, y:Float, width:Float, height:Float):Void;
+	function SetPixels(rgba:haxe.io.BytesData, width:Int, height:Int):Void;
 }
 
 @:native("HaxeUICs.UIText")

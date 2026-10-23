@@ -36,7 +36,8 @@ class TestMain {
 			new cases.TestText(),
 			new cases.TestImages(),
 			new cases.TestMouse(),
-			new cases.TestTextInput()
+			new cases.TestTextInput(),
+			new cases.TestGraphics()
 		];
 	}
 }
