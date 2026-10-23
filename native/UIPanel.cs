@@ -50,6 +50,19 @@ namespace HaxeUICs
 
         public int ChildCount => Children.Count - _contentCount;
 
+        EventRouter _events;
+
+        /// <summary>Forwards the input kinds in the mask (EventKind flags) to the listener; 0 stops it.</summary>
+        public void Listen(int kinds, IPanelListener listener)
+        {
+            if (_events == null)
+            {
+                if (kinds == 0) return;
+                _events = new EventRouter(this, false);
+            }
+            _events.Update(kinds, listener);
+        }
+
         /// <summary>Sets position and size; NaN leaves that value as it was.</summary>
         public void SetBounds(double left, double top, double width, double height)
         {

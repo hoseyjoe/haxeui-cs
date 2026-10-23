@@ -33,7 +33,19 @@ extern class Host {
 	static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic;
 	static function StopTimer(handle:Dynamic):Void;
 	static function CloseWindow():Void;
+	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
+}
+
+@:native("HaxeUICs.IPanelListener")
+extern interface IPanelListener {
+	function OnPointer(kind:Int, screenX:Float, screenY:Float, buttonDown:Bool, ctrl:Bool, shift:Bool, alt:Bool, wheelDelta:Float, nativeEvent:Dynamic):Void;
+	function OnKey(kind:Int, keyCode:Int, ctrl:Bool, shift:Bool, alt:Bool, nativeEvent:Dynamic):Void;
+}
+
+@:native("HaxeUICs.NativeEvents")
+extern class NativeEvents {
+	static function Cancel(nativeEvent:Dynamic):Void;
 }
 
 /** Avalonia's base control: only ever passed back to C#. **/
@@ -66,6 +78,7 @@ extern class UIPanel extends Control {
 	function IndexOfChild(child:Control):Int;
 	function AddContent(content:Control):Void;
 	function ApplyStyle(style:UIStyle):Void;
+	function Listen(kinds:Int, listener:IPanelListener):Void;
 }
 
 @:native("HaxeUICs.UIText")
@@ -152,5 +165,9 @@ extern class HeadlessDriver {
 	static function ResizeWindow(width:Int, height:Int):Void;
 	static function Capture(path:String):Void;
 	static function PixelAt(x:Int, y:Int):Int;
+	static function MouseMove(x:Float, y:Float):Void;
+	static function MouseDown(x:Float, y:Float, button:Int):Void;
+	static function MouseUp(x:Float, y:Float, button:Int):Void;
+	static function Wheel(x:Float, y:Float, deltaY:Float):Void;
 }
 #end

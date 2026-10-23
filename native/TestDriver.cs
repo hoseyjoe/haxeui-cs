@@ -1,6 +1,8 @@
 #if HAXEUI_CS_HEADLESS
 using System.Runtime.InteropServices;
+using Avalonia;
 using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Platform;
 using Avalonia.Threading;
 
@@ -32,6 +34,42 @@ namespace HaxeUICs
             Dispatcher.UIThread.Post(() => stop.Cancel(), DispatcherPriority.SystemIdle);
             Dispatcher.UIThread.MainLoop(stop.Token);
         }
+
+        static RawInputModifiers _buttons;
+
+        public static void MouseMove(double x, double y)
+        {
+            Host.Window.MouseMove(new Point(x, y), _buttons);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        /// <summary>button: 0 left, 1 middle, 2 right.</summary>
+        public static void MouseDown(double x, double y, int button)
+        {
+            Host.Window.MouseDown(new Point(x, y), ToButton(button), _buttons);
+            _buttons |= ToModifier(button);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        public static void MouseUp(double x, double y, int button)
+        {
+            _buttons &= ~ToModifier(button);
+            Host.Window.MouseUp(new Point(x, y), ToButton(button), _buttons);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        /// <summary>deltaY &gt; 0 scrolls up (away from the user), as a wheel does.</summary>
+        public static void Wheel(double x, double y, double deltaY)
+        {
+            Host.Window.MouseWheel(new Point(x, y), new Vector(0, deltaY), _buttons);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        static MouseButton ToButton(int button) =>
+            button == 2 ? MouseButton.Right : button == 1 ? MouseButton.Middle : MouseButton.Left;
+
+        static RawInputModifiers ToModifier(int button) =>
+            button == 2 ? RawInputModifiers.RightMouseButton : button == 1 ? RawInputModifiers.MiddleMouseButton : RawInputModifiers.LeftMouseButton;
 
         public static void ResizeWindow(int width, int height)
         {

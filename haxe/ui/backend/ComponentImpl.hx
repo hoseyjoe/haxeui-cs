@@ -1,6 +1,9 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.cs.EventMapper;
+import haxe.ui.backend.cs.InputListener;
 import haxe.ui.backend.cs.StyleMapper;
+import haxe.ui.events.UIEvent;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.core.Component;
 import haxe.ui.core.ImageDisplay;
@@ -78,6 +81,27 @@ class ComponentImpl extends ComponentBase {
             nativePanel.AddContent(_imageDisplay.imageNative);
         }
         return _imageDisplay;
+    }
+
+    private var _input:InputListener;
+
+    private override function mapEvent(type:String, listener:UIEvent->Void) {
+        if (EventMapper.kindOf(type) == 0) {
+            return;
+        }
+        if (_input == null) {
+            _input = new InputListener();
+        }
+        _input.mapping.set(type, listener);
+        nativePanel.Listen(_input.mask, _input);
+    }
+
+    private override function unmapEvent(type:String, listener:UIEvent->Void) {
+        if (_input == null || !_input.mapping.exists(type)) {
+            return;
+        }
+        _input.mapping.remove(type);
+        nativePanel.Listen(_input.mask, _input);
     }
 
     private override function handleVisibility(show:Bool) {

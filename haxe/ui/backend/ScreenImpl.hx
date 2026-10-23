@@ -1,5 +1,7 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.cs.EventMapper;
+import haxe.ui.backend.cs.InputListener;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.core.Component;
 import haxe.ui.events.UIEvent;
@@ -7,6 +9,7 @@ import haxe.ui.events.UIEvent;
 /** The window's root panel: root components' panels are its children, in z-order. **/
 class ScreenImpl extends ScreenBase {
     private var _mapping:Map<String, UIEvent->Void> = new Map<String, UIEvent->Void>();
+    private var _input:InputListener = new InputListener();
 
     public function new() {
         // ScreenBase declares `rootComponents = []` but has no constructor to run it from.
@@ -37,15 +40,25 @@ class ScreenImpl extends ScreenBase {
     }
 
     private override function supportsEvent(type:String):Bool {
-        return type == UIEvent.RESIZE;
+        return type == UIEvent.RESIZE || EventMapper.kindOf(type) != 0;
     }
 
     private override function mapEvent(type:String, listener:UIEvent->Void) {
-        _mapping.set(type, listener);
+        if (type == UIEvent.RESIZE) {
+            _mapping.set(type, listener);
+            return;
+        }
+        _input.mapping.set(type, listener);
+        Host.ListenScreen(_input.mask, _input);
     }
 
     private override function unmapEvent(type:String, listener:UIEvent->Void) {
-        _mapping.remove(type);
+        if (type == UIEvent.RESIZE) {
+            _mapping.remove(type);
+            return;
+        }
+        _input.mapping.remove(type);
+        Host.ListenScreen(_input.mask, _input);
     }
 
     /** The window's client area changed size. **/

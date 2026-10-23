@@ -34,5 +34,42 @@ class TestDriver {
 	public static function pixel(x:Int, y:Int):Int {
 		return HeadlessDriver.PixelAt(x, y);
 	}
+
+	// Pointer input, in window coordinates. Buttons: 0 left, 1 middle, 2 right.
+
+	public static function mouseMove(x:Float, y:Float):Void {
+		HeadlessDriver.MouseMove(x, y);
+	}
+
+	public static function mouseDown(x:Float, y:Float, button:Int = 0):Void {
+		HeadlessDriver.MouseDown(x, y, button);
+	}
+
+	public static function mouseUp(x:Float, y:Float, button:Int = 0):Void {
+		HeadlessDriver.MouseUp(x, y, button);
+	}
+
+	/** Moves there, presses and releases the left button, and lets the effects run. **/
+	public static function click(x:Float, y:Float):Void {
+		mouseMove(x, y);
+		mouseDown(x, y);
+		pump();
+		mouseUp(x, y);
+		pump();
+	}
+
+	/** deltaY > 0 scrolls up, deltaY < 0 down. **/
+	public static function wheel(x:Float, y:Float, deltaY:Float):Void {
+		HeadlessDriver.Wheel(x, y, deltaY);
+	}
+
+	public static function centerOf(c:haxe.ui.core.Component):{x:Float, y:Float} {
+		return {x: c.screenLeft + c.width / 2, y: c.screenTop + c.height / 2};
+	}
+
+	public static function clickComponent(c:haxe.ui.core.Component):Void {
+		var p = centerOf(c);
+		click(p.x, p.y);
+	}
 }
 #end

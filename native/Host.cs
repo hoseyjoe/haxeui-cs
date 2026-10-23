@@ -69,6 +69,21 @@ namespace HaxeUICs
             }
         }
 
+        static int _screenKinds;
+        static IPanelListener _screenListener;
+        static EventRouter _screenEvents;
+
+        /// <summary>
+        /// Window-wide input for HaxeUI's Screen: hears events even after a component handled them.
+        /// May be called before the window exists (Toolkit.init does); it attaches on creation.
+        /// </summary>
+        public static void ListenScreen(int kinds, IPanelListener listener)
+        {
+            _screenKinds = kinds;
+            _screenListener = listener;
+            _screenEvents?.Update(kinds, listener);
+        }
+
         public static double ClientWidth => Window != null ? Window.ClientSize.Width : _width;
         public static double ClientHeight => Window != null ? Window.ClientSize.Height : _height;
 
@@ -119,6 +134,8 @@ namespace HaxeUICs
                     Listener?.OnResize(window.ClientSize.Width, window.ClientSize.Height);
             };
             window.Closed += (s, e) => Listener?.OnClosed();
+            _screenEvents = new EventRouter(window, true);
+            _screenEvents.Update(_screenKinds, _screenListener);
             Window = window;
             return window;
         }

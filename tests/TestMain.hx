@@ -34,7 +34,8 @@ class TestMain {
 			new cases.TestEventLoop(),
 			new cases.TestStyles(),
 			new cases.TestText(),
-			new cases.TestImages()
+			new cases.TestImages(),
+			new cases.TestMouse()
 		];
 	}
 }
