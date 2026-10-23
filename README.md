@@ -73,6 +73,11 @@ pixels. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a 
 - Canvas fills follow haxeui-heaps (Flash): `fillStyle(c)` begins a fill and `fillStyle(null)`
   ends it, and the path drawn in between is filled even without `beginPath`.
 - Pointer and key events bubble natively, as in the DOM; `event.cancel()` stops a pointer event.
+  Clicks are made from press and release as a browser makes them: every click is a `CLICK`, and
+  the second inside the double-click time is also a `DBL_CLICK`. `pointer-events: none` makes a
+  component and its contents click-through.
+- A `callLater` callback that throws is reported on stderr and the rest of its frame still runs;
+  an `onEnd` that throws is reported and the process exits with code 1.
 - Removing (with dispose) a component that has HaxeUI focus quietly drops that focus
   (haxeui-core-joe, `#if cs`).
 
