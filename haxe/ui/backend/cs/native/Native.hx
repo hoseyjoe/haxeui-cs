@@ -223,6 +223,7 @@ extern class UIStyle {
 	var BorderRightColor:UInt;
 	var BorderBottomColor:UInt;
 	var BorderOpacity:Float;
+	var BorderStyle:Int;
 
 	var RadiusTL:Float;
 	var RadiusTR:Float;

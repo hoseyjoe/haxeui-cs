@@ -18,6 +18,8 @@ namespace HaxeUICs
         public double BorderLeft, BorderTop, BorderRight, BorderBottom;
         public uint BorderLeftColor, BorderTopColor, BorderRightColor, BorderBottomColor;
         public double BorderOpacity = 1;
+        /// <summary>0 solid, 1 dashed, 2 dotted.</summary>
+        public int BorderStyle;
 
         public double RadiusTL, RadiusTR, RadiusBR, RadiusBL;
 
@@ -87,6 +89,19 @@ namespace HaxeUICs
         internal IBrush BorderBrush(uint color)
         {
             return color == 0 ? null : new SolidColorBrush(Color.FromUInt32(color), BorderOpacity);
+        }
+
+        /// <summary>The pen for a border line of this width, dashed or dotted as BorderStyle says.</summary>
+        internal Pen BorderPen(IBrush brush, double width)
+        {
+            switch (BorderStyle)
+            {
+                // Dash lengths are in multiples of the pen's width: dashes of 3 with gaps of 3, as
+                // browsers draw them; dots are round caps on zero-length dashes, a dot apart.
+                case 1: return new Pen(brush, width, new DashStyle(new double[] { 3, 3 }, 0), PenLineCap.Flat);
+                case 2: return new Pen(brush, width, new DashStyle(new double[] { 0, 2 }, 0), PenLineCap.Round);
+                default: return new Pen(brush, width);
+            }
         }
 
         internal bool HasRadius => RadiusTL > 0 || RadiusTR > 0 || RadiusBR > 0 || RadiusBL > 0;

@@ -276,9 +276,18 @@ namespace HaxeUICs
                 // A pen is centred on its path: inset by half its width so the border sits inside.
                 var inner = bounds.Deflate(size / 2);
                 var half = size / 2;
-                context.DrawRectangle(null, new Pen(brush, size), new RoundedRect(inner,
+                context.DrawRectangle(null, s.BorderPen(brush, size), new RoundedRect(inner,
                     System.Math.Max(0, s.RadiusTL - half), System.Math.Max(0, s.RadiusTR - half),
                     System.Math.Max(0, s.RadiusBR - half), System.Math.Max(0, s.RadiusBL - half)));
+                return;
+            }
+            if (s.BorderStyle != 0)
+            {
+                // Dashed or dotted sides are stroked along each side's centre line.
+                StrokeSide(context, s, s.BorderTopColor, s.BorderTop, new Point(0, s.BorderTop / 2), new Point(bounds.Width, s.BorderTop / 2));
+                StrokeSide(context, s, s.BorderRightColor, s.BorderRight, new Point(bounds.Width - s.BorderRight / 2, 0), new Point(bounds.Width - s.BorderRight / 2, bounds.Height));
+                StrokeSide(context, s, s.BorderBottomColor, s.BorderBottom, new Point(bounds.Width, bounds.Height - s.BorderBottom / 2), new Point(0, bounds.Height - s.BorderBottom / 2));
+                StrokeSide(context, s, s.BorderLeftColor, s.BorderLeft, new Point(s.BorderLeft / 2, bounds.Height), new Point(s.BorderLeft / 2, 0));
                 return;
             }
             if (!s.HasRadius)
@@ -306,6 +315,12 @@ namespace HaxeUICs
             FillShare(context, s.BorderBrush(s.BorderRightColor), r, ring, new Point(w, 0), new Point(w, h), new Point(w - r, h - b), new Point(w - r, t));
             FillShare(context, s.BorderBrush(s.BorderBottomColor), b, ring, new Point(w, h), new Point(0, h), new Point(l, h - b), new Point(w - r, h - b));
             FillShare(context, s.BorderBrush(s.BorderLeftColor), l, ring, new Point(0, h), new Point(0, 0), new Point(l, t), new Point(l, h - b));
+        }
+
+        static void StrokeSide(DrawingContext context, UIStyle s, uint color, double size, Point from, Point to)
+        {
+            var brush = s.BorderBrush(color);
+            if (brush != null && size > 0) context.DrawLine(s.BorderPen(brush, size), from, to);
         }
 
         static void FillSide(DrawingContext context, IBrush brush, Rect side)

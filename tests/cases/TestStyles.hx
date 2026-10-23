@@ -39,6 +39,25 @@ class TestStyles extends utest.Test {
 		Assert.equals(0xFF000000, TestDriver.pixel(0, 30), "left side");
 	}
 
+	function testDashedBorderHasGaps() {
+		show("background-color: #FFFFFF; border: 2px dashed #000000;");
+		var row = TestDriver.pixels(4, 1, 92, 1);
+		Assert.isTrue(Pixels.countWhere(row, p -> p == 0xFF000000) > 10, "dashes");
+		Assert.isTrue(Pixels.countWhere(row, p -> Pixels.bright(p) > 700) > 10, "gaps");
+	}
+
+	function testDottedPerSideBorder() {
+		show("background-color: #FFFFFF; border-left-size: 2px; border-left-color: #000000; border-style: dotted;");
+		var col = TestDriver.pixels(1, 4, 1, 52);
+		Assert.isTrue(Pixels.countWhere(col, p -> Pixels.bright(p) < 200) > 5, "dots");
+		Assert.isTrue(Pixels.countWhere(col, p -> Pixels.bright(p) > 700) > 10, "gaps");
+	}
+
+	function testSolidBorderHasNoGaps() {
+		show("background-color: #FFFFFF; border: 2px solid #000000;");
+		Assert.equals(0, Pixels.countWhere(TestDriver.pixels(4, 1, 92, 1), p -> Pixels.bright(p) > 700));
+	}
+
 	function testBorderRadius() {
 		show("background-color: #FF0000; border-radius: 20px;");
 		Assert.notEquals(0xFFFF0000, TestDriver.pixel(1, 1));

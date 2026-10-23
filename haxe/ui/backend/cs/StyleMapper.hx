@@ -23,6 +23,11 @@ class StyleMapper {
 		into.BorderRightColor = color(style.borderRightColor != null ? style.borderRightColor : style.borderColor);
 		into.BorderBottomColor = color(style.borderBottomColor != null ? style.borderBottomColor : style.borderColor);
 		into.BorderOpacity = or(style.borderOpacity, 1);
+		into.BorderStyle = switch (style.borderStyle) {
+			case "dashed": 1;
+			case "dotted": 2;
+			case _: 0;
+		};
 
 		var radius = or(style.borderRadius, 0);
 		into.RadiusTL = or(style.borderRadiusTopLeft, radius);
