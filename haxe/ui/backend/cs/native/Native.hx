@@ -119,6 +119,46 @@ extern class UIImageView extends Control {
 	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
 }
 
+@:native("HaxeUICs.ITextInputListener")
+extern interface ITextInputListener {
+	function OnTextChanged():Void;
+	function OnScrollChanged():Void;
+	function OnFocus(focused:Bool):Void;
+}
+
+@:native("HaxeUICs.UITextInput")
+extern class UITextInput extends Control {
+	function new():Void;
+
+	var Text(default, null):String;
+	var CaretIndex:Int;
+	var SelectionStart:Int;
+	var SelectionEnd:Int;
+	var IsEnabled:Bool;
+	var IsPassword(default, null):Bool;
+	var IsFocused(default, null):Bool;
+	var ScrollX(default, null):Float;
+	var ScrollY(default, null):Float;
+	var ExtentWidth(default, null):Float;
+	var ExtentHeight(default, null):Float;
+	var ViewportWidth(default, null):Float;
+	var ViewportHeight(default, null):Float;
+
+	function SetListener(listener:ITextInputListener):Void;
+	function SetText(text:String):Void;
+	function SetMultiline(multiline:Bool):Void;
+	function SetWordWrap(wrap:Bool):Void;
+	function SetPassword(password:Bool):Void;
+	function SetSelectionColor(argb:UInt):Void;
+	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool):Void;
+	function SetColor(argb:UInt):Void;
+	function SetAlign(align:Int):Void;
+	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
+	function SetScroll(x:Float, y:Float):Void;
+	function Focus():Bool;
+	function Blur():Void;
+}
+
 @:native("HaxeUICs.UIStyle")
 extern class UIStyle {
 	function new():Void;
@@ -169,5 +209,7 @@ extern class HeadlessDriver {
 	static function MouseDown(x:Float, y:Float, button:Int):Void;
 	static function MouseUp(x:Float, y:Float, button:Int):Void;
 	static function Wheel(x:Float, y:Float, deltaY:Float):Void;
+	static function KeyStroke(name:String, ctrl:Bool, shift:Bool):Void;
+	static function TypeText(text:String):Void;
 }
 #end

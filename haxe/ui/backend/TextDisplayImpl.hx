@@ -24,7 +24,7 @@ class TextDisplayImpl extends TextBase {
         var measureTextRequired = false;
         if (_wordWrap != _displayData.wordWrap) {
             _wordWrap = _displayData.wordWrap;
-            textNative.SetWrap(_displayData.wordWrap);
+            applyWrap(_displayData.wordWrap);
             measureTextRequired = true;
         }
 
@@ -37,18 +37,34 @@ class TextDisplayImpl extends TextBase {
             var key = '$family|$size|$bold|$italic|$underline';
             if (key != _fontKey) {
                 _fontKey = key;
-                textNative.SetFont(family, size, bold, italic, underline);
+                applyFont(family, size, bold, italic, underline);
                 measureTextRequired = true;
             }
             var color = _textStyle.color != null ? _textStyle.color : 0x000000;
-            textNative.SetColor(cast(0xFF000000 | (color & 0xFFFFFF)));
-            textNative.SetAlign(switch (_textStyle.textAlign) {
+            applyColor(cast(0xFF000000 | (color & 0xFFFFFF)));
+            applyAlign(switch (_textStyle.textAlign) {
                 case "center": 1;
                 case "right": 2;
                 case _: 0;
             });
         }
         return measureTextRequired;
+    }
+
+    private function applyWrap(wrap:Bool) {
+        textNative.SetWrap(wrap);
+    }
+
+    private function applyFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool) {
+        textNative.SetFont(family, size, bold, italic, underline);
+    }
+
+    private function applyColor(argb:UInt) {
+        textNative.SetColor(argb);
+    }
+
+    private function applyAlign(align:Int) {
+        textNative.SetAlign(align);
     }
 
     private override function validatePosition() {

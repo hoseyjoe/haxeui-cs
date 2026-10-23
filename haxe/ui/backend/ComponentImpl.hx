@@ -8,6 +8,7 @@ import haxe.ui.backend.cs.native.Native;
 import haxe.ui.core.Component;
 import haxe.ui.core.ImageDisplay;
 import haxe.ui.core.TextDisplay;
+import haxe.ui.core.TextInput;
 import haxe.ui.util.Variant;
 import haxe.ui.geom.Rectangle;
 import haxe.ui.styles.Style;
@@ -48,6 +49,14 @@ class ComponentImpl extends ComponentBase {
         StyleMapper.toNative(style, _nativeStyle);
         applyBackgroundImage(style.backgroundImage);
         nativePanel.ApplyStyle(_nativeStyle);
+    }
+
+    public override function createTextInput(text:String = null):TextInput {
+        if (_textInput == null) {
+            super.createTextInput(text);
+            nativePanel.AddContent(_textInput.inputNative);
+        }
+        return _textInput;
     }
 
     private var _backgroundImageId:String = null;

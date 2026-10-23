@@ -65,6 +65,25 @@ namespace HaxeUICs
             Dispatcher.UIThread.RunJobs();
         }
 
+        /// <summary>Presses and releases a key, named as Avalonia's Key enum ("Enter", "Tab", "A").</summary>
+        public static void KeyStroke(string name, bool ctrl, bool shift)
+        {
+            var key = (Key)System.Enum.Parse(typeof(Key), name);
+            System.Enum.TryParse<PhysicalKey>(name, out var physical);
+            var modifiers = (ctrl ? RawInputModifiers.Control : RawInputModifiers.None) | (shift ? RawInputModifiers.Shift : RawInputModifiers.None);
+            Host.Window.KeyPress(key, modifiers, physical, null);
+            Dispatcher.UIThread.RunJobs();
+            Host.Window.KeyRelease(key, modifiers, physical, null);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        /// <summary>Text arriving as typed input (what a keyboard layout produces).</summary>
+        public static void TypeText(string text)
+        {
+            Host.Window.KeyTextInput(text);
+            Dispatcher.UIThread.RunJobs();
+        }
+
         static MouseButton ToButton(int button) =>
             button == 2 ? MouseButton.Right : button == 1 ? MouseButton.Middle : MouseButton.Left;
 

@@ -72,8 +72,9 @@ namespace HaxeUICs
             _target.AddHandler(InputElement.TappedEvent, (s, e) => Pointer(EventKind.CLICK, e), bubble, _handledEventsToo);
             _target.AddHandler(InputElement.DoubleTappedEvent, (s, e) => Pointer(EventKind.DBL_CLICK, e), bubble, _handledEventsToo);
             _target.AddHandler(InputElement.RightTappedEvent, (s, e) => Pointer(EventKind.RIGHT_CLICK, e), bubble, _handledEventsToo);
-            _target.AddHandler(InputElement.KeyDownEvent, (s, e) => Key(EventKind.KEY_DOWN, e), bubble, _handledEventsToo);
-            _target.AddHandler(InputElement.KeyUpEvent, (s, e) => Key(EventKind.KEY_UP, e), bubble, _handledEventsToo);
+            // Keys always bubble on (a TextBox handles most of them itself), as they do in the DOM.
+            _target.AddHandler(InputElement.KeyDownEvent, (s, e) => Key(EventKind.KEY_DOWN, e), bubble, true);
+            _target.AddHandler(InputElement.KeyUpEvent, (s, e) => Key(EventKind.KEY_UP, e), bubble, true);
         }
 
         void Pointer(int kind, PointerEventArgs e, double wheelDelta = 0)

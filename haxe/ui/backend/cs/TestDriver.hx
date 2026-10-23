@@ -63,6 +63,16 @@ class TestDriver {
 		HeadlessDriver.Wheel(x, y, deltaY);
 	}
 
+	/** Presses and releases a key named as Avalonia's Key enum: "Enter", "Tab", "A". **/
+	public static function key(name:String, ctrl:Bool = false, shift:Bool = false):Void {
+		HeadlessDriver.KeyStroke(name, ctrl, shift);
+	}
+
+	/** Text arriving as typed input, into whatever has keyboard focus. **/
+	public static function type(text:String):Void {
+		HeadlessDriver.TypeText(text);
+	}
+
 	public static function centerOf(c:haxe.ui.core.Component):{x:Float, y:Float} {
 		return {x: c.screenLeft + c.width / 2, y: c.screenTop + c.height / 2};
 	}
