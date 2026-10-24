@@ -107,6 +107,7 @@ namespace HaxeUICs
             _listener.OnPointer(kind, position.X, position.Y, properties.IsLeftButtonPressed,
                 KeyCodes.IsCtrl((int)modifiers, System.OperatingSystem.IsMacOS()), shift || modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt),
                 System.Math.Max(-1, System.Math.Min(1, wheelDelta)), nativeEvent ?? e);
+            Host.WakeEventsPump(); // a handler may have started a haxe.Timer
         }
 
         /// <summary>
@@ -171,6 +172,7 @@ namespace HaxeUICs
             var modifiers = e.KeyModifiers;
             _listener.OnKey(kind, KeyCodes.FromKey(e.Key),
                 KeyCodes.IsCtrl((int)modifiers, System.OperatingSystem.IsMacOS()), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt), e);
+            Host.WakeEventsPump();
         }
 
         void KeyPress(TextInputEventArgs e)

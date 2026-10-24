@@ -54,10 +54,22 @@ class AppImpl extends AppBase {
     }
 }
 
-private class HostListener implements IHostListener {
-    /** How often the desktop drives Haxe's own main-thread events (haxe.Timer, haxe.MainLoop). **/
-    static inline var HAXE_EVENTS_INTERVAL_MS = 10;
+/** Haxe's main-thread event loop (haxe.Timer, haxe.MainLoop), run when the host gives it a turn. **/
+private class EventsPump implements IEventsPump {
+    public function new() {
+    }
 
+    public function Pump():Float {
+        return switch (sys.thread.Thread.current().events.progress()) {
+            case Now: 0;
+            case At(time): Math.max(0, (time - haxe.Timer.stamp()) * 1000);
+            case AnyTime(time) if (time != null): Math.max(0, (time - haxe.Timer.stamp()) * 1000);
+            case _: -1; // nothing scheduled
+        }
+    }
+}
+
+private class HostListener implements IHostListener {
     var onReady:Void->Void;
     var onEnd:Void->Void;
     var pumpHaxeEvents:Bool;
@@ -72,7 +84,7 @@ private class HostListener implements IHostListener {
         // Avalonia's loop owns the main thread, so Haxe's event loop never gets
         // a turn unless the dispatcher gives it one.
         if (pumpHaxeEvents) {
-            Host.StartTimer(HAXE_EVENTS_INTERVAL_MS, Callbacks.callback(() -> sys.thread.Thread.current().events.progress()));
+            Host.StartEventsPump(new EventsPump());
         }
         onReady();
     }

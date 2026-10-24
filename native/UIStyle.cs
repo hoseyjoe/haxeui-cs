@@ -72,7 +72,24 @@ namespace HaxeUICs
         /// <summary>The colour filter in force while this style is painted (set by UIPainter), or null.</summary>
         internal float[] PaintMatrix;
 
-        internal IBrush BackgroundBrush() => ColorMatrix.Brush(UnfilteredBackgroundBrush(), PaintMatrix);
+        // Brushes are kept between renders and made again only when what they show changes.
+        IBrush _background;
+        bool _backgroundMade;
+        (uint, uint, int, double, float[]) _backgroundKey;
+        readonly System.Collections.Generic.Dictionary<(uint, double, float[]), IBrush> _borders =
+            new System.Collections.Generic.Dictionary<(uint, double, float[]), IBrush>();
+
+        internal IBrush BackgroundBrush()
+        {
+            var key = (BackgroundColor, BackgroundColorEnd, GradientStyle, BackgroundOpacity, PaintMatrix);
+            if (!_backgroundMade || !key.Equals(_backgroundKey))
+            {
+                _background = ColorMatrix.Brush(UnfilteredBackgroundBrush(), PaintMatrix);
+                _backgroundKey = key;
+                _backgroundMade = true;
+            }
+            return _background;
+        }
 
         /// <summary>The shadows, their colours through the paint-time colour filter.</summary>
         internal BoxShadows PaintShadows()
@@ -105,7 +122,15 @@ namespace HaxeUICs
 
         internal IBrush BorderBrush(uint color)
         {
-            return color == 0 ? null : ColorMatrix.Brush(new SolidColorBrush(Color.FromUInt32(color), BorderOpacity), PaintMatrix);
+            if (color == 0) return null;
+            var key = (color, BorderOpacity, PaintMatrix);
+            if (!_borders.TryGetValue(key, out var brush))
+            {
+                if (_borders.Count >= 8) _borders.Clear(); // a style shows at most four border colours
+                brush = ColorMatrix.Brush(new SolidColorBrush(Color.FromUInt32(color), BorderOpacity), PaintMatrix);
+                _borders[key] = brush;
+            }
+            return brush;
         }
 
         /// <summary>The pen for a border line of this width, dashed or dotted as BorderStyle says.</summary>

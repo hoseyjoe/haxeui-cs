@@ -19,6 +19,12 @@ namespace HaxeUICs
         void Invoke();
     }
 
+    /// <summary>Runs Haxe's own event loop once; answers how long until it next needs to (ms, -1: no idea).</summary>
+    public interface IEventsPump
+    {
+        double Pump();
+    }
+
     /// <summary>What the host tells the HaxeUI side about the window's life.</summary>
     public interface IHostListener
     {
@@ -210,7 +216,11 @@ namespace HaxeUICs
 
         public static void Post(ICallback callback)
         {
-            Dispatcher.UIThread.Post(() => callback.Invoke());
+            Dispatcher.UIThread.Post(() =>
+            {
+                callback.Invoke();
+                WakeEventsPump();
+            });
         }
 
         /// <summary>
@@ -247,11 +257,51 @@ namespace HaxeUICs
                 try { callback.Invoke(); }
                 catch (System.Exception e) { System.Console.Error.WriteLine("haxeui-cs: a callLater threw: " + e); }
             }
+            WakeEventsPump();
+        }
+
+        // Haxe's event loop (haxe.Timer, haxe.MainLoop, results posted from other threads) gets a
+        // turn when it says it next needs one, and straight after anything that may have given it
+        // work (a HaxeUI frame, input, a posted callback). With nothing scheduled it is polled
+        // slowly, for work posted from other threads: an idle app is not woken 100 times a second.
+        const double IdleEventsPollMs = 250;
+        static IEventsPump _eventsPump;
+        static DispatcherTimer _eventsTimer;
+
+        /// <summary>How often the Haxe event loop has been pumped (for the idle check).</summary>
+        public static int EventsPumps { get; private set; }
+
+        public static void StartEventsPump(IEventsPump pump)
+        {
+            _eventsPump = pump;
+            _eventsTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(1), DispatcherPriority.Normal, (s, e) => PumpEvents());
+            _eventsTimer.Start();
+        }
+
+        static void PumpEvents()
+        {
+            EventsPumps++;
+            var next = _eventsPump.Pump();
+            var wait = next < 0 ? IdleEventsPollMs : System.Math.Clamp(next, 1, IdleEventsPollMs);
+            _eventsTimer.Interval = TimeSpan.FromMilliseconds(wait);
+        }
+
+        /// <summary>Gives the Haxe event loop a turn as soon as the dispatcher is free.</summary>
+        internal static void WakeEventsPump()
+        {
+            if (_eventsTimer == null || _eventsTimer.Interval.TotalMilliseconds <= 1) return;
+            _eventsTimer.Stop();
+            _eventsTimer.Interval = TimeSpan.FromMilliseconds(1);
+            _eventsTimer.Start();
         }
 
         public static object StartTimer(int milliseconds, ICallback callback)
         {
-            var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(System.Math.Max(1, milliseconds)), DispatcherPriority.Normal, (s, e) => callback.Invoke());
+            var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(System.Math.Max(1, milliseconds)), DispatcherPriority.Normal, (s, e) =>
+            {
+                callback.Invoke();
+                WakeEventsPump();
+            });
             timer.Start();
             return timer;
         }

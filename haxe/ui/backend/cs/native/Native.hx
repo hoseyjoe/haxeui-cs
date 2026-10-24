@@ -10,6 +10,11 @@ extern interface ICallback {
 	function Invoke():Void;
 }
 
+@:native("HaxeUICs.IEventsPump")
+extern interface IEventsPump {
+	function Pump():Float;
+}
+
 @:native("HaxeUICs.IHostListener")
 extern interface IHostListener {
 	function OnReady():Void;
@@ -40,6 +45,8 @@ extern class Host {
 	static function Exit(code:Int):Void;
 	static function SetScreenCursor(css:String):Void;
 	static function SetScale(scaleX:Float, scaleY:Float):Void;
+	static function StartEventsPump(pump:IEventsPump):Void;
+	static var EventsPumps(default, null):Int;
 	static function ConfigureWindow(resizable:Bool, minWidth:Int, minHeight:Int, maximized:Bool):Void;
 	static function SetIcon(image:haxe.io.BytesData):Void;
 	static var HasIcon(default, null):Bool;
