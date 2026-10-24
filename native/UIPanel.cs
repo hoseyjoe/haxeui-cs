@@ -309,7 +309,7 @@ namespace HaxeUICs
                     context.FillRectangle(background, bounds);
             }
 
-            if (s.BackgroundImage != null) RenderBackgroundImage(context, s, bounds, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
+            if (s.BackgroundImage != null) RenderBackgroundImage(context, s, bounds, UIImage.DeviceScale(this));
 
             RenderBorder(context, s, bounds);
         }

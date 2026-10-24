@@ -114,9 +114,12 @@ namespace HaxeUICs
         /// A minimal HTTP/1.0 file server on 127.0.0.1 for tests: GET /name serves root/name, anything
         /// else is a 404. Plain TCP, so it needs no URL reservation the way HttpListener does on Windows.
         /// </summary>
-        public static int StartHttpServer(string root)
+        public static int HttpHits { get; private set; }
+
+        public static int StartHttpServer(string root, int delayMs)
         {
             StopHttpServer();
+            HttpHits = 0;
             var dir = System.IO.Path.GetFullPath(root);
             var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
             listener.Start();
@@ -128,7 +131,12 @@ namespace HaxeUICs
                     System.Net.Sockets.TcpClient client;
                     try { client = await listener.AcceptTcpClientAsync(); }
                     catch { return; } // stopped
-                    _ = System.Threading.Tasks.Task.Run(() => Serve(client, dir));
+                    HttpHits++;
+                    _ = System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        if (delayMs > 0) await System.Threading.Tasks.Task.Delay(delayMs);
+                        Serve(client, dir);
+                    });
                 }
             });
             return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;

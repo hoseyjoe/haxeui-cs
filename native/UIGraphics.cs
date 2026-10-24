@@ -83,6 +83,7 @@ namespace HaxeUICs
                 System.Runtime.InteropServices.Marshal.WriteByte(at + 2, (byte)argb);
                 System.Runtime.InteropServices.Marshal.WriteByte(at + 3, (byte)(argb >> 24));
             }
+            ColorMatrix.Forget(_pixels); // written in place: any filtered copy is out of date
             Changed?.Invoke();
         }
 

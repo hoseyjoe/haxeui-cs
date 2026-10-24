@@ -180,6 +180,9 @@ extern class UIImage {
 	var Height(default, null):Int;
 
 	static function FromBytes(data:haxe.io.BytesData):UIImage;
+
+	var CachedSizes(default, null):Int;
+	function BitmapFor(pixelWidth:Float, pixelHeight:Float):Dynamic;
 }
 
 @:native("HaxeUICs.UIImageView")
@@ -302,7 +305,8 @@ extern class HeadlessDriver {
 	static function Wheel(x:Float, y:Float, deltaY:Float, deltaX:Float):Void;
 	static function KeyStroke(name:String, ctrl:Bool, shift:Bool):Void;
 	static function TypeText(text:String):Void;
-	static function StartHttpServer(root:String):Int;
+	static function StartHttpServer(root:String, delayMs:Int):Int;
+	static var HttpHits(default, null):Int;
 	static function StopHttpServer():Void;
 }
 #end

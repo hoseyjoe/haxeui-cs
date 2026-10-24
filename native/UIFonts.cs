@@ -61,7 +61,10 @@ namespace HaxeUICs
                 _families[full] = null;
                 return null;
             }
-            return FromBytes(full, File.ReadAllBytes(full));
+            byte[] data;
+            try { data = File.ReadAllBytes(full); }
+            catch (Exception) { return null; } // locked or not ours to read: the default family (not remembered, it may free up)
+            return FromBytes(full, data);
         }
 
         /// <summary>Underline, strikethrough, both or neither (null).</summary>

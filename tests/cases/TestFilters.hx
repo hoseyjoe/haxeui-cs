@@ -173,6 +173,27 @@ class TestFilters extends utest.Test {
 		Assert.isTrue(near(fromCanvas, gray(fromCanvas), 3) && bright(fromCanvas) < 600, 'canvas ${StringTools.hex(fromCanvas, 8)}');
 	}
 
+	function testSetPixelUnderColourFilter() {
+		// each new pixel shows through the filter, not just the first
+		var parent = new Absolute();
+		parent.width = 40;
+		parent.height = 40;
+		parent.styleString = "filter: grayscale;";
+		var canvas = new Canvas();
+		canvas.width = 40;
+		canvas.height = 40;
+		parent.addComponent(canvas);
+		Screen.instance.addComponent(parent);
+		TestDriver.pump(3);
+		canvas.componentGraphics.setPixel(5, 5, 0xFF0000);
+		TestDriver.pump(3);
+		Assert.isTrue(bright(TestDriver.pixel(5, 5)) < 600, "the first pixel, filtered");
+		canvas.componentGraphics.setPixel(10, 5, 0xFF0000);
+		TestDriver.pump(3);
+		var p = TestDriver.pixel(10, 5);
+		Assert.isTrue(bright(p) < 600 && near(p, gray(p), 3), 'the second pixel: ${StringTools.hex(p, 8)}');
+	}
+
 	function testColourFilterClears() {
 		var b = box("background-color: #FF0000; filter: grayscale;");
 		b.styleString = "border-size: 0px; padding: 0px; background-color: #FF0000; filter: none;";

@@ -70,6 +70,28 @@ class TestScale extends utest.Test {
 		Assert.isTrue(TestDriver.pixel(x, y) != 0xFFFFFFFF, 'popup border at ($x, $y)');
 	}
 
+	function testSvgSharpWhenScaled() {
+		// red left half, blue right half: drawn for the scaled size, the edge stays a clean step
+		Toolkit.scale = 2;
+		var image = new haxe.ui.components.Image();
+		image.resource = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="5" height="10" fill="#ff0000"/><rect x="5" width="5" height="10" fill="#0000ff"/></svg>';
+		image.width = 20;
+		image.height = 20;
+		Screen.instance.addComponent(image);
+		TestDriver.pump(3);
+		var left = TestDriver.pixel(19, 20), right = TestDriver.pixel(20, 20);
+		Assert.isTrue(close(left, 0xFFFF0000) && close(right, 0xFF0000FF), 'edge ${StringTools.hex(left, 8)} | ${StringTools.hex(right, 8)}');
+	}
+
+	static function close(a:Int, b:Int):Bool {
+		for (shift in [16, 8, 0]) {
+			if (Math.abs(((a >> shift) & 0xFF) - ((b >> shift) & 0xFF)) > 8) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	static function redBox(left:Float, top:Float, w:Float, h:Float):Box {
 		var b = new Box();
 		b.left = left;

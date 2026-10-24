@@ -72,6 +72,12 @@ namespace HaxeUICs
 
         static readonly ConditionalWeakTable<Bitmap, Dictionary<string, Bitmap>> _filtered = new ConditionalWeakTable<Bitmap, Dictionary<string, Bitmap>>();
 
+        /// <summary>Forgets the filtered copies of a bitmap whose pixels were changed in place.</summary>
+        public static void Forget(Bitmap source)
+        {
+            if (source != null) _filtered.Remove(source);
+        }
+
         /// <summary>The bitmap with every pixel mapped (cached per bitmap and matrix); itself with no matrix.</summary>
         public static Bitmap Filter(Bitmap source, float[] m)
         {

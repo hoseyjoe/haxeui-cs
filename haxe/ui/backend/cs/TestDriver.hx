@@ -79,9 +79,17 @@ class TestDriver {
 		HeadlessDriver.TypeText(text);
 	}
 
-	/** Serves the files under `root` on 127.0.0.1 (anything else is a 404); returns the port. **/
-	public static function startHttpServer(root:String):Int {
-		return HeadlessDriver.StartHttpServer(root);
+	/**
+	 * Serves the files under `root` on 127.0.0.1 (anything else is a 404), each answer
+	 * `delayMs` late; returns the port.
+	 */
+	public static function startHttpServer(root:String, delayMs:Int = 0):Int {
+		return HeadlessDriver.StartHttpServer(root, delayMs);
+	}
+
+	/** How many requests the test server has received since it started. **/
+	public static function httpServerHits():Int {
+		return HeadlessDriver.HttpHits;
 	}
 
 	public static function stopHttpServer():Void {

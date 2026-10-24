@@ -15,12 +15,30 @@ namespace HaxeUICs
         readonly Svg.Skia.SKSvg _svg; // owns the picture
         readonly SkiaSharp.SKPicture _picture;
         readonly Dictionary<(int, int), Bitmap> _rasters = new Dictionary<(int, int), Bitmap>();
+        readonly List<(int, int)> _rasterOrder = new List<(int, int)>();
+
+        /// <summary>
+        /// Device pixels per layout unit where a visual draws: the screen's render scaling times any
+        /// scale on the way to the window (Toolkit.scale), so vector images are drawn for that size.
+        /// </summary>
+        public static double DeviceScale(Visual visual)
+        {
+            var top = TopLevel.GetTopLevel(visual);
+            if (top == null) return 1;
+            var scale = top.RenderScaling;
+            var m = visual.TransformToVisual(top);
+            if (m.HasValue) scale *= System.Math.Sqrt(m.Value.M11 * m.Value.M11 + m.Value.M12 * m.Value.M12);
+            return scale;
+        }
 
         /// <summary>The image at its own size (a vector image drawn at its intrinsic size).</summary>
         public Bitmap Bitmap => _bitmap ?? BitmapFor(Width, Height);
         public int Width { get; }
         public int Height { get; }
         public bool IsVector => _picture != null;
+
+        /// <summary>How many drawn sizes of a vector image are kept.</summary>
+        public int CachedSizes => _rasters.Count;
 
         UIImage(Bitmap bitmap)
         {
@@ -85,6 +103,12 @@ namespace HaxeUICs
             var w = System.Math.Clamp((int)System.Math.Ceiling(pixelWidth), 1, 4096);
             var h = System.Math.Clamp((int)System.Math.Ceiling(pixelHeight), 1, 4096);
             if (_rasters.TryGetValue((w, h), out var done)) return done;
+            // A resize asks for a new size every frame: keep only the last two.
+            if (_rasterOrder.Count >= 2)
+            {
+                _rasters.Remove(_rasterOrder[0]);
+                _rasterOrder.RemoveAt(0);
+            }
             var info = new SkiaSharp.SKImageInfo(w, h, SkiaSharp.SKColorType.Bgra8888, SkiaSharp.SKAlphaType.Premul);
             using var raster = new SkiaSharp.SKBitmap(info);
             using (var canvas = new SkiaSharp.SKCanvas(raster))
@@ -103,6 +127,7 @@ namespace HaxeUICs
                     System.Runtime.InteropServices.Marshal.Copy(bytes, row * raster.RowBytes, buffer.Address + row * buffer.RowBytes, w * 4);
             }
             _rasters[(w, h)] = result;
+            _rasterOrder.Add((w, h));
             return result;
         }
     }
@@ -158,7 +183,7 @@ namespace HaxeUICs
         public override void Render(DrawingContext context)
         {
             if (_image == null || W <= 0 || H <= 0) return;
-            var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+            var scale = UIImage.DeviceScale(this);
             var bitmap = ColorMatrix.Filter(_image.BitmapFor(W * scale, H * scale), _matrix);
             context.DrawImage(bitmap, new Rect(0, 0, bitmap.PixelSize.Width, bitmap.PixelSize.Height), new Rect(0, 0, W, H));
         }

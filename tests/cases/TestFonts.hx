@@ -50,6 +50,21 @@ class TestFonts extends utest.Test {
 		Assert.isTrue(width("Hello", "font-name: red4x4.png;") > 0);
 	}
 
+	function testUnreadableFontFallsBack() {
+		// a font file someone else holds open exclusively: the default family, no exception
+		var path = "tests/bin/locked-font.ttf";
+		sys.io.File.copy("tests/assets/DejaVuSansMono.ttf", path);
+		var lock:Dynamic = cs.Syntax.code("new System.IO.FileStream({0}, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None)", path);
+		var w = -1.0;
+		try {
+			w = width("Hello", 'font-name: $path;');
+		} catch (e:Dynamic) {
+			Assert.fail('threw: $e');
+		}
+		cs.Syntax.code("((System.IO.FileStream){0}).Dispose()", lock);
+		Assert.isTrue(w > 0, 'width $w');
+	}
+
 	function testTextInputUsesFont() {
 		var f = new TextField();
 		f.styleString = "font-name: fonts/DejaVuSansMono.ttf; font-size: 20px;";

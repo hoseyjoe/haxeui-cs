@@ -7,6 +7,8 @@ import haxe.ui.constants.ScaleMode;
 import haxe.ui.containers.Box;
 import haxe.ui.core.Screen;
 import haxe.ui.loaders.image.HttpImageLoader;
+import haxe.ui.backend.cs.NativeBytes;
+import haxe.ui.backend.cs.native.Native.UIImage;
 import haxe.ui.backend.cs.TestDriver;
 import utest.Assert;
 
@@ -186,6 +188,30 @@ class TestImages extends utest.Test {
 		Screen.instance.addComponent(img);
 		TestDriver.pump(3);
 		Assert.equals(0xFFFF0000, TestDriver.pixel(20, 20));
+	}
+
+	function testSvgRastersStayBounded() {
+		// a window being resized asks for a new size every frame: old sizes must not pile up
+		var svg = UIImage.FromBytes(NativeBytes.of(haxe.Resource.getBytes("square.svg")));
+		for (size in 10...40) {
+			svg.BitmapFor(size, size);
+		}
+		Assert.isTrue(svg.CachedSizes <= 2, 'sizes kept: ${svg.CachedSizes}');
+	}
+
+	function testHttpImageRemovedWhileLoading() {
+		// the request is really in flight (the server answers late) when the image goes away
+		var port = TestDriver.startHttpServer("tests/bin/http", 600);
+		var image = new Image();
+		image.width = 40;
+		image.height = 40;
+		image.resource = 'http://127.0.0.1:$port/red.png';
+		Screen.instance.addComponent(image);
+		pumpUntil(() -> TestDriver.httpServerHits() > 0, 3000);
+		Assert.equals(1, TestDriver.httpServerHits(), "the request reached the server");
+		Screen.instance.removeComponent(image);
+		pumpFor(1500); // the answer arrives after the removal, and must not throw
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(20, 20), "nothing drawn");
 	}
 
 	function testOddResourceName() {
