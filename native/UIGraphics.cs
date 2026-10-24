@@ -170,7 +170,10 @@ namespace HaxeUICs
                             break;
                         case Op.Image:
                             if (c.Image != null && c.C > 0 && c.D > 0)
-                                _context.DrawImage(ColorMatrix.Filter(c.Image.Bitmap, _matrix), new Rect(0, 0, c.Image.Width, c.Image.Height), new Rect(c.A, c.B, c.C, c.D));
+                                {
+                                var bitmap = ColorMatrix.Filter(c.Image.BitmapFor(c.C, c.D), _matrix);
+                                _context.DrawImage(bitmap, new Rect(0, 0, bitmap.PixelSize.Width, bitmap.PixelSize.Height), new Rect(c.A, c.B, c.C, c.D));
+                            }
                             break;
                     }
                 }

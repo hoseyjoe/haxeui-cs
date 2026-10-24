@@ -309,17 +309,24 @@ namespace HaxeUICs
                     context.FillRectangle(background, bounds);
             }
 
-            if (s.BackgroundImage != null) RenderBackgroundImage(context, s, bounds);
+            if (s.BackgroundImage != null) RenderBackgroundImage(context, s, bounds, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
 
             RenderBorder(context, s, bounds);
         }
 
-        static void RenderBackgroundImage(DrawingContext context, UIStyle s, Rect bounds)
+        static void RenderBackgroundImage(DrawingContext context, UIStyle s, Rect bounds, double renderScale)
         {
-            var image = ColorMatrix.Filter(s.BackgroundImage.Bitmap, s.PaintMatrix);
+            // Source rects are in the image's own units; `ratio` takes them to the bitmap's pixels,
+            // which for an SVG is drawn at the size it shows (stretched backgrounds larger).
+            var picture = s.BackgroundImage;
+            var stretch = picture.IsVector && s.Repeat == 0 && !s.HasSlice
+                ? System.Math.Max(bounds.Width / picture.Width, bounds.Height / picture.Height) : 1;
+            var k = System.Math.Clamp(renderScale * stretch, 1, 64);
+            var image = ColorMatrix.Filter(picture.BitmapFor(picture.Width * k, picture.Height * k), s.PaintMatrix);
+            var ratio = image.PixelSize.Width / (double)picture.Width;
             var source = s.HasClip
                 ? new Rect(s.ClipL, s.ClipT, s.ClipR - s.ClipL, s.ClipB - s.ClipT)
-                : new Rect(0, 0, image.PixelSize.Width, image.PixelSize.Height);
+                : new Rect(0, 0, picture.Width, picture.Height);
             if (source.Width <= 0 || source.Height <= 0) return;
 
             // Within the background's rounded corners, as html5 clips it; pixelated if asked.
@@ -342,8 +349,8 @@ namespace HaxeUICs
                         {
                             var part = new Rect(sx[col], sy[row], sx[col + 1] - sx[col], sy[row + 1] - sy[row]);
                             var into = new Rect(dx[col], dy[row], dx[col + 1] - dx[col], dy[row + 1] - dy[row]);
-                            if (s.Repeat == 1 && (row == 1 || col == 1)) DrawTiled(context, image, part, into, col == 1, row == 1);
-                            else DrawPart(context, image, part, into);
+                            if (s.Repeat == 1 && (row == 1 || col == 1)) DrawTiled(context, image, ratio, part, into, col == 1, row == 1);
+                            else DrawPart(context, image, ratio, part, into);
                         }
                     return;
                 }
@@ -352,13 +359,13 @@ namespace HaxeUICs
                 switch (s.Repeat)
                 {
                     case 1:
-                        DrawTiled(context, image, source, bounds, true, true, size);
+                        DrawTiled(context, image, ratio, source, bounds, true, true, size);
                         break;
                     case 2:
-                        DrawPart(context, image, source, new Rect(0, 0, size.Width, size.Height));
+                        DrawPart(context, image, ratio, source, new Rect(0, 0, size.Width, size.Height));
                         break;
                     default:
-                        DrawPart(context, image, source, bounds);
+                        DrawPart(context, image, ratio, source, bounds);
                         break;
                 }
             }
@@ -381,7 +388,7 @@ namespace HaxeUICs
         }
 
         /// <summary>Repeats a source rect across a destination, along x, y or both; stretched along the other.</summary>
-        static void DrawTiled(DrawingContext context, Bitmap image, Rect source, Rect into, bool alongX, bool alongY, Size? tile = null)
+        static void DrawTiled(DrawingContext context, Bitmap image, double ratio, Rect source, Rect into, bool alongX, bool alongY, Size? tile = null)
         {
             if (into.Width <= 0 || into.Height <= 0) return;
             var step = tile ?? source.Size;
@@ -392,14 +399,14 @@ namespace HaxeUICs
             {
                 for (var y = into.Y; y < into.Bottom; y += stepY)
                     for (var x = into.X; x < into.Right; x += stepX)
-                        DrawPart(context, image, source, new Rect(x, y, stepX, stepY));
+                        DrawPart(context, image, ratio, source, new Rect(x, y, stepX, stepY));
             }
         }
 
-        static void DrawPart(DrawingContext context, Bitmap image, Rect source, Rect destination)
+        static void DrawPart(DrawingContext context, Bitmap image, double ratio, Rect source, Rect destination)
         {
             if (source.Width > 0 && source.Height > 0 && destination.Width > 0 && destination.Height > 0)
-                context.DrawImage(image, source, destination);
+                context.DrawImage(image, new Rect(source.X * ratio, source.Y * ratio, source.Width * ratio, source.Height * ratio), destination);
         }
 
         static void RenderBorder(DrawingContext context, UIStyle s, Rect bounds)

@@ -161,6 +161,22 @@ class TestImages extends utest.Test {
 		Assert.isTrue(p == 0xFF000000 || p == 0xFFFFFFFF, 'no interpolated grey at the cell edge: ${StringTools.hex(p, 8)}');
 	}
 
+	function testSvgImage() {
+		var img = new Image();
+		img.resource = "square.svg";
+		img.width = 40;
+		img.height = 40;
+		Screen.instance.addComponent(img);
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(20, 20));
+		Assert.equals(0xFFFF0000, TestDriver.pixel(38, 38), "drawn at its drawn size");
+	}
+
+	function testSvgBackground() {
+		box100x60('background-image: "square.svg";');
+		Assert.equals(0xFFFF0000, TestDriver.pixel(50, 30));
+	}
+
 	function testOddResourceName() {
 		var info:ImageInfo = null;
 		ToolkitAssets.instance.getImage("odd name & co.png", i -> info = i);

@@ -1,3 +1,5 @@
+using Avalonia.Platform;
+using System.Collections.Generic;
 using System.IO;
 using Avalonia;
 using Avalonia.Controls;
@@ -9,19 +11,37 @@ namespace HaxeUICs
     /// <summary>A decoded image: HaxeUI's ImageData.</summary>
     public class UIImage
     {
-        public Bitmap Bitmap { get; }
-        public int Width => Bitmap.PixelSize.Width;
-        public int Height => Bitmap.PixelSize.Height;
+        readonly Bitmap _bitmap;
+        readonly Svg.Skia.SKSvg _svg; // owns the picture
+        readonly SkiaSharp.SKPicture _picture;
+        readonly Dictionary<(int, int), Bitmap> _rasters = new Dictionary<(int, int), Bitmap>();
+
+        /// <summary>The image at its own size (a vector image drawn at its intrinsic size).</summary>
+        public Bitmap Bitmap => _bitmap ?? BitmapFor(Width, Height);
+        public int Width { get; }
+        public int Height { get; }
+        public bool IsVector => _picture != null;
 
         UIImage(Bitmap bitmap)
         {
-            Bitmap = bitmap;
+            _bitmap = bitmap;
+            Width = bitmap.PixelSize.Width;
+            Height = bitmap.PixelSize.Height;
         }
 
-        /// <summary>Decodes PNG/JPEG/etc. bytes; null when they are not an image.</summary>
+        UIImage(Svg.Skia.SKSvg svg, SkiaSharp.SKPicture picture)
+        {
+            _svg = svg;
+            _picture = picture;
+            Width = System.Math.Max(1, (int)System.Math.Ceiling(picture.CullRect.Width));
+            Height = System.Math.Max(1, (int)System.Math.Ceiling(picture.CullRect.Height));
+        }
+
+        /// <summary>Decodes PNG/JPEG/etc. or SVG bytes; null when they are not an image.</summary>
         public static UIImage FromBytes(byte[] data)
         {
             if (data == null || data.Length == 0) return null;
+            if (LooksLikeSvg(data)) return FromSvg(data);
             try
             {
                 using var stream = new MemoryStream(data);
@@ -31,6 +51,59 @@ namespace HaxeUICs
             {
                 return null;
             }
+        }
+
+        static bool LooksLikeSvg(byte[] data)
+        {
+            var head = System.Text.Encoding.UTF8.GetString(data, 0, System.Math.Min(data.Length, 1024)).TrimStart('\uFEFF', ' ', '\t', '\r', '\n');
+            return head.StartsWith("<svg") || ((head.StartsWith("<?xml") || head.StartsWith("<!")) && head.Contains("<svg"));
+        }
+
+        static UIImage FromSvg(byte[] data)
+        {
+            try
+            {
+                var svg = new Svg.Skia.SKSvg();
+                using var stream = new MemoryStream(data);
+                var picture = svg.Load(stream);
+                if (picture == null || picture.CullRect.Width <= 0 || picture.CullRect.Height <= 0) return null;
+                return new UIImage(svg, picture);
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The bitmap to draw this image at, for about this many device pixels: a raster image is
+        /// itself; a vector one is drawn afresh at that size (and kept), so it stays sharp.
+        /// </summary>
+        public Bitmap BitmapFor(double pixelWidth, double pixelHeight)
+        {
+            if (_bitmap != null) return _bitmap;
+            var w = System.Math.Clamp((int)System.Math.Ceiling(pixelWidth), 1, 4096);
+            var h = System.Math.Clamp((int)System.Math.Ceiling(pixelHeight), 1, 4096);
+            if (_rasters.TryGetValue((w, h), out var done)) return done;
+            var info = new SkiaSharp.SKImageInfo(w, h, SkiaSharp.SKColorType.Bgra8888, SkiaSharp.SKAlphaType.Premul);
+            using var raster = new SkiaSharp.SKBitmap(info);
+            using (var canvas = new SkiaSharp.SKCanvas(raster))
+            {
+                canvas.Clear(SkiaSharp.SKColors.Transparent);
+                var cull = _picture.CullRect;
+                canvas.Scale(w / cull.Width, h / cull.Height);
+                canvas.Translate(-cull.Left, -cull.Top);
+                canvas.DrawPicture(_picture);
+            }
+            var result = new WriteableBitmap(new PixelSize(w, h), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+            using (var buffer = result.Lock())
+            {
+                var bytes = raster.Bytes;
+                for (var row = 0; row < h; row++)
+                    System.Runtime.InteropServices.Marshal.Copy(bytes, row * raster.RowBytes, buffer.Address + row * buffer.RowBytes, w * 4);
+            }
+            _rasters[(w, h)] = result;
+            return result;
         }
     }
 
@@ -85,7 +158,9 @@ namespace HaxeUICs
         public override void Render(DrawingContext context)
         {
             if (_image == null || W <= 0 || H <= 0) return;
-            context.DrawImage(ColorMatrix.Filter(_image.Bitmap, _matrix), new Rect(0, 0, _image.Width, _image.Height), new Rect(0, 0, W, H));
+            var scale = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
+            var bitmap = ColorMatrix.Filter(_image.BitmapFor(W * scale, H * scale), _matrix);
+            context.DrawImage(bitmap, new Rect(0, 0, bitmap.PixelSize.Width, bitmap.PixelSize.Height), new Rect(0, 0, W, H));
         }
     }
 }

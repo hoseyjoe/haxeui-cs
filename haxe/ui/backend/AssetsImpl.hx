@@ -3,6 +3,7 @@ package haxe.ui.backend;
 import haxe.io.Bytes;
 import haxe.ui.assets.FontInfo;
 import haxe.ui.assets.ImageInfo;
+import haxe.ui.backend.cs.NativeBytes;
 import haxe.ui.backend.cs.native.Native.UIFonts;
 import haxe.ui.backend.cs.native.Native.UIImage;
 
@@ -23,7 +24,7 @@ class AssetsImpl extends AssetsBase {
     }
 
     public override function imageFromBytes(bytes:Bytes, callback:ImageInfo->Void) {
-        var image = bytes != null ? UIImage.FromBytes(bytes.getData()) : null;
+        var image = bytes != null ? UIImage.FromBytes(NativeBytes.of(bytes)) : null;
         callback(image != null ? imageInfoFromImageData(image) : null);
     }
 
@@ -58,7 +59,7 @@ class AssetsImpl extends AssetsBase {
 
     private override function getFontFromHaxeResource(resourceId:String, callback:String->FontInfo->Void) {
         var bytes = haxe.Resource.getBytes(resourceId);
-        fontInfo(resourceId, bytes != null ? UIFonts.FromBytes(resourceId, bytes.getData()) : null, function(info) {
+        fontInfo(resourceId, bytes != null ? UIFonts.FromBytes(resourceId, NativeBytes.of(bytes)) : null, function(info) {
             callback(resourceId, info);
         });
     }

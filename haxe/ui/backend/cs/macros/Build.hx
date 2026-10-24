@@ -21,6 +21,7 @@ import sys.io.File;
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
+	static inline var SVG_SKIA_VERSION = "5.1.1";
 
 	public static function configure():Void {
 		Context.onAfterGenerate(afterGenerate);
@@ -59,7 +60,10 @@ class Build {
 			native.push('    <Compile Include="${Path.join([nativeDir, file])}" />');
 		}
 
-		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple"];
+		// Svg.Skia draws SVG images: 5.1.1 is the newest on Avalonia's own SkiaSharp (3.119) and
+		// HarfBuzzSharp (8.3.1.3); later ones need SkiaSharp 4 and would pull it out from under Avalonia.
+		var versions = ["Svg.Skia" => SVG_SKIA_VERSION];
+		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
 		if (headless) {
 			packages.push("Avalonia.Headless");
 		}
@@ -72,7 +76,7 @@ class Build {
 			.split("::DEFINES::").join(headless ? ";HAXEUI_CS_HEADLESS" : "")
 			.split("::NATIVE_DIR::").join(native.join("\n"))
 			.split("::RESOURCES::").join(resources.join("\n"))
-			.split("::PACKAGES::").join([for (p in packages) '    <PackageReference Include="$p" Version="$AVALONIA_VERSION" />'].join("\n"));
+			.split("::PACKAGES::").join([for (p in packages) '    <PackageReference Include="$p" Version="${versions.exists(p) ? versions.get(p) : AVALONIA_VERSION}" />'].join("\n"));
 	}
 
 	/**

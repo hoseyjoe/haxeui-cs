@@ -28,7 +28,7 @@ class AppImpl extends AppBase {
             bytes = sys.io.File.getBytes(value);
         }
         if (bytes != null) {
-            Host.SetIcon(bytes.getData());
+            Host.SetIcon(haxe.ui.backend.cs.NativeBytes.of(bytes));
         }
         return value;
     }

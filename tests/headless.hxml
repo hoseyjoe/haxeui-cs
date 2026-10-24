@@ -10,6 +10,7 @@
 --resource tests/assets/slice9.png@slice9.png
 --resource tests/assets/slice9-pattern.png@slice9-pattern.png
 --resource tests/assets/checker2x2.png@checker2x2.png
+--resource tests/assets/square.svg@square.svg
 # a resource name the generated .csproj must escape
 --resource tests/assets/red4x4.png@odd name & co.png
 --resource tests/assets/DejaVuSansMono.ttf@fonts/DejaVuSansMono.ttf
