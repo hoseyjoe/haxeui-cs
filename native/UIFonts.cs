@@ -76,10 +76,24 @@ namespace HaxeUICs
             return both;
         }
 
+        /// <summary>
+        /// CSS's generic families as installed fonts, each a fallback list (Windows, macOS, Linux)
+        /// Avalonia walks until one is present; the default family is the last resort.
+        /// </summary>
+        static readonly Dictionary<string, FontFamily> Generic = new Dictionary<string, FontFamily>
+        {
+            ["monospace"] = new FontFamily("Consolas, Menlo, DejaVu Sans Mono, Liberation Mono, Courier New"),
+            ["serif"] = new FontFamily("Times New Roman, Times, DejaVu Serif, Liberation Serif"),
+            ["cursive"] = new FontFamily("Comic Sans MS, Apple Chancery, URW Chancery L"),
+            ["sans-serif"] = FontFamily.Default,
+            ["system-ui"] = FontFamily.Default,
+        };
+
         /// <summary>The FontFamily to use for the family HaxeUI names; null or empty is the default.</summary>
         public static FontFamily ResolveFamily(string name)
         {
-            return string.IsNullOrEmpty(name) ? FontFamily.Default : new FontFamily(name);
+            if (string.IsNullOrEmpty(name)) return FontFamily.Default;
+            return Generic.TryGetValue(name.Trim().ToLowerInvariant(), out var generic) ? generic : new FontFamily(name);
         }
     }
 

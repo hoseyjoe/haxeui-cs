@@ -62,6 +62,17 @@ class TestFonts extends utest.Test {
 		Assert.floatEquals(narrow, f.getTextInput().textWidth, 1.0);
 	}
 
+	function testGenericMonospace() {
+		var s = "font-name: monospace; font-size: 20px;";
+		Assert.floatEquals(width("iiiiiiii", s), width("WWWWWWWW", s), 1.0);
+	}
+
+	function testGenericSerifDiffersFromSans() {
+		var serif = width("Hamburgefonstiv", "font-name: serif; font-size: 20px;");
+		var sans = width("Hamburgefonstiv", "font-name: sans-serif; font-size: 20px;");
+		Assert.isTrue(Math.abs(serif - sans) > 2, 'serif $serif, sans-serif $sans');
+	}
+
 	static function width(text:String, style:String):Float {
 		var l = new Label();
 		l.styleString = style;
