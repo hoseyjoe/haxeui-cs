@@ -47,6 +47,7 @@ class TextDisplayImpl extends TextBase {
             applyAlign(switch (_textStyle.textAlign) {
                 case "center": 1;
                 case "right": 2;
+                case "justify": 3;
                 case _: 0;
             });
         }

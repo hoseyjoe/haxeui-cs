@@ -80,6 +80,27 @@ class TestText extends utest.Test {
 		Assert.isTrue(run > 0.6 * f.getTextInput().textWidth, 'run $run of ${f.getTextInput().textWidth}');
 	}
 
+	function testJustify() {
+		var label = new Label();
+		label.width = 200;
+		label.wordWrap = true;
+		label.styleString = "font-size: 13px; color: #000000; text-align: justify;";
+		label.text = "aa bb cc dd ee ff gg hh ii jj kk ll mm nn oo pp";
+		Screen.instance.addComponent(label);
+		TestDriver.pump(3);
+		// the first line reaches the right edge; left-aligned, its end is ragged
+		var px = TestDriver.pixels(0, 0, 200, 14);
+		var rightmost = -1;
+		for (row in 0...14) {
+			for (x in 0...200) {
+				if (Pixels.bright(px[row * 200 + x]) < 500 && x > rightmost) {
+					rightmost = x;
+				}
+			}
+		}
+		Assert.isTrue(rightmost >= 196, 'first line ends at x $rightmost');
+	}
+
 	/** The longest run of dark pixels in any one row of the component. **/
 	static function darkRun(c:Component):Int {
 		var w = Std.int(c.width), h = Std.int(c.height);

@@ -135,10 +135,11 @@ namespace HaxeUICs
             CaretBrush = brush;
         }
 
-        /// <summary>0 left, 1 center, 2 right.</summary>
+        /// <summary>0 left, 1 center, 2 right, 3 justify.</summary>
         public void SetAlign(int align)
         {
-            TextAlignment = align == 1 ? TextAlignment.Center : align == 2 ? TextAlignment.Right : TextAlignment.Left;
+            TextAlignment = align == 1 ? TextAlignment.Center : align == 2 ? TextAlignment.Right
+                : align == 3 ? TextAlignment.Justify : TextAlignment.Left;
         }
 
         /// <summary>A shadow of the glyphs (haxeui-cs's text-shadow); argb 0 removes it.</summary>
