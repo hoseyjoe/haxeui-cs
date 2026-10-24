@@ -149,6 +149,36 @@ class TestMouse extends utest.Test {
 		Assert.equals(0, clicks);
 	}
 
+	function testMiddleClick() {
+		var b = box(100, 60);
+		b.left = 20;
+		b.top = 20;
+		Screen.instance.addComponent(b);
+		TestDriver.pump(2);
+		var n = 0;
+		b.registerEvent(MouseEvent.MIDDLE_CLICK, _ -> n++);
+		var p = TestDriver.centerOf(b);
+		TestDriver.mouseMove(p.x, p.y);
+		TestDriver.mouseDown(p.x, p.y, 1);
+		TestDriver.mouseUp(p.x, p.y, 1);
+		TestDriver.pump();
+		Assert.equals(1, n);
+	}
+
+	function testHorizontalWheelScrollsSideways() {
+		var sv = new ScrollView();
+		sv.width = 150;
+		sv.height = 90;
+		sv.addComponent(box(600, 60));
+		Screen.instance.addComponent(sv);
+		TestDriver.pump(3);
+		var c = TestDriver.centerOf(sv);
+		TestDriver.mouseMove(c.x, c.y);
+		TestDriver.wheel(c.x, c.y, 0, -1);
+		TestDriver.pump(3);
+		Assert.isTrue(sv.hscrollPos > 0, 'hscroll ${sv.hscrollPos}');
+	}
+
 	static function addButton():Button {
 		var button = new Button();
 		button.text = "Press";

@@ -64,9 +64,9 @@ namespace HaxeUICs
         }
 
         /// <summary>deltaY &gt; 0 scrolls up (away from the user), as a wheel does.</summary>
-        public static void Wheel(double x, double y, double deltaY)
+        public static void Wheel(double x, double y, double deltaY, double deltaX)
         {
-            Host.Window.MouseWheel(new Point(x, y), new Vector(0, deltaY), _buttons);
+            Host.Window.MouseWheel(new Point(x, y), new Vector(deltaX, deltaY), _buttons);
             Dispatcher.UIThread.RunJobs();
         }
 

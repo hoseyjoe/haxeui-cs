@@ -1,6 +1,8 @@
 package cases;
 
 import haxe.ui.backend.cs.TestDriver;
+import haxe.ui.backend.cs.native.Native.KeyCodes;
+import haxe.ui.components.TextField;
 import haxe.ui.core.Screen;
 import haxe.ui.events.KeyboardEvent;
 import utest.Assert;
@@ -32,5 +34,26 @@ class TestKeys extends utest.Test {
 			Assert.equals(k.code, codes[0], k.key);
 		}
 		Screen.instance.unregisterEvent(KeyboardEvent.KEY_DOWN, listener);
+	}
+
+	function testKeyPress() {
+		var f = new TextField();
+		Screen.instance.addComponent(f);
+		TestDriver.pump(2);
+		f.focus = true;
+		TestDriver.pump();
+		var codes = [];
+		f.registerEvent(KeyboardEvent.KEY_PRESS, e -> codes.push(e.keyCode));
+		TestDriver.type("a");
+		TestDriver.pump();
+		Assert.same([97], codes);
+		Screen.instance.removeComponent(f);
+	}
+
+	function testCmdIsCtrlOnMac() {
+		// Avalonia's KeyModifiers: Control 2, Meta 8
+		Assert.isTrue(KeyCodes.IsCtrl(8, true), "Cmd on a Mac");
+		Assert.isFalse(KeyCodes.IsCtrl(8, false), "the Windows key elsewhere");
+		Assert.isTrue(KeyCodes.IsCtrl(2, false), "Ctrl anywhere");
 	}
 }

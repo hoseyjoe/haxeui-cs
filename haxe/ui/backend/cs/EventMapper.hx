@@ -20,6 +20,8 @@ class EventMapper {
 	public static inline var MIDDLE_UP = 4096;
 	public static inline var KEY_DOWN = 8192;
 	public static inline var KEY_UP = 16384;
+	public static inline var MIDDLE_CLICK = 32768;
+	public static inline var KEY_PRESS = 65536;
 
 	/** The native kind for a HaxeUI event type, or 0 when it is not an input event. **/
 	public static function kindOf(type:String):Int {
@@ -37,8 +39,10 @@ class EventMapper {
 			case MouseEvent.RIGHT_CLICK: RIGHT_CLICK;
 			case MouseEvent.MIDDLE_MOUSE_DOWN: MIDDLE_DOWN;
 			case MouseEvent.MIDDLE_MOUSE_UP: MIDDLE_UP;
+			case MouseEvent.MIDDLE_CLICK: MIDDLE_CLICK;
 			case KeyboardEvent.KEY_DOWN: KEY_DOWN;
 			case KeyboardEvent.KEY_UP: KEY_UP;
+			case KeyboardEvent.KEY_PRESS: KEY_PRESS;
 			case _: 0;
 		}
 	}
@@ -58,8 +62,10 @@ class EventMapper {
 			case RIGHT_CLICK: MouseEvent.RIGHT_CLICK;
 			case MIDDLE_DOWN: MouseEvent.MIDDLE_MOUSE_DOWN;
 			case MIDDLE_UP: MouseEvent.MIDDLE_MOUSE_UP;
+			case MIDDLE_CLICK: MouseEvent.MIDDLE_CLICK;
 			case KEY_DOWN: KeyboardEvent.KEY_DOWN;
 			case KEY_UP: KeyboardEvent.KEY_UP;
+			case KEY_PRESS: KeyboardEvent.KEY_PRESS;
 			case _: null;
 		}
 	}

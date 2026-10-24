@@ -10,10 +10,10 @@ namespace HaxeUICs
     {
         public const int MOVE = 1, OVER = 2, OUT = 4, DOWN = 8, UP = 16, CLICK = 32, DBL_CLICK = 64, WHEEL = 128,
             RIGHT_DOWN = 256, RIGHT_UP = 512, RIGHT_CLICK = 1024, MIDDLE_DOWN = 2048, MIDDLE_UP = 4096,
-            KEY_DOWN = 8192, KEY_UP = 16384;
+            KEY_DOWN = 8192, KEY_UP = 16384, MIDDLE_CLICK = 32768, KEY_PRESS = 65536;
 
         public const int POINTER = MOVE | OVER | OUT | DOWN | UP | CLICK | DBL_CLICK | WHEEL
-            | RIGHT_DOWN | RIGHT_UP | RIGHT_CLICK | MIDDLE_DOWN | MIDDLE_UP;
+            | RIGHT_DOWN | RIGHT_UP | RIGHT_CLICK | MIDDLE_DOWN | MIDDLE_UP | MIDDLE_CLICK;
     }
 
     /// <summary>
@@ -59,6 +59,7 @@ namespace HaxeUICs
         // element is a click, EVERY time, and the second press inside the double-click time also
         // makes a double click. Avalonia's Tapped is not used: it swallows that second click.
         bool _pressedHere;
+        bool _middlePressedHere;
         int _pressClickCount;
         static ClickState s_click;
 
@@ -84,7 +85,7 @@ namespace HaxeUICs
             _target.AddHandler(InputElement.PointerExitedEvent, (s, e) => Pointer(EventKind.OUT, e), RoutingStrategies.Direct, _handledEventsToo);
             _target.AddHandler(InputElement.PointerPressedEvent, (s, e) => Pointer(PressKind(e), e), bubble, _handledEventsToo);
             _target.AddHandler(InputElement.PointerReleasedEvent, (s, e) => Pointer(ReleaseKind(e), e), bubble, _handledEventsToo);
-            _target.AddHandler(InputElement.PointerWheelChangedEvent, (s, e) => Pointer(EventKind.WHEEL, e, e.Delta.Y), bubble, _handledEventsToo);
+            _target.AddHandler(InputElement.PointerWheelChangedEvent, (s, e) => Wheel(e), bubble, _handledEventsToo);
             // After the UP handler above, so UP comes before CLICK, as in a browser. Handled events
             // too: a press a component cancelled is still the first half of a click.
             _target.AddHandler(InputElement.PointerPressedEvent, (s, e) => PressForClick(e), bubble, true);
@@ -93,28 +94,49 @@ namespace HaxeUICs
             // Keys always bubble on (a TextBox handles most of them itself), as they do in the DOM.
             _target.AddHandler(InputElement.KeyDownEvent, (s, e) => Key(EventKind.KEY_DOWN, e), bubble, true);
             _target.AddHandler(InputElement.KeyUpEvent, (s, e) => Key(EventKind.KEY_UP, e), bubble, true);
+            // Text the keyboard produces: KEY_PRESS, as heaps maps it (a browser's keypress).
+            _target.AddHandler(InputElement.TextInputEvent, (s, e) => KeyPress(e), bubble, true);
         }
 
-        void Pointer(int kind, PointerEventArgs e, double wheelDelta = 0, object nativeEvent = null)
+        void Pointer(int kind, PointerEventArgs e, double wheelDelta = 0, object nativeEvent = null, bool shift = false)
         {
             if (kind == 0 || (_kinds & kind) == 0 || _listener == null) return;
             var position = e.GetPosition(Host.Root);
             var properties = e.GetCurrentPoint(null).Properties;
             var modifiers = e.KeyModifiers;
             _listener.OnPointer(kind, position.X, position.Y, properties.IsLeftButtonPressed,
-                modifiers.HasFlag(KeyModifiers.Control), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt),
+                KeyCodes.IsCtrl((int)modifiers, System.OperatingSystem.IsMacOS()), shift || modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt),
                 System.Math.Max(-1, System.Math.Min(1, wheelDelta)), nativeEvent ?? e);
+        }
+
+        /// <summary>
+        /// A sideways wheel (or a trackpad's sideways swipe) is shift+wheel, which is how HaxeUI's
+        /// ScrollView scrolls across: MouseEvent has no horizontal delta of its own.
+        /// </summary>
+        void Wheel(PointerWheelEventArgs e)
+        {
+            if (e.Delta.Y == 0 && e.Delta.X != 0) Pointer(EventKind.WHEEL, e, e.Delta.X, null, true);
+            else Pointer(EventKind.WHEEL, e, e.Delta.Y);
         }
 
         void PressForClick(PointerPressedEventArgs e)
         {
-            if (e.GetCurrentPoint(null).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed) return;
+            var kind = e.GetCurrentPoint(null).Properties.PointerUpdateKind;
+            if (kind == PointerUpdateKind.MiddleButtonPressed) _middlePressedHere = true;
+            if (kind != PointerUpdateKind.LeftButtonPressed) return;
             _pressedHere = true;
             _pressClickCount = e.ClickCount;
         }
 
         void ReleaseForClick(PointerReleasedEventArgs e)
         {
+            if (e.InitialPressMouseButton == MouseButton.Middle && _middlePressedHere)
+            {
+                // a middle press and release inside is a MIDDLE_CLICK, as a left pair is a CLICK
+                _middlePressedHere = false;
+                if (Inside(e)) Pointer(EventKind.MIDDLE_CLICK, e);
+                return;
+            }
             if (e.InitialPressMouseButton != MouseButton.Left || !_pressedHere) return;
             _pressedHere = false;
             if (!Inside(e)) return;
@@ -140,7 +162,7 @@ namespace HaxeUICs
             var position = e.GetPosition(Host.Root);
             var modifiers = e.KeyModifiers;
             _listener.OnPointer(kind, position.X, position.Y, false,
-                modifiers.HasFlag(KeyModifiers.Control), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt), 0, e);
+                KeyCodes.IsCtrl((int)modifiers, System.OperatingSystem.IsMacOS()), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt), 0, e);
         }
 
         void Key(int kind, KeyEventArgs e)
@@ -148,7 +170,13 @@ namespace HaxeUICs
             if ((_kinds & kind) == 0 || _listener == null) return;
             var modifiers = e.KeyModifiers;
             _listener.OnKey(kind, KeyCodes.FromKey(e.Key),
-                modifiers.HasFlag(KeyModifiers.Control), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt), e);
+                KeyCodes.IsCtrl((int)modifiers, System.OperatingSystem.IsMacOS()), modifiers.HasFlag(KeyModifiers.Shift), modifiers.HasFlag(KeyModifiers.Alt), e);
+        }
+
+        void KeyPress(TextInputEventArgs e)
+        {
+            if ((_kinds & EventKind.KEY_PRESS) == 0 || _listener == null || string.IsNullOrEmpty(e.Text)) return;
+            _listener.OnKey(EventKind.KEY_PRESS, char.ConvertToUtf32(e.Text, 0), false, false, false, e);
         }
 
         static int PressKind(PointerPressedEventArgs e)
@@ -180,6 +208,16 @@ namespace HaxeUICs
     /// </summary>
     public static class KeyCodes
     {
+        /// <summary>
+        /// Whether these KeyModifiers (as an int) count as Ctrl. On a Mac, Cmd does: HaxeUI's
+        /// KeyboardEvent has no meta key, and an app's Ctrl shortcuts are Cmd shortcuts there.
+        /// </summary>
+        public static bool IsCtrl(int modifiers, bool isMac)
+        {
+            var m = (KeyModifiers)modifiers;
+            return m.HasFlag(KeyModifiers.Control) || (isMac && m.HasFlag(KeyModifiers.Meta));
+        }
+
         public static int FromKey(Key key)
         {
             if (key >= Key.A && key <= Key.Z) return 65 + (key - Key.A);

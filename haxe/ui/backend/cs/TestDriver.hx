@@ -64,9 +64,9 @@ class TestDriver {
 		pump();
 	}
 
-	/** deltaY > 0 scrolls up, deltaY < 0 down. **/
-	public static function wheel(x:Float, y:Float, deltaY:Float):Void {
-		HeadlessDriver.Wheel(x, y, deltaY);
+	/** deltaY > 0 scrolls up, deltaY < 0 down; deltaX turns a sideways wheel (or a trackpad). **/
+	public static function wheel(x:Float, y:Float, deltaY:Float, deltaX:Float = 0):Void {
+		HeadlessDriver.Wheel(x, y, deltaY, deltaX);
 	}
 
 	/** Presses and releases a key named as Avalonia's Key enum: "Enter", "Tab", "A". **/

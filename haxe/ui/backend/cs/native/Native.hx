@@ -60,6 +60,12 @@ extern class NativeEvents {
 	static function Cancel(nativeEvent:Dynamic):Void;
 }
 
+@:native("HaxeUICs.KeyCodes")
+extern class KeyCodes {
+	/** Whether these Avalonia KeyModifiers count as Ctrl: Cmd does on a Mac. **/
+	static function IsCtrl(modifiers:Int, isMac:Bool):Bool;
+}
+
 @:native("HaxeUICs.IFileDialogListener")
 extern interface IFileDialogListener {
 	function OnFiles(paths:cs.NativeArray<String>):Void;
@@ -282,7 +288,7 @@ extern class HeadlessDriver {
 	static function MouseMove(x:Float, y:Float):Void;
 	static function MouseDown(x:Float, y:Float, button:Int):Void;
 	static function MouseUp(x:Float, y:Float, button:Int):Void;
-	static function Wheel(x:Float, y:Float, deltaY:Float):Void;
+	static function Wheel(x:Float, y:Float, deltaY:Float, deltaX:Float):Void;
 	static function KeyStroke(name:String, ctrl:Bool, shift:Bool):Void;
 	static function TypeText(text:String):Void;
 	static function StartHttpServer(root:String):Int;
