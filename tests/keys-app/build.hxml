@@ -1,0 +1,8 @@
+# By hand: prints each key HaxeUI sees; on a Mac, Cmd+S prints `keys-app: 83 ctrl=true`.
+# `haxe tests/keys-app/build.hxml` from the repo root (or run its DLL elsewhere with dotnet).
+-cp tests/keys-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-cs tests/keys-app/bin
+-w -WAll
