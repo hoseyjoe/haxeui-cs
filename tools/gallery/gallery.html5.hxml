@@ -1,10 +1,13 @@
 # The parity gallery on haxeui-html5, the reference. From the repo root:
 # `haxe tools/gallery/gallery.html5.hxml`, then `python -I tools/gallery/compare.py`.
--cp tools/gallery
+# Built from tools/gallery: Haxe always has the working directory on its classpath, and from
+# the repo root that would pull haxeui-cs's own module (its directives and loaders) into html5.
+--cwd tools/gallery
+-cp .
 -main Gallery
 -lib haxeui-core
 -lib haxeui-html5
--js tools/gallery/web/gallery.js
+-js web/gallery.js
 -dce no
 --macro include('haxe.ui.components')
 --macro include('haxe.ui.containers', true)

@@ -152,6 +152,20 @@ class Gallery {
 				t.wrap = true;
 				return t;
 			}},
+			{name: "sample: html text", make: () -> {
+				var l = new Label();
+				l.htmlText = '<b>Bold</b>, <i>italic</i>, <u>under</u>, <font color="#CC0000">red</font><br><s>struck</s> &amp; plain';
+				return l;
+			}},
+			{name: "style: rotation", make: () -> ComponentBuilder.fromString('<box width="80" height="20" style="background-color:#3366cc;rotation:30" />')},
+			{name: "style: clip-path", make: () -> ComponentBuilder.fromString('<box width="80" height="60" style="background-color:#3366cc;clip-path:inset(10px 20px 10px 20px)" />')},
+			{name: "sample: svg image", make: () -> {
+				var image = new haxe.ui.components.Image();
+				image.resource = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="18" fill="#3366cc"/><rect x="12" y="12" width="16" height="16" fill="#ffcc00"/></svg>';
+				image.width = 60;
+				image.height = 60;
+				return image;
+			}},
 			{name: "style: tooltip", make: () -> ComponentBuilder.fromString('<button text="Has tooltip" tooltip="I am a tooltip" />')},
 		];
 	}
