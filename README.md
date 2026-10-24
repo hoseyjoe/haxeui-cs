@@ -96,24 +96,51 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 ## Behaviour worth knowing
 
 - `callLater` runs with the next frame (about 60 a second), as html5's `requestAnimationFrame`.
+  Haxe's own event loop (`haxe.Timer`, `haxe.MainLoop`) runs when it next needs to and straight
+  after any frame, input or timer; an idle app is woken about four times a second, not a hundred.
 - Canvas fills follow haxeui-heaps (Flash): `fillStyle(c)` begins a fill and `fillStyle(null)`
   ends it, and the path drawn in between is filled even without `beginPath`.
 - Pointer and key events bubble natively, as in the DOM; `event.cancel()` stops a pointer event.
   Clicks are made from press and release as a browser makes them: every click is a `CLICK`, and
-  the second inside the double-click time is also a `DBL_CLICK`. `pointer-events: none` makes a
-  component and its contents click-through.
+  the second inside the double-click time is also a `DBL_CLICK`; a middle press and release is a
+  `MIDDLE_CLICK`. `pointer-events: none` makes a component and its contents click-through.
+- Keys arrive as the browser's key codes. Typed text also fires `KEY_PRESS` (its character code).
+  On a Mac, Cmd counts as `ctrlKey` (HaxeUI's `KeyboardEvent` has no meta key). A sideways wheel or
+  trackpad swipe arrives as `MOUSE_WHEEL` with `shiftKey` set, which is how ScrollView scrolls across.
+- Shadows and filters follow html5's numbers: `drop-shadow` and `box-shadow` shadow the
+  component's box (a drop-shadow's angle, strength and quality are ignored, as on html5), and
+  `blur`, `grayscale`, `tint`, `brightness`, `contrast`, `saturate`, `hue-rotate` and `invert`
+  reach the component and everything in it.
+- **`text-shadow: <dx>px <dy>px <blur>px <#rrggbb> [<alpha>]`** is a haxeui-cs directive (core
+  has none) that shadows a text's glyphs. Other backends ignore it. `rotation` and
+  `clip-path: inset(...)` work as on html5.
+- `font-name` takes a system family, a CSS generic family (`monospace`, `serif`, `sans-serif`,
+  `cursive`, `system-ui`), or a `.ttf`/`.otf` font file: a Haxe resource or a file path.
+- Labels show `htmlText`: `b`, `i`, `u`, `s`, `br`, `font` (color, size, face) and
+  `span style="color: ..."`; other tags are dropped and their text kept. Text inputs edit plain
+  text: HTML is shown with its tags stripped.
+- Images may be PNG, JPEG and the like, or SVG, as a file, a resource, or the SVG markup itself
+  (as html5 allows). An SVG is drawn afresh at the size it shows, so it stays sharp.
+- `Toolkit.scale` scales the whole UI from the window's top left; sizes and pointer positions stay
+  in HaxeUI's units. It is taken up as root components are added.
+- Text with no `font-size` from the theme is 13px; html5 leaves it to the browser (usually 16px).
 - A `callLater` callback that throws is reported on stderr and the rest of its frame still runs;
-  an `onEnd` that throws is reported and the process exits with code 1.
+  an `onEnd` that throws is reported and the process exits with code 1. A file dialog whose
+  listener throws is reported, never thrown.
 - Removing (with dispose) a component that has HaxeUI focus quietly drops that focus
   (haxeui-core-joe, `#if cs`).
 
-## Limits (v1)
+## Limits
 
-- **Fonts are system fonts, by family name.** A `font-name` that looks like a file is ignored.
-- Verified on **Windows** and **Linux** (WSL2 with WSLg); Mac should work, untested.
-- No text shadows, no `Toolkit.scale` (Avalonia's own DPI scaling applies), no CSS filters.
+- **Mac is untested.** Avalonia should carry it; Windows and Linux (WSL2 with WSLg) are verified.
+  `tests/keys-app` is the by-hand check that Cmd works as Ctrl there.
 - **`backdrop-filter` is not drawn.** Avalonia 12 has no way to blur what lies behind a control:
   it offers no backdrop effect, and a `VisualBrush` of the window drawn inside that same window
   recurses without end.
+- Text in a box too narrow for one letter is not shown; html5 breaks it one letter per line.
+- Dashed and dotted borders whose sides differ are drawn square at the corners (a uniform dashed
+  border does follow the radius).
+- Changing `Toolkit.scale` after the app has started shows from the next root component added.
+- `letter-spacing` and `line-height` are not styles haxeui-core has, so no backend draws them.
 - Haxe's C# target puts its top-level classes in the global namespace, so native code writes
   `System.Math` and `System.Array`. `-D erase-generics` breaks HaxeUI.
