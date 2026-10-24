@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <module id="haxeui-cs" priority="-1">
+    <loaders>
+        <image-loaders>
+            <image-loader prefix="svg" pattern="^&lt;svg.*&gt;.*&lt;\/svg&gt;$" class="haxe.ui.backend.cs.loaders.SvgImageLoader" singleInstance="true" />
+        </image-loaders>
+    </loaders>
+
     <cssExtensions>
         <cssDirective name="text-shadow" class="haxe.ui.backend.cs.directives.TextShadow" />
         <cssDirective name="rotation" class="haxe.ui.backend.cs.directives.Rotate" />

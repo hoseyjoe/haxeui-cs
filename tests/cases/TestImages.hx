@@ -177,6 +177,17 @@ class TestImages extends utest.Test {
 		Assert.equals(0xFFFF0000, TestDriver.pixel(50, 30));
 	}
 
+	function testInlineSvgString() {
+		// an SVG given as the resource itself, as html5 allows
+		var img = new Image();
+		img.resource = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="#ff0000"/></svg>';
+		img.width = 40;
+		img.height = 40;
+		Screen.instance.addComponent(img);
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(20, 20));
+	}
+
 	function testOddResourceName() {
 		var info:ImageInfo = null;
 		ToolkitAssets.instance.getImage("odd name & co.png", i -> info = i);
