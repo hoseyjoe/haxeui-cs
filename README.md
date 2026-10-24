@@ -98,8 +98,10 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - `callLater` runs with the next frame (about 60 a second), as html5's `requestAnimationFrame`.
   Haxe's own event loop (`haxe.Timer`, `haxe.MainLoop`) runs when it next needs to and straight
   after any frame, input or timer; an idle app is woken about four times a second, not a hundred.
-- Canvas fills follow haxeui-heaps (Flash): `fillStyle(c)` begins a fill and `fillStyle(null)`
-  ends it, and the path drawn in between is filled even without `beginPath`.
+- Canvas drawing follows haxeui-heaps (h2d.Graphics): `fillStyle(c)` begins a fill and
+  `fillStyle(null)` ends it, and the path drawn in between is filled even without `beginPath`.
+  Each `moveTo` starts a new polygon, filled on its own and then outlined, in drawing order: a
+  later shape covers an earlier outline, and overlapping polygons of one fill cut no holes.
 - `StringTools.startsWith` and `endsWith` compare code unit by code unit, as on every other
   target. Haxe's C# std leaves them to .NET's culture rules, where a BOM or soft hyphen matches
   anything; haxeui-cs corrects that at compile time.

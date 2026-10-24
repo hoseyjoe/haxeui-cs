@@ -8,9 +8,11 @@ namespace HaxeUICs
 {
     /// <summary>
     /// HaxeUI's canvas drawing for one component, recorded as commands and replayed when painted.
-    /// Fills follow haxeui-heaps (Flash): FillStyle(true, c) begins a fill; every figure drawn until
-    /// the fill ends (FillStyle(false), the next FillStyle, or the end) is filled, closed, even
-    /// without BeginPath. Strokes draw as they go, over all fills.
+    /// Fills and strokes follow haxeui-heaps (h2d.Graphics): FillStyle(true, c) begins a fill, and every
+    /// figure drawn until the fill ends (FillStyle(false), the next FillStyle, or the end) is filled,
+    /// closed, even without BeginPath. Each MoveTo (or change of fill or stroke) ends the figure, which
+    /// is then filled on its own and outlined, in drawing order: a later figure covers an earlier
+    /// outline, and two figures of one fill never cut holes in each other.
     /// </summary>
     public class UIGraphics
     {
@@ -101,20 +103,16 @@ namespace HaxeUICs
             new Replay(context, matrix).Run(_commands);
         }
 
-        /// <summary>One pass over the commands: fills (and images) draw in order, then every stroke on top.</summary>
+        /// <summary>One pass over the commands, everything drawn in order: each figure is filled, then outlined.</summary>
         class Replay
         {
             readonly DrawingContext _context;
             readonly float[] _matrix;
-            readonly List<(IPen pen, Geometry geometry)> _strokes = new List<(IPen, Geometry)>();
 
             IBrush _fill;
-            PathGeometry _fillGeometry;
-            PathFigure _fillFigure;
-
             IPen _pen;
-            PathGeometry _strokeGeometry;
-            PathFigure _strokeFigure;
+            PathFigure _figure;
+            bool _closed;
 
             Point _position;
 
@@ -131,9 +129,8 @@ namespace HaxeUICs
                     switch (c.Op)
                     {
                         case Op.MoveTo:
+                            Flush();
                             _position = new Point(c.A, c.B);
-                            _fillFigure = null;
-                            _strokeFigure = null;
                             break;
                         case Op.LineTo:
                             Segment(new LineSegment { Point = new Point(c.A, c.B) });
@@ -148,28 +145,36 @@ namespace HaxeUICs
                             _position = new Point(c.E, c.F);
                             break;
                         case Op.Circle:
-                            Shape(new EllipseGeometry(new Rect(c.A - c.C, c.B - c.C, c.C * 2, c.C * 2)));
+                            Flush();
+                            _context.DrawGeometry(_fill, _pen, new EllipseGeometry(new Rect(c.A - c.C, c.B - c.C, c.C * 2, c.C * 2)));
                             break;
                         case Op.Rectangle:
-                            Shape(new RectangleGeometry(new Rect(c.A, c.B, c.C, c.D)));
+                            Flush();
+                            _context.DrawGeometry(_fill, _pen, new RectangleGeometry(new Rect(c.A, c.B, c.C, c.D)));
                             break;
                         case Op.Stroke:
-                            EndStroke();
+                            Flush();
                             _pen = c.Has ? new Pen(new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, c.Color))), c.A > 0 ? c.A : 1) : null;
                             break;
                         case Op.Fill:
-                            EndFill();
+                            Flush();
                             _fill = c.Has ? new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, c.Color))) : null;
                             break;
                         case Op.BeginPath:
-                            _fillFigure = null;
-                            _strokeFigure = null;
+                            Flush();
                             break;
                         case Op.ClosePath:
-                            if (_fillFigure != null) _fillFigure.IsClosed = true;
-                            if (_strokeFigure != null) _strokeFigure.IsClosed = true;
+                            // Ends the figure closed; the pen goes back to where it started, as on a canvas.
+                            if (_figure != null)
+                            {
+                                var start = _figure.StartPoint;
+                                _closed = true;
+                                Flush();
+                                _position = start;
+                            }
                             break;
                         case Op.Image:
+                            Flush();
                             if (c.Image != null && c.C > 0 && c.D > 0)
                                 {
                                 var bitmap = ColorMatrix.Filter(c.Image.BitmapFor(c.C, c.D), _matrix);
@@ -178,64 +183,31 @@ namespace HaxeUICs
                             break;
                     }
                 }
-                EndFill();
-                EndStroke();
-                foreach (var (pen, geometry) in _strokes) _context.DrawGeometry(null, pen, geometry);
+                Flush();
             }
 
             void Segment(PathSegment segment)
             {
-                if (_fill != null)
-                {
-                    if (_fillFigure == null)
-                    {
-                        _fillGeometry ??= new PathGeometry();
-                        _fillFigure = new PathFigure { StartPoint = _position, IsClosed = true, IsFilled = true, Segments = new PathSegments() };
-                        _fillGeometry.Figures.Add(_fillFigure);
-                    }
-                    _fillFigure.Segments.Add(Clone(segment));
-                }
-                if (_pen != null)
-                {
-                    if (_strokeFigure == null)
-                    {
-                        _strokeGeometry ??= new PathGeometry();
-                        _strokeFigure = new PathFigure { StartPoint = _position, IsClosed = false, IsFilled = false, Segments = new PathSegments() };
-                        _strokeGeometry.Figures.Add(_strokeFigure);
-                    }
-                    _strokeFigure.Segments.Add(segment);
-                }
+                if (_fill == null && _pen == null) return;
+                _figure ??= new PathFigure { StartPoint = _position, IsClosed = false, IsFilled = true, Segments = new PathSegments() };
+                _figure.Segments.Add(segment);
             }
 
-            void Shape(Geometry shape)
+            /// <summary>
+            /// Draws the figure in hand, filled (closed, as a fill always is) and then outlined. The outline
+            /// is closed when the figure was, or when it ends where it began, as h2d closes a line.
+            /// </summary>
+            void Flush()
             {
-                if (_fill != null) _context.DrawGeometry(_fill, null, shape);
-                if (_pen != null) _strokes.Add((_pen, shape));
-            }
-
-            void EndFill()
-            {
-                if (_fill != null && _fillGeometry != null) _context.DrawGeometry(_fill, null, _fillGeometry);
-                _fillGeometry = null;
-                _fillFigure = null;
-            }
-
-            void EndStroke()
-            {
-                if (_pen != null && _strokeGeometry != null) _strokes.Add((_pen, _strokeGeometry));
-                _strokeGeometry = null;
-                _strokeFigure = null;
-            }
-
-            static PathSegment Clone(PathSegment segment)
-            {
-                switch (segment)
-                {
-                    case LineSegment l: return new LineSegment { Point = l.Point };
-                    case QuadraticBezierSegment q: return new QuadraticBezierSegment { Point1 = q.Point1, Point2 = q.Point2 };
-                    case BezierSegment b: return new BezierSegment { Point1 = b.Point1, Point2 = b.Point2, Point3 = b.Point3 };
-                    default: return segment;
-                }
+                var figure = _figure;
+                var closed = _closed;
+                _figure = null;
+                _closed = false;
+                if (figure == null) return;
+                figure.IsClosed = closed || _position == figure.StartPoint;
+                var geometry = new PathGeometry();
+                geometry.Figures.Add(figure);
+                _context.DrawGeometry(_fill, _pen, geometry);
             }
         }
     }

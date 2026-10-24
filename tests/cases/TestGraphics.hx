@@ -5,11 +5,12 @@ import haxe.ui.core.Screen;
 import haxe.ui.backend.cs.TestDriver;
 import utest.Assert;
 
-/** HaxeUI canvas drawing, with haxeui-heaps' Flash-style fill semantics. **/
+/** HaxeUI canvas drawing, with haxeui-heaps' (h2d.Graphics') fill and stroke semantics. **/
 class TestGraphics extends utest.Test {
 	static inline var WHITE = 0xFFFFFFFF;
 	static inline var RED = 0xFFFF0000;
 	static inline var BLUE = 0xFF0000FF;
+	static inline var GREEN = 0xFF00FF00;
 
 	function teardown() {
 		for (c in Screen.instance.rootComponents.copy()) {
@@ -55,6 +56,46 @@ class TestGraphics extends utest.Test {
 		TestDriver.pump(2);
 		Assert.equals(BLUE, TestDriver.pixel(50, 50));
 		Assert.equals(WHITE, TestDriver.pixel(50, 30));
+	}
+
+	/** Strokes keep their place in the drawing, as on heaps (and html5): a shape drawn later covers an earlier outline. **/
+	function testLaterFillCoversEarlierStroke() {
+		var canvas = addCanvas();
+		var g = canvas.componentGraphics;
+		g.strokeStyle(0x0000FF, 6);
+		g.fillStyle(0xFF0000);
+		g.moveTo(10, 10);
+		g.lineTo(60, 10);
+		g.lineTo(60, 60);
+		g.lineTo(10, 60);
+		g.lineTo(10, 10);
+		g.strokeStyle(null);
+		g.fillStyle(0x00FF00);
+		g.rectangle(40, 40, 50, 50);
+		g.fillStyle(null);
+		TestDriver.pump(2);
+		Assert.equals(BLUE, TestDriver.pixel(60, 25));
+		Assert.equals(GREEN, TestDriver.pixel(60, 50));
+	}
+
+	/** Each moveTo starts a polygon filled on its own, as heaps fills them: overlapping ones do not cut holes. **/
+	function testIslandsOfOneFillDoNotCutEachOther() {
+		var canvas = addCanvas();
+		var g = canvas.componentGraphics;
+		g.fillStyle(0xFF0000);
+		g.moveTo(10, 10);
+		g.lineTo(60, 10);
+		g.lineTo(60, 60);
+		g.lineTo(10, 60);
+		g.moveTo(40, 40);
+		g.lineTo(90, 40);
+		g.lineTo(90, 90);
+		g.lineTo(40, 90);
+		g.fillStyle(null);
+		TestDriver.pump(2);
+		Assert.equals(RED, TestDriver.pixel(25, 25));
+		Assert.equals(RED, TestDriver.pixel(50, 50));
+		Assert.equals(RED, TestDriver.pixel(75, 75));
 	}
 
 	function testCircleAndRectangleFill() {
