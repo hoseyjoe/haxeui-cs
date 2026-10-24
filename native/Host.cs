@@ -55,6 +55,10 @@ namespace HaxeUICs
         static string _title = "";
         static int _width = 800;
         static int _height = 600;
+        static bool _resizable = true;
+        static int _minWidth, _minHeight;
+        static bool _maximized;
+        static byte[] _icon;
 
         public static Window Window { get; private set; }
 
@@ -90,6 +94,42 @@ namespace HaxeUICs
             _screenListener = listener;
             _screenEvents?.Update(kinds, listener);
         }
+
+        /// <summary>Window options beyond size and title; kept until the window exists.</summary>
+        public static void ConfigureWindow(bool resizable, int minWidth, int minHeight, bool maximized)
+        {
+            _resizable = resizable;
+            _minWidth = System.Math.Max(0, minWidth);
+            _minHeight = System.Math.Max(0, minHeight);
+            _maximized = maximized;
+            if (Window != null) ApplyOptions(Window);
+        }
+
+        static void ApplyOptions(Window window)
+        {
+            window.CanResize = _resizable;
+            window.MinWidth = _minWidth;
+            window.MinHeight = _minHeight;
+            if (_maximized) window.WindowState = WindowState.Maximized;
+            if (_icon != null)
+            {
+                try { window.Icon = new WindowIcon(new System.IO.MemoryStream(_icon)); }
+                catch (System.Exception) { } // not an image: no icon
+            }
+        }
+
+        /// <summary>The window's icon, from image bytes (PNG and the like).</summary>
+        public static void SetIcon(byte[] image)
+        {
+            _icon = image;
+            if (Window != null) ApplyOptions(Window);
+        }
+
+        public static bool HasIcon => Window?.Icon != null;
+        public static bool IsResizable => Window?.CanResize ?? _resizable;
+        public static double MinWidth => Window?.MinWidth ?? _minWidth;
+        public static double MinHeight => Window?.MinHeight ?? _minHeight;
+        public static bool IsMaximized => Window != null ? Window.WindowState == WindowState.Maximized : _maximized;
 
         public static double ClientWidth => Window != null ? Window.ClientSize.Width : _width;
         public static double ClientHeight => Window != null ? Window.ClientSize.Height : _height;
@@ -134,6 +174,7 @@ namespace HaxeUICs
                 Background = Brushes.White,
             };
             window.Content = Root;
+            ApplyOptions(window);
             window.PropertyChanged += (s, e) =>
             {
                 if (e.Property == TopLevel.ClientSizeProperty)

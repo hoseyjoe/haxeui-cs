@@ -40,6 +40,13 @@ extern class Host {
 	static function Exit(code:Int):Void;
 	static function SetScreenCursor(css:String):Void;
 	static function SetScale(scaleX:Float, scaleY:Float):Void;
+	static function ConfigureWindow(resizable:Bool, minWidth:Int, minHeight:Int, maximized:Bool):Void;
+	static function SetIcon(image:haxe.io.BytesData):Void;
+	static var HasIcon(default, null):Bool;
+	static var IsResizable(default, null):Bool;
+	static var MinWidth(default, null):Float;
+	static var MinHeight(default, null):Float;
+	static var IsMaximized(default, null):Bool;
 }
 
 @:native("HaxeUICs.IPanelListener")

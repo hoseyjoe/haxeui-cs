@@ -13,10 +13,34 @@ class AppImpl extends AppBase {
     public function new() {
     }
 
+    /** Closes the window, which ends the app as the user closing it does (onEnd, then exit). **/
+    public override function exit() {
+        Host.CloseWindow();
+    }
+
+    /** The window's icon: a Haxe resource or an image file. **/
+    private override function set_icon(value:String):String {
+        super.set_icon(value);
+        var bytes:haxe.io.Bytes = null;
+        if (value != null && haxe.Resource.listNames().indexOf(value) != -1) {
+            bytes = haxe.Resource.getBytes(value);
+        } else if (value != null && sys.FileSystem.exists(value)) {
+            bytes = sys.io.File.getBytes(value);
+        }
+        if (bytes != null) {
+            Host.SetIcon(bytes.getData());
+        }
+        return value;
+    }
+
     private override function init(onReady:Void->Void, onEnd:Void->Void = null) {
         // Toolkit.init has already handed the app's options to the screen.
         var options = haxe.ui.core.Screen.instance.options;
         var title = (options != null && options.title != null) ? options.title : "";
+        if (options != null) {
+            Host.ConfigureWindow(options.resizable != false, options.minWidth != null ? options.minWidth : 0,
+                options.minHeight != null ? options.minHeight : 0, options.maximized == true);
+        }
         #if haxeui_cs_headless
         var width = (options != null && options.width != null) ? options.width : 800;
         var height = (options != null && options.height != null) ? options.height : 600;

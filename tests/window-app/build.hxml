@@ -1,0 +1,9 @@
+# Desktop check: the window options reach a real window, and app.exit() ends
+# the process. `haxe tests/window-app/build.hxml` from the repo root; exits 0.
+-cp tests/window-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_run
+-cs tests/window-app/bin
+-w -WAll

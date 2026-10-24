@@ -39,6 +39,10 @@ app.ready(function() {
 On the desktop, `ready()` runs Avalonia's loop and returns only when the window closes; closing the
 window ends the process.
 
+The options also take `resizable` (default true), `minWidth`, `minHeight` and `maximized`.
+`app.icon = "icon.png"` sets the window's icon (a Haxe resource or an image file), and
+`app.exit()` closes the window, which ends the app as the user closing it does.
+
 | Define | Effect |
 |---|---|
 | `-D haxeui_cs_run` | run the program straight after building it |

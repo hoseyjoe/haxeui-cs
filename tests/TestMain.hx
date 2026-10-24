@@ -44,7 +44,8 @@ class TestMain {
 			new cases.TestFonts(),
 			new cases.TestFilters(),
 			new cases.TestCursors(),
-			new cases.TestScale()
+			new cases.TestScale(),
+			new cases.TestApp()
 		];
 	}
 }
