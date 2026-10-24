@@ -1,6 +1,8 @@
 package cases;
 
 import haxe.ui.components.Label;
+import haxe.ui.components.TextField;
+import haxe.ui.core.Component;
 import haxe.ui.core.Screen;
 import haxe.ui.backend.cs.TestDriver;
 import utest.Assert;
@@ -56,6 +58,40 @@ class TestText extends utest.Test {
 		var text = "Café — “quoted”";
 		var label = show(text);
 		Assert.equals(text, label.getTextDisplay().textNative.Text);
+	}
+
+	function testStrikeThrough() {
+		// "o" has no horizontal strokes of its own: only a line through it makes a long dark run
+		var plain = show("oooooo", "font-size: 30px; color: #000000;");
+		var plainRun = darkRun(plain);
+		Screen.instance.removeComponent(plain);
+		var struck = show("oooooo", "font-size: 30px; color: #000000; text-decoration: line-through;");
+		Assert.isTrue(darkRun(struck) > 0.8 * struck.width, 'struck run ${darkRun(struck)} of ${struck.width}');
+		Assert.isTrue(plainRun < 0.5 * plain.width, 'plain run $plainRun of ${plain.width}');
+	}
+
+	function testTextInputUnderline() {
+		var f = new TextField();
+		f.styleString = "font-size: 30px; color: #000000; font-underline: true; border-size: 0px; background-color: #FFFFFF;";
+		f.text = "oooooo";
+		Screen.instance.addComponent(f);
+		TestDriver.pump(3);
+		var run = darkRun(f);
+		Assert.isTrue(run > 0.6 * f.getTextInput().textWidth, 'run $run of ${f.getTextInput().textWidth}');
+	}
+
+	/** The longest run of dark pixels in any one row of the component. **/
+	static function darkRun(c:Component):Int {
+		var w = Std.int(c.width), h = Std.int(c.height);
+		var px = TestDriver.pixels(Std.int(c.screenLeft), Std.int(c.screenTop), w, h);
+		var best = 0;
+		for (row in 0...h) {
+			var run = Pixels.longestRun(px, w, row, p -> Pixels.bright(p) < 300);
+			if (run > best) {
+				best = run;
+			}
+		}
+		return best;
 	}
 
 	static function show(text:String, ?styleString:String):Label {

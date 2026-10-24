@@ -129,7 +129,7 @@ extern class UIText extends Control {
 	var MeasuredWidth(default, null):Float;
 	var MeasuredHeight(default, null):Float;
 
-	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool):Void;
+	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool):Void;
 	function SetColor(argb:UInt):Void;
 	function SetAlign(align:Int):Void;
 	function SetWrap(wrap:Bool):Void;
@@ -195,7 +195,7 @@ extern class UITextInput extends Control {
 	function SetWordWrap(wrap:Bool):Void;
 	function SetPassword(password:Bool):Void;
 	function SetSelectionColor(argb:UInt):Void;
-	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool):Void;
+	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool):Void;
 	function SetColor(argb:UInt):Void;
 	function SetAlign(align:Int):Void;
 	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;

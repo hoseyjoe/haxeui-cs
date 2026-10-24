@@ -64,6 +64,18 @@ namespace HaxeUICs
             return FromBytes(full, File.ReadAllBytes(full));
         }
 
+        /// <summary>Underline, strikethrough, both or neither (null).</summary>
+        public static TextDecorationCollection Decorations(bool underline, bool strikethrough)
+        {
+            if (!underline && !strikethrough) return null;
+            if (!strikethrough) return TextDecorations.Underline;
+            if (!underline) return TextDecorations.Strikethrough;
+            var both = new TextDecorationCollection();
+            both.AddRange(TextDecorations.Underline);
+            both.AddRange(TextDecorations.Strikethrough);
+            return both;
+        }
+
         /// <summary>The FontFamily to use for the family HaxeUI names; null or empty is the default.</summary>
         public static FontFamily ResolveFamily(string name)
         {

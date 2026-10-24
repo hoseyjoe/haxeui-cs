@@ -78,12 +78,54 @@ namespace HaxeUICs
         public void SetPassword(bool password) => PasswordChar = password ? '•' : '\0';
         public void SetSelectionColor(uint argb) => SelectionBrush = new SolidColorBrush(Color.FromUInt32(argb));
 
-        public void SetFont(string family, double size, bool bold, bool italic, bool underline)
+        public void SetFont(string family, double size, bool bold, bool italic, bool underline, bool strikethrough)
         {
             FontFamily = UIFonts.ResolveFamily(family);
             FontSize = size > 0 ? size : 13;
             FontWeight = bold ? FontWeight.Bold : FontWeight.Normal;
             FontStyle = italic ? FontStyle.Italic : FontStyle.Normal;
+            if (underline != _underline || strikethrough != _strikethrough)
+            {
+                _underline = underline;
+                _strikethrough = strikethrough;
+                InvalidateVisual();
+            }
+        }
+
+        // A TextBox (and its TextPresenter) has no TextDecorations in Avalonia 12, so the lines
+        // are drawn here, under the presenter, from its text layout: one per laid-out line.
+        bool _underline, _strikethrough;
+        Avalonia.Controls.Presenters.TextPresenter _presenter;
+
+        public override void Render(DrawingContext context)
+        {
+            base.Render(context);
+            var layout = _presenter?.TextLayout;
+            if ((!_underline && !_strikethrough) || layout == null) return;
+            var origin = _presenter.TranslatePoint(new Point(0, 0), this) ?? default;
+            var pen = new Pen(Foreground, System.Math.Max(1, System.Math.Round(FontSize / 14)));
+            using (context.PushClip(new Rect(Bounds.Size)))
+            {
+                var top = origin.Y;
+                foreach (var line in layout.TextLines)
+                {
+                    var left = origin.X + line.Start;
+                    if (line.Width > 0)
+                    {
+                        if (_underline)
+                        {
+                            var y = top + line.Baseline + pen.Thickness + 1;
+                            context.DrawLine(pen, new Point(left, y), new Point(left + line.Width, y));
+                        }
+                        if (_strikethrough)
+                        {
+                            var y = top + line.Baseline - FontSize * 0.3;
+                            context.DrawLine(pen, new Point(left, y), new Point(left + line.Width, y));
+                        }
+                    }
+                    top += line.Height;
+                }
+            }
         }
 
         public void SetColor(uint argb)
@@ -142,7 +184,13 @@ namespace HaxeUICs
         {
             base.OnApplyTemplate(e);
             _scroll = e.NameScope.Find<ScrollViewer>("PART_ScrollViewer");
-            if (_scroll != null) _scroll.ScrollChanged += (s, a) => _listener?.OnScrollChanged();
+            _presenter = e.NameScope.Find<Avalonia.Controls.Presenters.TextPresenter>("PART_TextPresenter");
+            if (_presenter != null) _presenter.LayoutUpdated += (s, a) => { if (_underline || _strikethrough) InvalidateVisual(); };
+            if (_scroll != null) _scroll.ScrollChanged += (s, a) =>
+            {
+                if (_underline || _strikethrough) InvalidateVisual(); // the lines follow the text
+                _listener?.OnScrollChanged();
+            };
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)

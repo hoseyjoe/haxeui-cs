@@ -35,10 +35,11 @@ class TextDisplayImpl extends TextBase {
             var bold = _textStyle.fontBold == true;
             var italic = _textStyle.fontItalic == true;
             var underline = _textStyle.fontUnderline == true;
-            var key = '$family|$size|$bold|$italic|$underline';
+            var strikethrough = _textStyle.fontStrikeThrough == true;
+            var key = '$family|$size|$bold|$italic|$underline|$strikethrough';
             if (key != _fontKey) {
                 _fontKey = key;
-                applyFont(family, size, bold, italic, underline);
+                applyFont(family, size, bold, italic, underline, strikethrough);
                 measureTextRequired = true;
             }
             var color = _textStyle.color != null ? _textStyle.color : 0x000000;
@@ -78,8 +79,8 @@ class TextDisplayImpl extends TextBase {
         textNative.SetWrap(wrap);
     }
 
-    private function applyFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool) {
-        textNative.SetFont(family, size, bold, italic, underline);
+    private function applyFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool) {
+        textNative.SetFont(family, size, bold, italic, underline, strikethrough);
     }
 
     private function applyColor(argb:UInt) {

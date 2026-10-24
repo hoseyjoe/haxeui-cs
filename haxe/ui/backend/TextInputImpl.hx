@@ -77,9 +77,9 @@ class TextInputImpl extends TextDisplayImpl {
         inputNative.SetWordWrap(wrap);
     }
 
-    private override function applyFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool) {
-        super.applyFont(family, size, bold, italic, underline);
-        inputNative.SetFont(family, size, bold, italic, underline);
+    private override function applyFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool) {
+        super.applyFont(family, size, bold, italic, underline, strikethrough);
+        inputNative.SetFont(family, size, bold, italic, underline, strikethrough);
     }
 
     private override function applyColor(argb:UInt) {

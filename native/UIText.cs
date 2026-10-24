@@ -21,13 +21,13 @@ namespace HaxeUICs
             TextWrapping = TextWrapping.NoWrap;
         }
 
-        public void SetFont(string family, double size, bool bold, bool italic, bool underline)
+        public void SetFont(string family, double size, bool bold, bool italic, bool underline, bool strikethrough)
         {
             FontFamily = UIFonts.ResolveFamily(family);
             FontSize = size > 0 ? size : 13;
             FontWeight = bold ? FontWeight.Bold : FontWeight.Normal;
             FontStyle = italic ? FontStyle.Italic : FontStyle.Normal;
-            TextDecorations = underline ? Avalonia.Media.TextDecorations.Underline : null;
+            TextDecorations = UIFonts.Decorations(underline, strikethrough);
         }
 
         public void SetColor(uint argb)
