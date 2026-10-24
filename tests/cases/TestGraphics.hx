@@ -84,6 +84,14 @@ class TestGraphics extends utest.Test {
 		Assert.equals(WHITE, TestDriver.pixel(50, 50));
 	}
 
+	function testSetPixel() {
+		var canvas = addCanvas();
+		canvas.componentGraphics.setPixel(5, 5, 0xFF0000);
+		TestDriver.pump(3);
+		Assert.equals(RED, TestDriver.pixel(5, 5));
+		Assert.notEquals(RED, TestDriver.pixel(6, 5));
+	}
+
 	static function addCanvas():Canvas {
 		var canvas = new Canvas();
 		canvas.width = 100;

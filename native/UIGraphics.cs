@@ -65,6 +65,27 @@ namespace HaxeUICs
             Changed?.Invoke();
         }
 
+        /// <summary>
+        /// Sets one pixel of the canvas's pixel layer (made at width x height when there is none,
+        /// or when the canvas has changed size since).
+        /// </summary>
+        public void SetPixel(int x, int y, uint argb, int width, int height)
+        {
+            if (width <= 0 || height <= 0 || x < 0 || y < 0 || x >= width || y >= height) return;
+            if (_pixels == null || _pixels.PixelSize.Width != width || _pixels.PixelSize.Height != height)
+                _pixels = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888, AlphaFormat.Unpremul);
+            using (var buffer = _pixels.Lock())
+            {
+                // RGBA bytes, as SetPixels writes them
+                var at = buffer.Address + y * buffer.RowBytes + x * 4;
+                System.Runtime.InteropServices.Marshal.WriteByte(at, (byte)(argb >> 16));
+                System.Runtime.InteropServices.Marshal.WriteByte(at + 1, (byte)(argb >> 8));
+                System.Runtime.InteropServices.Marshal.WriteByte(at + 2, (byte)argb);
+                System.Runtime.InteropServices.Marshal.WriteByte(at + 3, (byte)(argb >> 24));
+            }
+            Changed?.Invoke();
+        }
+
         void Add(Command command)
         {
             _commands.Add(command);

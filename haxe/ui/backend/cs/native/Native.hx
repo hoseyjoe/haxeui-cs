@@ -136,6 +136,7 @@ extern class UIGraphics {
 	function ClosePath():Void;
 	function Image(image:UIImage, x:Float, y:Float, width:Float, height:Float):Void;
 	function SetPixels(rgba:haxe.io.BytesData, width:Int, height:Int):Void;
+	function SetPixel(x:Int, y:Int, argb:UInt, width:Int, height:Int):Void;
 }
 
 @:native("HaxeUICs.UIText")

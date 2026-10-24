@@ -32,6 +32,7 @@ class ComponentGraphicsImpl extends ComponentGraphicsBase {
         if (_hasSize == false) {
             return super.setPixel(x, y, color);
         }
+        _graphics.SetPixel(Std.int(x), Std.int(y), cast(0xFF000000 | ((color:Int) & 0xFFFFFF)), Std.int(_component.width), Std.int(_component.height));
     }
 
     public override function setPixels(pixels:Bytes) {
