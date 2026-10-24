@@ -35,9 +35,16 @@ namespace HaxeUICs
     }
 
     /// <summary>A HaxeUI image display: draws its image stretched to the size HaxeUI gives it.</summary>
-    public class UIImageView : Control
+    public class UIImageView : Control, IColorFiltered
     {
         UIImage _image;
+        float[] _matrix;
+
+        public void SetEffectiveColorMatrix(float[] matrix)
+        {
+            _matrix = matrix;
+            InvalidateVisual();
+        }
 
         public double W { get; private set; }
         public double H { get; private set; }
@@ -78,7 +85,7 @@ namespace HaxeUICs
         public override void Render(DrawingContext context)
         {
             if (_image == null || W <= 0 || H <= 0) return;
-            context.DrawImage(_image.Bitmap, new Rect(0, 0, _image.Width, _image.Height), new Rect(0, 0, W, H));
+            context.DrawImage(ColorMatrix.Filter(_image.Bitmap, _matrix), new Rect(0, 0, _image.Width, _image.Height), new Rect(0, 0, W, H));
         }
     }
 }

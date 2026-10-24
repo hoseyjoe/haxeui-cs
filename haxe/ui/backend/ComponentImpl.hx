@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.backend.cs.ColorFilters;
 import haxe.ui.backend.cs.EventMapper;
 import haxe.ui.backend.cs.InputListener;
 import haxe.ui.backend.cs.StyleMapper;
@@ -49,6 +50,7 @@ class ComponentImpl extends ComponentBase {
         StyleMapper.toNative(style, _nativeStyle);
         applyBackgroundImage(style.backgroundImage);
         nativePanel.ApplyStyle(_nativeStyle);
+        nativePanel.SetColorMatrix(ColorFilters.matrixFor(style.filter));
         if (_imageDisplay != null) {
             _imageDisplay.imageNative.SetPixelated(style.imageRendering == "pixelated");
         }

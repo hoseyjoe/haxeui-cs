@@ -71,17 +71,19 @@ namespace HaxeUICs
             Changed?.Invoke();
         }
 
-        public void Render(DrawingContext context)
+        /// <param name="matrix">The colour filter in force (null for none): colours and images go through it.</param>
+        public void Render(DrawingContext context, float[] matrix = null)
         {
-            if (_pixels != null) context.DrawImage(_pixels, new Rect(0, 0, _pixels.Size.Width, _pixels.Size.Height));
+            if (_pixels != null) context.DrawImage(ColorMatrix.Filter(_pixels, matrix), new Rect(0, 0, _pixels.Size.Width, _pixels.Size.Height));
             if (_commands.Count == 0) return;
-            new Replay(context).Run(_commands);
+            new Replay(context, matrix).Run(_commands);
         }
 
         /// <summary>One pass over the commands: fills (and images) draw in order, then every stroke on top.</summary>
         class Replay
         {
             readonly DrawingContext _context;
+            readonly float[] _matrix;
             readonly List<(IPen pen, Geometry geometry)> _strokes = new List<(IPen, Geometry)>();
 
             IBrush _fill;
@@ -94,9 +96,10 @@ namespace HaxeUICs
 
             Point _position;
 
-            public Replay(DrawingContext context)
+            public Replay(DrawingContext context, float[] matrix)
             {
                 _context = context;
+                _matrix = matrix;
             }
 
             public void Run(List<Command> commands)
@@ -130,11 +133,11 @@ namespace HaxeUICs
                             break;
                         case Op.Stroke:
                             EndStroke();
-                            _pen = c.Has ? new Pen(new SolidColorBrush(Color.FromUInt32(c.Color)), c.A > 0 ? c.A : 1) : null;
+                            _pen = c.Has ? new Pen(new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, c.Color))), c.A > 0 ? c.A : 1) : null;
                             break;
                         case Op.Fill:
                             EndFill();
-                            _fill = c.Has ? new SolidColorBrush(Color.FromUInt32(c.Color)) : null;
+                            _fill = c.Has ? new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, c.Color))) : null;
                             break;
                         case Op.BeginPath:
                             _fillFigure = null;
@@ -146,7 +149,7 @@ namespace HaxeUICs
                             break;
                         case Op.Image:
                             if (c.Image != null && c.C > 0 && c.D > 0)
-                                _context.DrawImage(c.Image.Bitmap, new Rect(0, 0, c.Image.Width, c.Image.Height), new Rect(c.A, c.B, c.C, c.D));
+                                _context.DrawImage(ColorMatrix.Filter(c.Image.Bitmap, _matrix), new Rect(0, 0, c.Image.Width, c.Image.Height), new Rect(c.A, c.B, c.C, c.D));
                             break;
                     }
                 }

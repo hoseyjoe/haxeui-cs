@@ -102,6 +102,7 @@ extern class UIPanel extends Control {
 	function Listen(kinds:Int, listener:IPanelListener):Void;
 	function SetGraphics(graphics:UIGraphics):Void;
 	function SetCursorSuppressed(suppressed:Bool):Void;
+	function SetColorMatrix(matrix:cs.NativeArray<Single>):Void;
 }
 
 @:native("HaxeUICs.UIGraphics")

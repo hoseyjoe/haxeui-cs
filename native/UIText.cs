@@ -8,8 +8,20 @@ namespace HaxeUICs
     /// A HaxeUI text display: a TextBlock HaxeUI positions and sizes itself, which can also report
     /// the size its text needs (unbounded, or wrapped at a width).
     /// </summary>
-    public class UIText : TextBlock
+    public class UIText : TextBlock, IColorFiltered
     {
+        float[] _matrix;
+        uint _color = 0xFF000000;
+        double _shadowX, _shadowY, _shadowBlur;
+        uint _shadowColor;
+
+        public void SetEffectiveColorMatrix(float[] matrix)
+        {
+            _matrix = matrix;
+            SetColor(_color);
+            SetShadow(_shadowX, _shadowY, _shadowBlur, _shadowColor);
+        }
+
         public double MeasuredWidth { get; private set; }
         public double MeasuredHeight { get; private set; }
 
@@ -32,7 +44,8 @@ namespace HaxeUICs
 
         public void SetColor(uint argb)
         {
-            Foreground = new SolidColorBrush(Color.FromUInt32(argb));
+            _color = argb;
+            Foreground = new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, argb)));
         }
 
         /// <summary>0 left, 1 center, 2 right, 3 justify.</summary>
@@ -45,6 +58,11 @@ namespace HaxeUICs
         /// <summary>A shadow of the glyphs (haxeui-cs's text-shadow); argb 0 removes it.</summary>
         public void SetShadow(double dx, double dy, double blur, uint argb)
         {
+            _shadowX = dx;
+            _shadowY = dy;
+            _shadowBlur = blur;
+            _shadowColor = argb;
+            argb = argb == 0 ? 0 : ColorMatrix.Apply(_matrix, argb);
             Effect = argb == 0 ? null : new DropShadowEffect
             {
                 OffsetX = dx,

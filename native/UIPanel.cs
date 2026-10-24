@@ -14,6 +14,38 @@ namespace HaxeUICs
     /// </summary>
     public class UIPanel : Canvas, ICustomHitTest
     {
+        float[] _ownMatrix, _parentMatrix, _effectiveMatrix;
+
+        /// <summary>This component's own colour filter (null for none); it reaches everything inside.</summary>
+        public void SetColorMatrix(float[] own)
+        {
+            _ownMatrix = own;
+            UpdateColorMatrix();
+        }
+
+        void SetParentColorMatrix(float[] parent)
+        {
+            _parentMatrix = parent;
+            UpdateColorMatrix();
+        }
+
+        void UpdateColorMatrix()
+        {
+            var effective = ColorMatrix.Compose(_parentMatrix, _ownMatrix);
+            if (SameMatrix(effective, _effectiveMatrix)) return;
+            _effectiveMatrix = effective;
+            foreach (var child in Children) PassColorMatrix(child);
+        }
+
+        void PassColorMatrix(Control child)
+        {
+            if (child is UIPanel panel) panel.SetParentColorMatrix(_effectiveMatrix);
+            else if (child is IColorFiltered filtered) filtered.SetEffectiveColorMatrix(_effectiveMatrix);
+        }
+
+        static bool SameMatrix(float[] a, float[] b) =>
+            a == b || (a != null && b != null && System.Linq.Enumerable.SequenceEqual(a, b));
+
         int _contentCount;
         readonly UIPainter _painter;
         string _cursorName;
@@ -133,6 +165,7 @@ namespace HaxeUICs
             Detach(child);
             var at = _contentCount + System.Math.Clamp(index, 0, ChildCount);
             Children.Insert(at, child);
+            PassColorMatrix(child);
         }
 
         /// <summary>
@@ -174,6 +207,7 @@ namespace HaxeUICs
             Detach(content);
             Children.Insert(_contentCount, content);
             _contentCount++;
+            PassColorMatrix(content);
         }
 
         public bool HitTest(Point point)
@@ -190,10 +224,17 @@ namespace HaxeUICs
     }
 
     /// <summary>Paints a UIPanel's own style (background, then border) beneath its content and children.</summary>
-    public class UIPainter : Control
+    public class UIPainter : Control, IColorFiltered
     {
         public UIStyle Style;
         public UIGraphics Graphics;
+        float[] _matrix;
+
+        public void SetEffectiveColorMatrix(float[] matrix)
+        {
+            _matrix = matrix;
+            InvalidateVisual();
+        }
 
         public UIPainter()
         {
@@ -202,8 +243,9 @@ namespace HaxeUICs
 
         public override void Render(DrawingContext context)
         {
+            if (Style != null) Style.PaintMatrix = _matrix;
             RenderStyle(context);
-            Graphics?.Render(context);
+            Graphics?.Render(context, _matrix);
         }
 
         void RenderStyle(DrawingContext context)
@@ -218,7 +260,7 @@ namespace HaxeUICs
             if (s.Shadows.Count > 0)
             {
                 // Shadows hug the background's rounded rect, drawn with it (outside, or inset inside).
-                context.DrawRectangle(background, null, new RoundedRect(bounds, s.RadiusTL, s.RadiusTR, s.RadiusBR, s.RadiusBL), s.Shadows);
+                context.DrawRectangle(background, null, new RoundedRect(bounds, s.RadiusTL, s.RadiusTR, s.RadiusBR, s.RadiusBL), s.PaintShadows());
             }
             else if (background != null)
             {
@@ -235,10 +277,10 @@ namespace HaxeUICs
 
         static void RenderBackgroundImage(DrawingContext context, UIStyle s, Rect bounds)
         {
-            var image = s.BackgroundImage;
+            var image = ColorMatrix.Filter(s.BackgroundImage.Bitmap, s.PaintMatrix);
             var source = s.HasClip
                 ? new Rect(s.ClipL, s.ClipT, s.ClipR - s.ClipL, s.ClipB - s.ClipT)
-                : new Rect(0, 0, image.Width, image.Height);
+                : new Rect(0, 0, image.PixelSize.Width, image.PixelSize.Height);
             if (source.Width <= 0 || source.Height <= 0) return;
 
             // Within the background's rounded corners, as html5 clips it; pixelated if asked.
@@ -300,7 +342,7 @@ namespace HaxeUICs
         }
 
         /// <summary>Repeats a source rect across a destination, along x, y or both; stretched along the other.</summary>
-        static void DrawTiled(DrawingContext context, UIImage image, Rect source, Rect into, bool alongX, bool alongY, Size? tile = null)
+        static void DrawTiled(DrawingContext context, Bitmap image, Rect source, Rect into, bool alongX, bool alongY, Size? tile = null)
         {
             if (into.Width <= 0 || into.Height <= 0) return;
             var step = tile ?? source.Size;
@@ -315,10 +357,10 @@ namespace HaxeUICs
             }
         }
 
-        static void DrawPart(DrawingContext context, UIImage image, Rect source, Rect destination)
+        static void DrawPart(DrawingContext context, Bitmap image, Rect source, Rect destination)
         {
             if (source.Width > 0 && source.Height > 0 && destination.Width > 0 && destination.Height > 0)
-                context.DrawImage(image.Bitmap, source, destination);
+                context.DrawImage(image, source, destination);
         }
 
         static void RenderBorder(DrawingContext context, UIStyle s, Rect bounds)

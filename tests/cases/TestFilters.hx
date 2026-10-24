@@ -1,7 +1,10 @@
 package cases;
 
 import haxe.ui.backend.cs.TestDriver;
+import haxe.ui.components.Canvas;
+import haxe.ui.components.Image;
 import haxe.ui.components.Label;
+import haxe.ui.containers.Absolute;
 import haxe.ui.containers.Box;
 import haxe.ui.core.Screen;
 import utest.Assert;
@@ -83,6 +86,139 @@ class TestFilters extends utest.Test {
 		Screen.instance.addComponent(parent);
 		TestDriver.pump(3);
 		return cast parent;
+	}
+
+	// Colour filters, as CSS filter functions (html5): expected values worked out by hand.
+
+	function testGrayscale() {
+		var p = solid("#FF0000", "grayscale");
+		Assert.isTrue(near(p, gray(p), 3), StringTools.hex(p, 8));
+	}
+
+	function testBrightnessHalves() {
+		var p = solid("#C86432", "brightness(0.5)");
+		Assert.isTrue(near(p, 0xFF643219, 2), StringTools.hex(p, 8));
+	}
+
+	function testInvert() {
+		var p = solid("#FF0000", "invert(1)");
+		Assert.isTrue(near(p, 0xFF00FFFF, 2), StringTools.hex(p, 8));
+	}
+
+	function testSaturateZeroIsGray() {
+		var p = solid("#3366CC", "saturate(0)");
+		Assert.isTrue(near(p, gray(p), 3), StringTools.hex(p, 8));
+	}
+
+	function testContrastZeroIsMidGray() {
+		var p = solid("#3366CC", "contrast(0)");
+		Assert.isTrue(near(p, 0xFF808080, 3), StringTools.hex(p, 8));
+	}
+
+	function testHueRotate180TurnsRedTowardsCyan() {
+		var p = solid("#FF0000", "hue-rotate(180)");
+		var r = (p >> 16) & 0xFF, g = (p >> 8) & 0xFF, b = p & 0xFF;
+		Assert.isTrue(r < g && r < b, StringTools.hex(p, 8));
+	}
+
+	function testTint() {
+		var p = solid("#FFFFFF", "tint(#FF0000, 1)");
+		Assert.isTrue(near(p, 0xFFFF0000, 6), StringTools.hex(p, 8));
+	}
+
+	function testFilterReachesChildren() {
+		var parent = new Absolute();
+		parent.left = 20;
+		parent.top = 20;
+		parent.width = 60;
+		parent.height = 40;
+		parent.styleString = "filter: grayscale;";
+		var child = new Box();
+		child.width = 60;
+		child.height = 40;
+		child.styleString = "border-size: 0px; padding: 0px; background-color: #FF0000;";
+		parent.addComponent(child);
+		Screen.instance.addComponent(parent);
+		TestDriver.pump(3);
+		var p = TestDriver.pixel(40, 40);
+		Assert.isTrue(near(p, gray(p), 3), StringTools.hex(p, 8));
+	}
+
+	function testFilterReachesImageAndCanvas() {
+		var parent = new Absolute();
+		parent.left = 20;
+		parent.top = 20;
+		parent.width = 120;
+		parent.height = 40;
+		parent.styleString = "filter: grayscale;";
+		var image = new Image();
+		image.resource = "red4x4.png";
+		image.width = 40;
+		image.height = 40;
+		parent.addComponent(image);
+		var canvas = new Canvas();
+		canvas.left = 60;
+		canvas.width = 40;
+		canvas.height = 40;
+		parent.addComponent(canvas);
+		Screen.instance.addComponent(parent);
+		TestDriver.pump(3);
+		canvas.componentGraphics.fillStyle(0xFF0000);
+		canvas.componentGraphics.rectangle(0, 0, 40, 40);
+		canvas.componentGraphics.fillStyle(null);
+		TestDriver.pump(3);
+		var fromImage = TestDriver.pixel(40, 40);
+		var fromCanvas = TestDriver.pixel(100, 40);
+		Assert.isTrue(near(fromImage, gray(fromImage), 3) && bright(fromImage) < 600, 'image ${StringTools.hex(fromImage, 8)}');
+		Assert.isTrue(near(fromCanvas, gray(fromCanvas), 3) && bright(fromCanvas) < 600, 'canvas ${StringTools.hex(fromCanvas, 8)}');
+	}
+
+	function testColourFilterClears() {
+		var b = box("background-color: #FF0000; filter: grayscale;");
+		b.styleString = "border-size: 0px; padding: 0px; background-color: #FF0000; filter: none;";
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(70, 50));
+	}
+
+	function testDisabledImageIsGray() {
+		// the default theme: .image:disabled { filter: grayscale }
+		var image = new Image();
+		image.resource = "red4x4.png";
+		image.width = 40;
+		image.height = 40;
+		Screen.instance.addComponent(image);
+		TestDriver.pump(3);
+		image.disabled = true;
+		TestDriver.pump(3);
+		var p = TestDriver.pixel(20, 20);
+		Assert.isTrue(near(p, gray(p), 3) && bright(p) < 600, StringTools.hex(p, 8));
+	}
+
+	static function solid(colour:String, filter:String):Int {
+		var b = new Box();
+		b.left = 20;
+		b.top = 20;
+		b.width = 60;
+		b.height = 40;
+		b.styleString = 'border-size: 0px; padding: 0px; background-color: $colour; filter: $filter;';
+		Screen.instance.addComponent(b);
+		TestDriver.pump(3);
+		return TestDriver.pixel(40, 40);
+	}
+
+	static function near(a:Int, b:Int, tolerance:Int):Bool {
+		for (shift in [16, 8, 0]) {
+			if (Math.abs(((a >> shift) & 0xFF) - ((b >> shift) & 0xFF)) > tolerance) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** The opaque grey whose three channels are a pixel's channel average. **/
+	static function gray(p:Int):Int {
+		var avg = Math.round((((p >> 16) & 0xFF) + ((p >> 8) & 0xFF) + (p & 0xFF)) / 3);
+		return 0xFF000000 | (avg << 16) | (avg << 8) | avg;
 	}
 
 	// text-shadow (a haxeui-cs directive): white glyphs on the white window are invisible,

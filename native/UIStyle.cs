@@ -69,7 +69,20 @@ namespace HaxeUICs
         internal bool HasClip => !double.IsNaN(ClipL) && !double.IsNaN(ClipT) && !double.IsNaN(ClipR) && !double.IsNaN(ClipB);
         internal bool HasSlice => !double.IsNaN(SliceL) && !double.IsNaN(SliceT) && !double.IsNaN(SliceR) && !double.IsNaN(SliceB);
 
-        internal IBrush BackgroundBrush()
+        /// <summary>The colour filter in force while this style is painted (set by UIPainter), or null.</summary>
+        internal float[] PaintMatrix;
+
+        internal IBrush BackgroundBrush() => ColorMatrix.Brush(UnfilteredBackgroundBrush(), PaintMatrix);
+
+        /// <summary>The shadows, their colours through the paint-time colour filter.</summary>
+        internal BoxShadows PaintShadows()
+        {
+            if (PaintMatrix == null || _shadows.Count == 0) return Shadows;
+            var mapped = _shadows.ConvertAll(sh => { sh.Color = ColorMatrix.Apply(PaintMatrix, sh.Color); return sh; });
+            return mapped.Count == 1 ? new BoxShadows(mapped[0]) : new BoxShadows(mapped[0], mapped.GetRange(1, mapped.Count - 1).ToArray());
+        }
+
+        IBrush UnfilteredBackgroundBrush()
         {
             if (BackgroundColor == 0) return null;
             if (GradientStyle == 0 || BackgroundColorEnd == 0)
@@ -92,7 +105,7 @@ namespace HaxeUICs
 
         internal IBrush BorderBrush(uint color)
         {
-            return color == 0 ? null : new SolidColorBrush(Color.FromUInt32(color), BorderOpacity);
+            return color == 0 ? null : ColorMatrix.Brush(new SolidColorBrush(Color.FromUInt32(color), BorderOpacity), PaintMatrix);
         }
 
         /// <summary>The pen for a border line of this width, dashed or dotted as BorderStyle says.</summary>

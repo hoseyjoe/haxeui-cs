@@ -20,8 +20,21 @@ namespace HaxeUICs
     /// the field around it) and its scrollbars hidden (HaxeUI draws those too). Pointer and key
     /// events keep bubbling to the owning component, as an HTML input's do.
     /// </summary>
-    public class UITextInput : TextBox
+    public class UITextInput : TextBox, IColorFiltered
     {
+        float[] _matrix;
+        uint _color = 0xFF000000, _selectionColor;
+        double _shadowX, _shadowY, _shadowBlur;
+        uint _shadowColor;
+
+        public void SetEffectiveColorMatrix(float[] matrix)
+        {
+            _matrix = matrix;
+            SetColor(_color);
+            if (_selectionColor != 0) SetSelectionColor(_selectionColor);
+            SetShadow(_shadowX, _shadowY, _shadowBlur, _shadowColor);
+        }
+
         ITextInputListener _listener;
         ScrollViewer _scroll;
         bool _settingText;
@@ -76,7 +89,11 @@ namespace HaxeUICs
             ScrollViewer.SetHorizontalScrollBarVisibility(this, wrap ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Hidden);
         }
         public void SetPassword(bool password) => PasswordChar = password ? '•' : '\0';
-        public void SetSelectionColor(uint argb) => SelectionBrush = new SolidColorBrush(Color.FromUInt32(argb));
+        public void SetSelectionColor(uint argb)
+        {
+            _selectionColor = argb;
+            SelectionBrush = new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, argb)));
+        }
 
         public void SetFont(string family, double size, bool bold, bool italic, bool underline, bool strikethrough)
         {
@@ -130,7 +147,8 @@ namespace HaxeUICs
 
         public void SetColor(uint argb)
         {
-            var brush = new SolidColorBrush(Color.FromUInt32(argb));
+            _color = argb;
+            var brush = new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, argb)));
             Foreground = brush;
             CaretBrush = brush;
         }
@@ -145,6 +163,11 @@ namespace HaxeUICs
         /// <summary>A shadow of the glyphs (haxeui-cs's text-shadow); argb 0 removes it.</summary>
         public void SetShadow(double dx, double dy, double blur, uint argb)
         {
+            _shadowX = dx;
+            _shadowY = dy;
+            _shadowBlur = blur;
+            _shadowColor = argb;
+            argb = argb == 0 ? 0 : ColorMatrix.Apply(_matrix, argb);
             Effect = argb == 0 ? null : new DropShadowEffect
             {
                 OffsetX = dx,
