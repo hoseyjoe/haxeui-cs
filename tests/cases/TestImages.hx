@@ -161,6 +161,13 @@ class TestImages extends utest.Test {
 		Assert.isTrue(p == 0xFF000000 || p == 0xFFFFFFFF, 'no interpolated grey at the cell edge: ${StringTools.hex(p, 8)}');
 	}
 
+	function testOddResourceName() {
+		var info:ImageInfo = null;
+		ToolkitAssets.instance.getImage("odd name & co.png", i -> info = i);
+		TestDriver.pump();
+		Assert.equals(4, info != null ? info.width : -1);
+	}
+
 	static function box100x60(style:String):Box {
 		var b = new Box();
 		b.width = 100;

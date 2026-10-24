@@ -24,89 +24,131 @@ namespace HaxeUICs
         /// <param name="patternNames">A label for each pattern.</param>
         public static async void OpenFiles(string title, bool multiple, string[] patterns, string[] patternNames, IFileDialogListener listener)
         {
-            if (TestResponse != null)
+            try
             {
-                Answer(TestResponse, listener);
-                return;
+                if (TestResponse != null)
+                {
+                    Answer(TestResponse, listener);
+                    return;
+                }
+                var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+                if (storage == null || !storage.CanOpen)
+                {
+                    Cancel(listener);
+                    return;
+                }
+                var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = multiple,
+                    FileTypeFilter = Filters(patterns, patternNames),
+                });
+                var paths = new List<string>();
+                foreach (var file in files)
+                {
+                    var path = file.TryGetLocalPath();
+                    if (path != null) paths.Add(path);
+                }
+                Answer(paths.ToArray(), listener);
             }
-            var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
-            if (storage == null || !storage.CanOpen)
+            catch (System.Exception e)
             {
-                listener.OnCancelled();
-                return;
+                Report(e);
+                Cancel(listener);
             }
-            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = title,
-                AllowMultiple = multiple,
-                FileTypeFilter = Filters(patterns, patternNames),
-            });
-            var paths = new List<string>();
-            foreach (var file in files)
-            {
-                var path = file.TryGetLocalPath();
-                if (path != null) paths.Add(path);
-            }
-            Answer(paths.ToArray(), listener);
         }
 
         public static async void SaveFile(string title, string suggestedName, string[] patterns, string[] patternNames, IFileDialogListener listener)
         {
-            if (TestResponse != null)
+            try
             {
-                Answer(TestResponse, listener);
-                return;
+                if (TestResponse != null)
+                {
+                    Answer(TestResponse, listener);
+                    return;
+                }
+                var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+                if (storage == null || !storage.CanSave)
+                {
+                    Cancel(listener);
+                    return;
+                }
+                var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = title,
+                    SuggestedFileName = suggestedName,
+                    FileTypeChoices = Filters(patterns, patternNames),
+                });
+                var path = file?.TryGetLocalPath();
+                Answer(path != null ? new[] { path } : System.Array.Empty<string>(), listener);
             }
-            var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
-            if (storage == null || !storage.CanSave)
+            catch (System.Exception e)
             {
-                listener.OnCancelled();
-                return;
+                Report(e);
+                Cancel(listener);
             }
-            var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = title,
-                SuggestedFileName = suggestedName,
-                FileTypeChoices = Filters(patterns, patternNames),
-            });
-            var path = file?.TryGetLocalPath();
-            Answer(path != null ? new[] { path } : System.Array.Empty<string>(), listener);
         }
 
         /// <param name="defaultPath">The folder to start in, or null for the OS's choice.</param>
         public static async void OpenFolder(string title, bool multiple, string defaultPath, IFileDialogListener listener)
         {
-            if (TestResponse != null)
+            try
             {
-                Answer(TestResponse, listener);
-                return;
+                if (TestResponse != null)
+                {
+                    Answer(TestResponse, listener);
+                    return;
+                }
+                var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+                if (storage == null || !storage.CanPickFolder)
+                {
+                    Cancel(listener);
+                    return;
+                }
+                var start = string.IsNullOrEmpty(defaultPath) ? null : await storage.TryGetFolderFromPathAsync(defaultPath);
+                var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                {
+                    Title = title,
+                    AllowMultiple = multiple,
+                    SuggestedStartLocation = start,
+                });
+                var paths = new List<string>();
+                foreach (var folder in folders)
+                {
+                    var path = folder.TryGetLocalPath();
+                    if (path != null) paths.Add(path);
+                }
+                Answer(paths.ToArray(), listener);
             }
-            var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
-            if (storage == null || !storage.CanPickFolder)
+            catch (System.Exception e)
             {
-                listener.OnCancelled();
-                return;
+                Report(e);
+                Cancel(listener);
             }
-            var start = string.IsNullOrEmpty(defaultPath) ? null : await storage.TryGetFolderFromPathAsync(defaultPath);
-            var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
-            {
-                Title = title,
-                AllowMultiple = multiple,
-                SuggestedStartLocation = start,
-            });
-            var paths = new List<string>();
-            foreach (var folder in folders)
-            {
-                var path = folder.TryGetLocalPath();
-                if (path != null) paths.Add(path);
-            }
-            Answer(paths.ToArray(), listener);
         }
 
+        // These run from async void methods: anything thrown there would reach Avalonia's
+        // dispatcher and end the app, so failures are reported instead, never thrown.
         static void Answer(string[] paths, IFileDialogListener listener)
         {
-            if (paths.Length == 0 || System.Array.IndexOf(paths, null) >= 0) listener.OnCancelled();
-            else listener.OnFiles(paths);
+            if (paths.Length == 0 || System.Array.IndexOf(paths, null) >= 0)
+            {
+                Cancel(listener);
+                return;
+            }
+            try { listener.OnFiles(paths); }
+            catch (System.Exception e) { Report(e); }
+        }
+
+        static void Cancel(IFileDialogListener listener)
+        {
+            try { listener.OnCancelled(); }
+            catch (System.Exception e) { Report(e); }
+        }
+
+        static void Report(System.Exception e)
+        {
+            System.Console.Error.WriteLine("haxeui-cs: a file dialog failed: " + e);
         }
 
         static List<FilePickerFileType> Filters(string[] patterns, string[] names)

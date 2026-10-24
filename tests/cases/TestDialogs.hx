@@ -89,9 +89,35 @@ class TestDialogs extends utest.Test {
 		Assert.isTrue(button == DialogButton.CANCEL);
 	}
 
+	function testDialogListenerThrowsIsReported() {
+		// a listener that throws is reported, not left to crash the app from an async method
+		var path = sys.FileSystem.absolutePath("tests/bin/dialog-open.txt");
+		sys.io.File.saveContent(path, "hello");
+		FileDialogs.TestResponse = answer(path);
+		var listener = new ThrowingListener();
+		FileDialogs.OpenFiles("Open", false, new cs.NativeArray<String>(0), new cs.NativeArray<String>(0), listener);
+		TestDriver.pump(2);
+		Assert.isTrue(listener.called);
+	}
+
 	static function answer(path:String):cs.NativeArray<String> {
 		var paths = new cs.NativeArray<String>(1);
 		paths[0] = path;
 		return paths;
+	}
+}
+
+private class ThrowingListener implements IFileDialogListener {
+	public var called = false;
+
+	public function new() {
+	}
+
+	public function OnFiles(paths:cs.NativeArray<String>):Void {
+		called = true;
+		throw "deliberate failure in a file dialog listener";
+	}
+
+	public function OnCancelled():Void {
 	}
 }
