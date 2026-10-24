@@ -100,6 +100,9 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
   after any frame, input or timer; an idle app is woken about four times a second, not a hundred.
 - Canvas fills follow haxeui-heaps (Flash): `fillStyle(c)` begins a fill and `fillStyle(null)`
   ends it, and the path drawn in between is filled even without `beginPath`.
+- `StringTools.startsWith` and `endsWith` compare code unit by code unit, as on every other
+  target. Haxe's C# std leaves them to .NET's culture rules, where a BOM or soft hyphen matches
+  anything; haxeui-cs corrects that at compile time.
 - Pointer and key events bubble natively, as in the DOM; `event.cancel()` stops a pointer event.
   Clicks are made from press and release as a browser makes them: every click is a `CLICK`, and
   the second inside the double-click time is also a `DBL_CLICK`; a middle press and release is a

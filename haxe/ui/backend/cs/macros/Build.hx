@@ -24,6 +24,7 @@ class Build {
 	static inline var SVG_SKIA_VERSION = "5.1.1";
 
 	public static function configure():Void {
+		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
 		Context.onAfterGenerate(afterGenerate);
 	}
 
