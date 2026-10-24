@@ -48,9 +48,39 @@ The options also take `resizable` (default true), `minWidth`, `minHeight` and `m
 | `-D haxeui_cs_run` | run the program straight after building it |
 | `-D haxeui_cs_headless` | headless Avalonia (real Skia drawing, no OS window) plus `haxe.ui.backend.cs.TestDriver`, for tests |
 | `-D haxeui_cs_no_dotnet` | stop after writing the `.csproj` |
+| `-D haxeui_cs_publish=<rid>` | publish a release build as one self-contained file instead (see Publishing) |
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
+
+### Publishing
+
+`-D haxeui_cs_publish=<rid>` publishes a release build for one runtime instead of the debug
+build: a single self-contained file, with the .NET runtime and the native libraries (Skia,
+HarfBuzz) inside and no `.pdb`, in `<cs-out>/publish/<rid>/`. The machine it runs on needs
+nothing installed. Runtime ids are .NET's: `win-x64`, `win-arm64`, `linux-x64`, `osx-arm64`,
+`osx-x64`.
+
+```
+haxe app.hxml -D haxeui_cs_publish=win-x64
+```
+
+With `-D haxeui_cs_run` the published program runs too, when it was published for this OS. It is
+the `dotnet publish` of the generated `.csproj` with `--self-contained`,
+`-p:PublishSingleFile=true`, `-p:IncludeNativeLibrariesForSelfExtract=true` and
+`-p:DebugType=none`, so it can also be run by hand with other settings.
+
+- It is about 100 MB. `-p:EnableCompressionInSingleFile=true` (by hand) makes it smaller and
+  slower to start.
+- It is not trimmed, and should not be (`PublishTrimmed`): Haxe's output and HaxeUI find classes by
+  name at run time.
+- `Sys.programPath()` is an empty string in a single-file program (Haxe's own `Sys`; .NET warns
+  about it while publishing). For the program's own folder use
+  `cs.Syntax.code("System.AppContext.BaseDirectory")`. Relative paths are still relative to the
+  folder it was started from.
+- The native libraries are unpacked to a temporary folder the first time it runs.
+- For a Mac it is a plain program, not a signed `.app` bundle. On Linux a real window needs the
+  libraries in the Linux section below.
 
 ## Testing
 

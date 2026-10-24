@@ -18,6 +18,9 @@ import sys.io.File;
  * `-D haxeui_cs_headless`  headless Avalonia host + Avalonia.Headless (tests)
  * `-D haxeui_cs_run`       run the program after building it
  * `-D haxeui_cs_no_dotnet` stop after writing the .csproj
+ * `-D haxeui_cs_publish=<rid>` instead of a debug build, publish a release build for that
+ *                          runtime (win-x64, linux-x64, osx-arm64...): one self-contained
+ *                          file, native libraries inside, no .pdb, in `<cs-out>/publish/<rid>/`
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
@@ -39,6 +42,10 @@ class Build {
 		if (Context.defined("haxeui_cs_no_dotnet")) {
 			return;
 		}
+		if (Context.defined("haxeui_cs_publish")) {
+			publish(out, name, csproj, Context.definedValue("haxeui_cs_publish"));
+			return;
+		}
 		var code = Sys.command("dotnet", ["build", csproj, "-nologo", "-v", "q"]);
 		if (code != 0) {
 			Sys.exit(code);
@@ -46,6 +53,50 @@ class Build {
 		if (Context.defined("haxeui_cs_run")) {
 			var dll = Path.join([out, "bin", "Debug", "net10.0", name + ".dll"]);
 			code = Sys.command("dotnet", [dll]);
+			if (code != 0) {
+				Sys.exit(code);
+			}
+		}
+	}
+
+	/**
+	 * A release build as one self-contained file for `rid`: the .NET runtime and the native
+	 * libraries (Skia, HarfBuzz...) inside, no .pdb beside it. Not trimmed: Haxe's output and
+	 * HaxeUI find classes by name at run time, which trimming would cut away.
+	 */
+	static function publish(out:String, name:String, csproj:String, rid:String):Void {
+		// a bare `-D haxeui_cs_publish` has the value "1"
+		if (rid == null || rid == "" || rid == "1") {
+			Context.fatalError("haxeui-cs: -D haxeui_cs_publish needs a runtime id, e.g. -D haxeui_cs_publish=win-x64", Context.currentPos());
+		}
+		var dir = Path.join([out, "publish", rid]);
+		var code = Sys.command("dotnet", [
+			"publish", csproj, "-c", "Release", "-r", rid, "--self-contained",
+			"-p:PublishSingleFile=true", "-p:IncludeNativeLibrariesForSelfExtract=true", "-p:DebugType=none",
+			"-o", dir, "-nologo", "-v", "q"
+		]);
+		if (code != 0) {
+			Sys.exit(code);
+		}
+		// DebugType=none drops the app's own symbols; the Skia and HarfBuzz packages ship
+		// theirs (100 MB of .pdb) beside the native libraries, so those go here.
+		for (file in FileSystem.readDirectory(dir)) {
+			if (Path.extension(file).toLowerCase() == "pdb") {
+				FileSystem.deleteFile(Path.join([dir, file]));
+			}
+		}
+		if (Context.defined("haxeui_cs_run")) {
+			// a program published for another OS cannot run here
+			var host = switch (Sys.systemName()) {
+				case "Windows": "win";
+				case "Mac": "osx";
+				case _: "linux";
+			}
+			if (!StringTools.startsWith(rid, host)) {
+				Sys.println('haxeui-cs: published for $rid in $dir; not run on this ${Sys.systemName()} machine');
+				return;
+			}
+			code = Sys.command(Path.join([dir, host == "win" ? name + ".exe" : name]), []);
 			if (code != 0) {
 				Sys.exit(code);
 			}
