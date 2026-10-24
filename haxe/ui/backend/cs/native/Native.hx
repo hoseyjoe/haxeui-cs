@@ -160,6 +160,7 @@ extern class UIText extends Control {
 	function SetColor(argb:UInt):Void;
 	function SetAlign(align:Int):Void;
 	function SetWrap(wrap:Bool):Void;
+	function SetHtml(html:String):Void;
 	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;
 	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
 	function MeasureText(maxWidth:Float):Void;

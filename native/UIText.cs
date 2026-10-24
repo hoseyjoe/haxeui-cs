@@ -1,5 +1,9 @@
+using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Media;
 
 namespace HaxeUICs
@@ -20,6 +24,144 @@ namespace HaxeUICs
             _matrix = matrix;
             SetColor(_color);
             SetShadow(_shadowX, _shadowY, _shadowBlur, _shadowColor);
+            if (_html != null) BuildInlines();
+        }
+
+        // ---- HTML text: a small subset, as runs of styled text ----
+
+        string _html;
+
+        /// <summary>
+        /// Shows HTML text: b/strong, i/em, u, s/strike/del, br, font (color, size, face) and
+        /// span style="color: ...". Other tags are dropped and their text kept; entities are
+        /// decoded and whitespace collapses as in HTML. Null goes back to plain Text.
+        /// </summary>
+        public void SetHtml(string html)
+        {
+            if (html == _html) return;
+            _html = html;
+            if (html != null) BuildInlines();
+        }
+
+        class RunStyle
+        {
+            public bool Bold, Italic, Underline, Strike;
+            public uint? Color;
+            public double? Size;
+            public string Face;
+            public RunStyle Copy() => (RunStyle)MemberwiseClone();
+        }
+
+        static readonly Regex Attribute = new Regex(@"([\w-]+)\s*=\s*(?:""([^""]*)""|'([^']*)'|([^\s>]+))");
+        static readonly Regex Space = new Regex(@"\s+");
+        static readonly double[] HtmlSizes = { 10, 13, 16, 18, 24, 32, 48 };
+
+        void BuildInlines()
+        {
+            var inlines = new InlineCollection();
+            var style = new RunStyle();
+            var open = new List<(string tag, RunStyle before)>();
+            var text = new StringBuilder();
+            var html = _html;
+            void Flush()
+            {
+                if (text.Length == 0) return;
+                var words = System.Net.WebUtility.HtmlDecode(Space.Replace(text.ToString(), " "));
+                text.Clear();
+                if (words.Length > 0) inlines.Add(MakeRun(words, style));
+            }
+            var i = 0;
+            while (i < html.Length)
+            {
+                var lt = html.IndexOf('<', i);
+                var gt = lt < 0 ? -1 : html.IndexOf('>', lt);
+                if (lt < 0 || gt < 0)
+                {
+                    text.Append(html, i, html.Length - i);
+                    break;
+                }
+                text.Append(html, i, lt - i);
+                Flush();
+                var tag = html.Substring(lt + 1, gt - lt - 1).Trim();
+                i = gt + 1;
+                if (tag.StartsWith("/"))
+                {
+                    var name = tag.Substring(1).Trim().ToLowerInvariant();
+                    for (var k = open.Count - 1; k >= 0; k--)
+                    {
+                        if (open[k].tag != name) continue;
+                        style = open[k].before;
+                        open.RemoveRange(k, open.Count - k);
+                        break;
+                    }
+                    continue;
+                }
+                var parts = tag.TrimEnd('/').Split(new[] { ' ', '\t', '\n', '\r' }, 2);
+                var tagName = parts[0].ToLowerInvariant();
+                if (tagName == "br")
+                {
+                    inlines.Add(new LineBreak());
+                    continue;
+                }
+                var next = style.Copy();
+                var attributes = parts.Length > 1 ? parts[1] : "";
+                switch (tagName)
+                {
+                    case "b": case "strong": next.Bold = true; break;
+                    case "i": case "em": next.Italic = true; break;
+                    case "u": next.Underline = true; break;
+                    case "s": case "strike": case "del": next.Strike = true; break;
+                    case "font":
+                        foreach (Match m in Attribute.Matches(attributes))
+                        {
+                            var value = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Success ? m.Groups[3].Value : m.Groups[4].Value;
+                            switch (m.Groups[1].Value.ToLowerInvariant())
+                            {
+                                case "color": next.Color = ParseColor(value) ?? next.Color; break;
+                                case "face": next.Face = value; break;
+                                case "size":
+                                    if (double.TryParse(value.Replace("px", ""), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var size))
+                                        next.Size = size >= 1 && size <= 7 && !value.EndsWith("px") ? HtmlSizes[(int)size - 1] : size;
+                                    break;
+                            }
+                        }
+                        break;
+                    case "span":
+                        foreach (Match m in Attribute.Matches(attributes))
+                        {
+                            if (m.Groups[1].Value.ToLowerInvariant() != "style") continue;
+                            var css = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Success ? m.Groups[3].Value : m.Groups[4].Value;
+                            var colour = Regex.Match(css, @"(?:^|;)\s*color\s*:\s*([^;]+)");
+                            if (colour.Success) next.Color = ParseColor(colour.Groups[1].Value.Trim()) ?? next.Color;
+                        }
+                        break;
+                    default:
+                        continue; // unknown: dropped, its text kept
+                }
+                open.Add((tagName, style));
+                style = next;
+            }
+            Flush();
+            Inlines = inlines;
+        }
+
+        Run MakeRun(string text, RunStyle style)
+        {
+            var run = new Run(text);
+            if (style.Bold) run.FontWeight = FontWeight.Bold;
+            if (style.Italic) run.FontStyle = FontStyle.Italic;
+            if (style.Underline || style.Strike) run.TextDecorations = UIFonts.Decorations(style.Underline, style.Strike);
+            if (style.Color.HasValue) run.Foreground = new SolidColorBrush(Color.FromUInt32(ColorMatrix.Apply(_matrix, style.Color.Value)));
+            if (style.Size.HasValue) run.FontSize = style.Size.Value;
+            if (!string.IsNullOrEmpty(style.Face)) run.FontFamily = UIFonts.ResolveFamily(style.Face);
+            return run;
+        }
+
+        static uint? ParseColor(string value)
+        {
+            var hex = value.Trim().TrimStart('#');
+            if (hex.Length == 3) hex = new string(new[] { hex[0], hex[0], hex[1], hex[1], hex[2], hex[2] });
+            return hex.Length == 6 && uint.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var rgb) ? 0xFF000000u | rgb : (uint?)null;
         }
 
         public double MeasuredWidth { get; private set; }
@@ -95,6 +237,17 @@ namespace HaxeUICs
         {
             var width = Width;
             var height = Height;
+            if (_html != null)
+            {
+                Width = double.NaN;
+                Height = double.NaN;
+                Measure(new Size(maxWidth > 0 ? maxWidth : double.PositiveInfinity, double.PositiveInfinity));
+                MeasuredWidth = System.Math.Ceiling(DesiredSize.Width);
+                MeasuredHeight = System.Math.Ceiling(DesiredSize.Height);
+                Width = width;
+                Height = height;
+                return;
+            }
             var text = Text;
             if (string.IsNullOrEmpty(text)) Text = "|";
             Width = double.NaN;

@@ -12,8 +12,17 @@ class TextDisplayImpl extends TextBase {
         textNative = new UIText();
     }
 
+    private override function get_supportsHtml():Bool {
+        return true;
+    }
+
     private override function validateData() {
+        if (_text == null && _htmlText != null && supportsHtml) {
+            textNative.SetHtml(_htmlText);
+            return;
+        }
         var text = _text != null ? _text : (_htmlText != null ? stripHtml(_htmlText) : "");
+        textNative.SetHtml(null);
         if (textNative.Text != text) {
             textNative.Text = text;
         }

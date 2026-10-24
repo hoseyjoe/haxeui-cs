@@ -101,6 +101,45 @@ class TestText extends utest.Test {
 		Assert.isTrue(rightmost >= 196, 'first line ends at x $rightmost');
 	}
 
+	function testHtmlFontColour() {
+		var l = html('<font color="#FF0000">RED</font>', "font-size: 24px; color: #000000;");
+		var px = TestDriver.pixels(Std.int(l.screenLeft), Std.int(l.screenTop), Std.int(l.width), Std.int(l.height));
+		var red = Pixels.countWhere(px, p -> ((p >> 16) & 0xFF) > 200 && ((p >> 8) & 0xFF) < 60 && (p & 0xFF) < 60);
+		Assert.isTrue(red > 10, 'red pixels: $red');
+	}
+
+	function testHtmlBold() {
+		var plain = html("WWWW").width;
+		var bold = html("<b>WWWW</b>").width;
+		Assert.isTrue(bold > plain, 'bold $bold, plain $plain');
+	}
+
+	function testHtmlLineBreak() {
+		var one = html("one").height;
+		var two = html("one<br>two").height;
+		Assert.isTrue(two >= 1.8 * one, 'one line $one, two lines $two');
+	}
+
+	function testHtmlUnknownTagKeepsText() {
+		Assert.floatEquals(html("x").width, html("<blink>x</blink>").width, 0.5);
+	}
+
+	function testHtmlEntities() {
+		var plain = show("a & b").width;
+		Assert.floatEquals(plain, html("a &amp; b").width, 0.5);
+	}
+
+	static function html(markup:String, ?styleString:String):Label {
+		var label = new Label();
+		label.htmlText = markup;
+		if (styleString != null) {
+			label.styleString = styleString;
+		}
+		Screen.instance.addComponent(label);
+		TestDriver.pump(3);
+		return label;
+	}
+
 	/** The longest run of dark pixels in any one row of the component. **/
 	static function darkRun(c:Component):Int {
 		var w = Std.int(c.width), h = Std.int(c.height);

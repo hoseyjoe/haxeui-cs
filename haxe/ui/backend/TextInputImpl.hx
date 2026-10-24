@@ -55,6 +55,11 @@ class TextInputImpl extends TextDisplayImpl {
         return value;
     }
 
+    /** Text inputs edit plain text: HTML is shown with its tags stripped. **/
+    private override function get_supportsHtml():Bool {
+        return false;
+    }
+
     private override function validateData() {
         super.validateData();
         inputNative.SetText(_text != null ? _text : "");
