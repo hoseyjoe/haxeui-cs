@@ -45,7 +45,8 @@ class TestMain {
 			new cases.TestFilters(),
 			new cases.TestCursors(),
 			new cases.TestScale(),
-			new cases.TestApp()
+			new cases.TestApp(),
+			new cases.TestDirectives()
 		];
 	}
 }

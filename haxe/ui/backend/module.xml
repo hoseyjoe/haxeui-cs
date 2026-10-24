@@ -2,5 +2,7 @@
 <module id="haxeui-cs" priority="-1">
     <cssExtensions>
         <cssDirective name="text-shadow" class="haxe.ui.backend.cs.directives.TextShadow" />
+        <cssDirective name="rotation" class="haxe.ui.backend.cs.directives.Rotate" />
+        <cssDirective name="clip-path" class="haxe.ui.backend.cs.directives.ClipPath" />
     </cssExtensions>
 </module>

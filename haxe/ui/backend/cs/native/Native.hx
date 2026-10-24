@@ -124,6 +124,8 @@ extern class UIPanel extends Control {
 	function SetGraphics(graphics:UIGraphics):Void;
 	function SetCursorSuppressed(suppressed:Bool):Void;
 	function SetColorMatrix(matrix:cs.NativeArray<Single>):Void;
+	function SetRotation(degrees:Float):Void;
+	function SetClipInset(top:Float, right:Float, bottom:Float, left:Float):Void;
 }
 
 @:native("HaxeUICs.UIGraphics")

@@ -137,6 +137,7 @@ namespace HaxeUICs
             Height = H;
             _painter.Width = W;
             _painter.Height = H;
+            if (!double.IsNaN(_insetTop)) UpdateClip(); // the inset is measured from the edges
             Place();
         }
 
@@ -151,8 +152,45 @@ namespace HaxeUICs
             ClipTop = enabled ? top : 0;
             ClipWidth = enabled ? width : 0;
             ClipHeight = enabled ? height : 0;
-            Clip = enabled ? new RectangleGeometry(new Rect(left, top, System.Math.Max(0, width), System.Math.Max(0, height))) : null;
+            UpdateClip();
             Place();
+        }
+
+        double _insetTop = double.NaN, _insetRight, _insetBottom, _insetLeft;
+
+        /// <summary>CSS clip-path: inset(top right bottom left), within HaxeUI's own clip; NaN clears it.</summary>
+        public void SetClipInset(double top, double right, double bottom, double left)
+        {
+            _insetTop = top;
+            _insetRight = right;
+            _insetBottom = bottom;
+            _insetLeft = left;
+            UpdateClip();
+        }
+
+        /// <summary>The rect that shows: HaxeUI's clip rect and the clip-path inset, either or both.</summary>
+        Rect? VisibleRect()
+        {
+            Rect? visible = ClipEnabled ? new Rect(ClipLeft, ClipTop, System.Math.Max(0, ClipWidth), System.Math.Max(0, ClipHeight)) : (Rect?)null;
+            if (!double.IsNaN(_insetTop))
+            {
+                var inset = new Rect(_insetLeft, _insetTop, System.Math.Max(0, W - _insetLeft - _insetRight), System.Math.Max(0, H - _insetTop - _insetBottom));
+                visible = visible.HasValue ? visible.Value.Intersect(inset) : inset;
+            }
+            return visible;
+        }
+
+        void UpdateClip()
+        {
+            var visible = VisibleRect();
+            Clip = visible.HasValue ? new RectangleGeometry(visible.Value) : null;
+        }
+
+        /// <summary>html5's rotation directive: turned about the panel's centre, in degrees.</summary>
+        public void SetRotation(double degrees)
+        {
+            RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+            RenderTransform = degrees == 0 || double.IsNaN(degrees) ? null : new RotateTransform(degrees);
         }
 
         public void SetVisible(bool visible)
@@ -212,7 +250,8 @@ namespace HaxeUICs
 
         public bool HitTest(Point point)
         {
-            if (ClipEnabled && !new Rect(ClipLeft, ClipTop, ClipWidth, ClipHeight).Contains(point)) return false;
+            var visible = VisibleRect();
+            if (visible.HasValue && !visible.Value.Contains(point)) return false;
             return point.X >= 0 && point.Y >= 0 && point.X < W && point.Y < H;
         }
 
