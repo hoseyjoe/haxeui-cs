@@ -53,6 +53,13 @@ namespace HaxeUICs
             InvalidateVisual();
         }
 
+        /// <summary>image-rendering: pixelated: scaled without smoothing.</summary>
+        public void SetPixelated(bool pixelated)
+        {
+            RenderOptions.SetBitmapInterpolationMode(this, pixelated ? BitmapInterpolationMode.None : BitmapInterpolationMode.Unspecified);
+            InvalidateVisual();
+        }
+
         /// <summary>Sets position and size; NaN leaves that value as it was.</summary>
         public void SetBounds(double left, double top, double width, double height)
         {

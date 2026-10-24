@@ -123,6 +123,54 @@ class TestImages extends utest.Test {
 		Assert.pass();
 	}
 
+	function testBackgroundSize() {
+		var b = box100x60('background-image: "red4x4.png"; background-image-repeat: no-repeat; background-width: 20px; background-height: 10px;');
+		Assert.equals(0xFFFF0000, TestDriver.pixel(15, 5));
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(25, 5));
+		b.styleString = 'border-size: 0px; padding: 0px; background-image: "red4x4.png"; background-image-repeat: no-repeat; background-width: 50%; background-height: 10px;';
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(45, 5));
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(55, 5));
+	}
+
+	function testBackgroundImageClippedToRadius() {
+		box100x60('background-image: "red4x4.png"; border-radius: 20px;');
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(1, 1), "outside the rounded corner");
+		Assert.equals(0xFFFF0000, TestDriver.pixel(50, 30));
+	}
+
+	function testNineSliceRepeatTilesTheCentre() {
+		// slice9-pattern's centre is 4px wide: red, red, yellow, yellow
+		var b = box100x60('background-image: "slice9-pattern.png"; background-image-repeat: repeat; '
+			+ 'background-image-slice-left: 4px; background-image-slice-top: 4px; background-image-slice-right: 8px; background-image-slice-bottom: 8px;');
+		b.width = 200;
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(4 + 40 + 1, 30), "a red stripe 40px in");
+		Assert.equals(0xFFFFFF00, TestDriver.pixel(4 + 40 + 3, 30), "then yellow: tiled every 4px, not stretched");
+	}
+
+	function testPixelatedImage() {
+		var img = new Image();
+		img.resource = "checker2x2.png";
+		img.width = 40;
+		img.height = 40;
+		img.styleString = "image-rendering: pixelated;";
+		Screen.instance.addComponent(img);
+		TestDriver.pump(3);
+		var p = TestDriver.pixel(19, 5);
+		Assert.isTrue(p == 0xFF000000 || p == 0xFFFFFFFF, 'no interpolated grey at the cell edge: ${StringTools.hex(p, 8)}');
+	}
+
+	static function box100x60(style:String):Box {
+		var b = new Box();
+		b.width = 100;
+		b.height = 60;
+		b.styleString = "border-size: 0px; padding: 0px; " + style;
+		Screen.instance.addComponent(b);
+		TestDriver.pump(3);
+		return b;
+	}
+
 	static function pumpUntil(done:Void->Bool, ms:Int) {
 		var end = haxe.Timer.stamp() + ms / 1000;
 		while (!done() && haxe.Timer.stamp() < end) {

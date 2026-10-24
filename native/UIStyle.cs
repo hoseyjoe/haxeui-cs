@@ -59,8 +59,12 @@ namespace HaxeUICs
         public double ClipL = double.NaN, ClipT = double.NaN, ClipR = double.NaN, ClipB = double.NaN;
         /// <summary>The 9-slice centre rect within the (clipped) source (left, top, right, bottom); NaN: no slicing.</summary>
         public double SliceL = double.NaN, SliceT = double.NaN, SliceR = double.NaN, SliceB = double.NaN;
-        /// <summary>0 stretch, 1 repeat, 2 natural size.</summary>
+        /// <summary>0 stretch, 1 repeat, 2 natural size. With a slice, repeat tiles the edges and centre.</summary>
         public int Repeat;
+        /// <summary>background-width/-height in px, or in percent of the panel; NaN when not given.</summary>
+        public double BgWidth = double.NaN, BgHeight = double.NaN, BgWidthPercent = double.NaN, BgHeightPercent = double.NaN;
+        /// <summary>image-rendering: pixelated (no smoothing when scaled).</summary>
+        public bool Pixelated;
 
         internal bool HasClip => !double.IsNaN(ClipL) && !double.IsNaN(ClipT) && !double.IsNaN(ClipR) && !double.IsNaN(ClipB);
         internal bool HasSlice => !double.IsNaN(SliceL) && !double.IsNaN(SliceT) && !double.IsNaN(SliceR) && !double.IsNaN(SliceB);

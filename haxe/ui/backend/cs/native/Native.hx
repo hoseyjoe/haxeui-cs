@@ -160,6 +160,7 @@ extern class UIImageView extends Control {
 	var H(default, null):Float;
 
 	function SetImage(image:UIImage):Void;
+	function SetPixelated(pixelated:Bool):Void;
 	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
 	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
 }
@@ -248,6 +249,11 @@ extern class UIStyle {
 	var SliceR:Float;
 	var SliceB:Float;
 	var Repeat:Int;
+	var BgWidth:Float;
+	var BgHeight:Float;
+	var BgWidthPercent:Float;
+	var BgHeightPercent:Float;
+	var Pixelated:Bool;
 }
 
 #if haxeui_cs_headless

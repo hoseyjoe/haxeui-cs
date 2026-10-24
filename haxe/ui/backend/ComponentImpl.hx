@@ -49,6 +49,9 @@ class ComponentImpl extends ComponentBase {
         StyleMapper.toNative(style, _nativeStyle);
         applyBackgroundImage(style.backgroundImage);
         nativePanel.ApplyStyle(_nativeStyle);
+        if (_imageDisplay != null) {
+            _imageDisplay.imageNative.SetPixelated(style.imageRendering == "pixelated");
+        }
     }
 
     public override function createTextInput(text:String = null):TextInput {
@@ -88,6 +91,8 @@ class ComponentImpl extends ComponentBase {
         if (_imageDisplay == null) {
             super.createImageDisplay();
             nativePanel.AddContent(_imageDisplay.imageNative);
+            var current = cast(this, haxe.ui.core.Component).style;
+            _imageDisplay.imageNative.SetPixelated(current != null && current.imageRendering == "pixelated");
         }
         return _imageDisplay;
     }

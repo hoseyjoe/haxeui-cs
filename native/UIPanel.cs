@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Rendering;
 
 namespace HaxeUICs
@@ -227,36 +228,77 @@ namespace HaxeUICs
                 : new Rect(0, 0, image.Width, image.Height);
             if (source.Width <= 0 || source.Height <= 0) return;
 
-            if (s.HasSlice)
+            // Within the background's rounded corners, as html5 clips it; pixelated if asked.
+            System.IDisposable corners = s.HasRadius ? context.PushGeometryClip(RoundedPath(bounds, new Vector(s.RadiusTL, s.RadiusTL),
+                new Vector(s.RadiusTR, s.RadiusTR), new Vector(s.RadiusBR, s.RadiusBR), new Vector(s.RadiusBL, s.RadiusBL))) : null;
+            System.IDisposable smoothing = s.Pixelated ? context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.None }) : null;
+            try
             {
-                // Source columns/rows around the centre rect; destination keeps the corners' size.
-                double[] sx = { source.X, source.X + s.SliceL, source.X + s.SliceR, source.Right };
-                double[] sy = { source.Y, source.Y + s.SliceT, source.Y + s.SliceB, source.Bottom };
-                double[] dx = { 0, s.SliceL, bounds.Width - (source.Width - s.SliceR), bounds.Width };
-                double[] dy = { 0, s.SliceT, bounds.Height - (source.Height - s.SliceB), bounds.Height };
-                for (var row = 0; row < 3; row++)
-                    for (var col = 0; col < 3; col++)
-                        DrawPart(context, image, new Rect(sx[col], sy[row], sx[col + 1] - sx[col], sy[row + 1] - sy[row]),
-                            new Rect(dx[col], dy[row], dx[col + 1] - dx[col], dy[row + 1] - dy[row]));
-                return;
-            }
+                if (s.HasSlice)
+                {
+                    // Source columns/rows around the centre rect; destination keeps the corners' size.
+                    // With repeat, the edges and centre are tiled at their own size (as heaps does)
+                    // instead of stretched.
+                    double[] sx = { source.X, source.X + s.SliceL, source.X + s.SliceR, source.Right };
+                    double[] sy = { source.Y, source.Y + s.SliceT, source.Y + s.SliceB, source.Bottom };
+                    double[] dx = { 0, s.SliceL, bounds.Width - (source.Width - s.SliceR), bounds.Width };
+                    double[] dy = { 0, s.SliceT, bounds.Height - (source.Height - s.SliceB), bounds.Height };
+                    for (var row = 0; row < 3; row++)
+                        for (var col = 0; col < 3; col++)
+                        {
+                            var part = new Rect(sx[col], sy[row], sx[col + 1] - sx[col], sy[row + 1] - sy[row]);
+                            var into = new Rect(dx[col], dy[row], dx[col + 1] - dx[col], dy[row + 1] - dy[row]);
+                            if (s.Repeat == 1 && (row == 1 || col == 1)) DrawTiled(context, image, part, into, col == 1, row == 1);
+                            else DrawPart(context, image, part, into);
+                        }
+                    return;
+                }
 
-            switch (s.Repeat)
+                var size = DrawSize(s, source, bounds);
+                switch (s.Repeat)
+                {
+                    case 1:
+                        DrawTiled(context, image, source, bounds, true, true, size);
+                        break;
+                    case 2:
+                        DrawPart(context, image, source, new Rect(0, 0, size.Width, size.Height));
+                        break;
+                    default:
+                        DrawPart(context, image, source, bounds);
+                        break;
+                }
+            }
+            finally
             {
-                case 1:
-                    using (context.PushClip(bounds))
-                    {
-                        for (var y = 0.0; y < bounds.Height; y += source.Height)
-                            for (var x = 0.0; x < bounds.Width; x += source.Width)
-                                DrawPart(context, image, source, new Rect(x, y, source.Width, source.Height));
-                    }
-                    break;
-                case 2:
-                    DrawPart(context, image, source, new Rect(0, 0, source.Width, source.Height));
-                    break;
-                default:
-                    DrawPart(context, image, source, bounds);
-                    break;
+                smoothing?.Dispose();
+                corners?.Dispose();
+            }
+        }
+
+        /// <summary>background-width/-height (px or %), keeping the image's shape for a side not given.</summary>
+        static Size DrawSize(UIStyle s, Rect source, Rect bounds)
+        {
+            var w = !double.IsNaN(s.BgWidth) ? s.BgWidth : !double.IsNaN(s.BgWidthPercent) ? bounds.Width * s.BgWidthPercent / 100 : double.NaN;
+            var h = !double.IsNaN(s.BgHeight) ? s.BgHeight : !double.IsNaN(s.BgHeightPercent) ? bounds.Height * s.BgHeightPercent / 100 : double.NaN;
+            if (double.IsNaN(w) && double.IsNaN(h)) return source.Size;
+            if (double.IsNaN(w)) w = h * source.Width / source.Height;
+            if (double.IsNaN(h)) h = w * source.Height / source.Width;
+            return new Size(w, h);
+        }
+
+        /// <summary>Repeats a source rect across a destination, along x, y or both; stretched along the other.</summary>
+        static void DrawTiled(DrawingContext context, UIImage image, Rect source, Rect into, bool alongX, bool alongY, Size? tile = null)
+        {
+            if (into.Width <= 0 || into.Height <= 0) return;
+            var step = tile ?? source.Size;
+            var stepX = alongX ? step.Width : into.Width;
+            var stepY = alongY ? step.Height : into.Height;
+            if (stepX <= 0 || stepY <= 0) return;
+            using (context.PushClip(into))
+            {
+                for (var y = into.Y; y < into.Bottom; y += stepY)
+                    for (var x = into.X; x < into.Right; x += stepX)
+                        DrawPart(context, image, source, new Rect(x, y, stepX, stepY));
             }
         }
 

@@ -63,6 +63,11 @@ class StyleMapper {
 			case null | "stretch": 0;
 			case _: 2;
 		};
+		into.BgWidth = or(style.backgroundWidth, Math.NaN);
+		into.BgHeight = or(style.backgroundHeight, Math.NaN);
+		into.BgWidthPercent = or(style.backgroundWidthPercent, Math.NaN);
+		into.BgHeightPercent = or(style.backgroundHeightPercent, Math.NaN);
+		into.Pixelated = style.imageRendering == "pixelated";
 	}
 
 	/**
