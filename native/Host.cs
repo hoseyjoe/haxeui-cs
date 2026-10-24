@@ -146,6 +146,18 @@ namespace HaxeUICs
             return window;
         }
 
+        /// <summary>
+        /// Toolkit.scale: the root panel, and so every root component and popup, drawn this much
+        /// larger from the window's top left. Pointer positions measured against the root stay in
+        /// HaxeUI's units, and text and images render at the scaled size, not stretched.
+        /// </summary>
+        public static void SetScale(double scaleX, double scaleY)
+        {
+            if (scaleX <= 0 || scaleY <= 0) return;
+            Root.RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Absolute);
+            Root.RenderTransform = scaleX == 1 && scaleY == 1 ? null : new ScaleTransform(scaleX, scaleY);
+        }
+
         /// <summary>The cursor the whole window shows (a splitter drag), or null for none.</summary>
         public static string ScreenCursorName { get; private set; }
 

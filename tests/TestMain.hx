@@ -43,7 +43,8 @@ class TestMain {
 			new cases.TestKeys(),
 			new cases.TestFonts(),
 			new cases.TestFilters(),
-			new cases.TestCursors()
+			new cases.TestCursors(),
+			new cases.TestScale()
 		];
 	}
 }

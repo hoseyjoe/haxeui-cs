@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.Toolkit;
 import haxe.ui.backend.cs.EventMapper;
 import haxe.ui.backend.cs.InputListener;
 import haxe.ui.backend.cs.native.Native;
@@ -16,12 +17,13 @@ class ScreenImpl extends ScreenBase {
         rootComponents = [];
     }
 
+    // Sizes are in HaxeUI's units: the window's size over Toolkit.scale.
     private override function get_width():Float {
-        return Host.ClientWidth;
+        return Host.ClientWidth / Toolkit.scaleX;
     }
 
     private override function get_height():Float {
-        return Host.ClientHeight;
+        return Host.ClientHeight / Toolkit.scaleY;
     }
 
     private override function get_title():String {
@@ -34,6 +36,8 @@ class ScreenImpl extends ScreenBase {
     }
 
     public override function addComponent(component:Component):Component {
+        // Toolkit.scale is taken up as root components arrive (as heaps does).
+        Host.SetScale(Toolkit.scaleX, Toolkit.scaleY);
         Host.Root.InsertChild(component.nativePanel, Host.Root.ChildCount);
         resizeComponent(component);
         return component;

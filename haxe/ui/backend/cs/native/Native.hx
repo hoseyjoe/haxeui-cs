@@ -39,6 +39,7 @@ extern class Host {
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
 	static function SetScreenCursor(css:String):Void;
+	static function SetScale(scaleX:Float, scaleY:Float):Void;
 }
 
 @:native("HaxeUICs.IPanelListener")
