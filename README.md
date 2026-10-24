@@ -60,7 +60,16 @@ dispatcher, injects clicks, wheel, keys and typing at window coordinates, and re
 pixels. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a repeating
 `haxe.Timer`, and the process must exit by itself when the window closes.
 `haxe tests/early-add/build.hxml` checks that a component added before the window exists (as
-HaxeUIApp's preloader is) appears once it does.
+HaxeUIApp's preloader is) appears once it does. `haxe tests/window-app/build.hxml` opens a window
+with every window option, checks an idle app stays idle, and ends itself with `app.exit()`.
+
+### Linux
+
+The build output is plain `net10.0`, so a program built on Windows runs on Linux as it is:
+`dotnet <app>.dll` with a .NET 10 runtime. Verified under WSL2 Ubuntu 24.04 with WSLg: the whole
+headless suite, and exit-app, early-add and window-app in a real window. A real window needs
+Avalonia's X11 libraries; a minimal Ubuntu lacks two of them, `sudo apt install libice6 libsm6`
+(or unpack those two packages anywhere and put their `lib` folder on `LD_LIBRARY_PATH`).
 
 The parity gallery (`tools/gallery`) puts every component class core has, data-filled samples and
 style samples on pages of 24. It builds them for haxeui-cs and for haxeui-html5, the reference,
@@ -101,7 +110,7 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 ## Limits (v1)
 
 - **Fonts are system fonts, by family name.** A `font-name` that looks like a file is ignored.
-- Verified on **Windows** only; Avalonia should carry Mac and Linux, untested.
+- Verified on **Windows** and **Linux** (WSL2 with WSLg); Mac should work, untested.
 - No text shadows, no `Toolkit.scale` (Avalonia's own DPI scaling applies), no CSS filters.
 - **`backdrop-filter` is not drawn.** Avalonia 12 has no way to blur what lies behind a control:
   it offers no backdrop effect, and a `VisualBrush` of the window drawn inside that same window
