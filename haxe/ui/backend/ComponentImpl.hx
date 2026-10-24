@@ -127,6 +127,11 @@ class ComponentImpl extends ComponentBase {
         }
     }
 
+    private override function handleDisabled(disable:Bool) {
+        // html5 strips a disabled component's cursor in core; here the panel does it
+        nativePanel.SetCursorSuppressed(disable);
+    }
+
     private override function handleVisibility(show:Bool) {
         nativePanel.SetVisible(show);
     }

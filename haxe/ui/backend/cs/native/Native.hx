@@ -24,6 +24,7 @@ extern class Host {
 	static var Title:String;
 	static var ClientWidth(default, null):Float;
 	static var ClientHeight(default, null):Float;
+	static var ScreenCursorName(default, null):String;
 
 	static function RunDesktop(listener:IHostListener, title:String, width:Int, height:Int):Void;
 	#if haxeui_cs_headless
@@ -37,6 +38,7 @@ extern class Host {
 	static function CaptureWindow(path:String):Bool;
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
+	static function SetScreenCursor(css:String):Void;
 }
 
 @:native("HaxeUICs.IPanelListener")
@@ -86,6 +88,7 @@ extern class UIPanel extends Control {
 	var ClipWidth(default, null):Float;
 	var ClipHeight(default, null):Float;
 	var ChildCount(default, null):Int;
+	var CursorName(default, null):String;
 
 	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
 	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
@@ -98,6 +101,7 @@ extern class UIPanel extends Control {
 	function ApplyStyle(style:UIStyle):Void;
 	function Listen(kinds:Int, listener:IPanelListener):Void;
 	function SetGraphics(graphics:UIGraphics):Void;
+	function SetCursorSuppressed(suppressed:Bool):Void;
 }
 
 @:native("HaxeUICs.UIGraphics")
@@ -209,6 +213,8 @@ extern class UITextInput extends Control {
 @:native("HaxeUICs.UIStyle")
 extern class UIStyle {
 	function new():Void;
+
+	static function StandardCursorName(css:String):String;
 
 	var BackgroundColor:UInt;
 	var BackgroundColorEnd:UInt;

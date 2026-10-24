@@ -114,18 +114,53 @@ namespace HaxeUICs
             BorderLeft == BorderTop && BorderTop == BorderRight && BorderRight == BorderBottom &&
             BorderLeftColor == BorderTopColor && BorderTopColor == BorderRightColor && BorderRightColor == BorderBottomColor;
 
+        /// <summary>CSS cursor names, as the Avalonia cursor that stands in for each.</summary>
+        static readonly System.Collections.Generic.Dictionary<string, StandardCursorType> CursorTypes =
+            new System.Collections.Generic.Dictionary<string, StandardCursorType>
+            {
+                ["default"] = StandardCursorType.Arrow,
+                ["auto"] = StandardCursorType.Arrow,
+                ["pointer"] = StandardCursorType.Hand,
+                ["text"] = StandardCursorType.Ibeam,
+                ["vertical-text"] = StandardCursorType.Ibeam,
+                ["move"] = StandardCursorType.SizeAll,
+                ["all-scroll"] = StandardCursorType.SizeAll,
+                ["none"] = StandardCursorType.None,
+                ["not-allowed"] = StandardCursorType.No,
+                ["no-drop"] = StandardCursorType.No,
+                ["wait"] = StandardCursorType.Wait,
+                ["progress"] = StandardCursorType.AppStarting,
+                ["crosshair"] = StandardCursorType.Cross,
+                ["help"] = StandardCursorType.Help,
+                ["grab"] = StandardCursorType.Hand,
+                ["grabbing"] = StandardCursorType.DragMove,
+                ["copy"] = StandardCursorType.DragCopy,
+                ["alias"] = StandardCursorType.DragLink,
+                ["col-resize"] = StandardCursorType.SizeWestEast,
+                ["ew-resize"] = StandardCursorType.SizeWestEast,
+                ["row-resize"] = StandardCursorType.SizeNorthSouth,
+                ["ns-resize"] = StandardCursorType.SizeNorthSouth,
+                ["nwse-resize"] = StandardCursorType.TopLeftCorner,
+                ["nesw-resize"] = StandardCursorType.TopRightCorner,
+                ["n-resize"] = StandardCursorType.TopSide,
+                ["s-resize"] = StandardCursorType.BottomSide,
+                ["e-resize"] = StandardCursorType.RightSide,
+                ["w-resize"] = StandardCursorType.LeftSide,
+                ["nw-resize"] = StandardCursorType.TopLeftCorner,
+                ["se-resize"] = StandardCursorType.BottomRightCorner,
+                ["ne-resize"] = StandardCursorType.TopRightCorner,
+                ["sw-resize"] = StandardCursorType.BottomLeftCorner,
+            };
+
+        /// <summary>The Avalonia StandardCursorType name for a CSS cursor, or null when it has none.</summary>
+        public static string StandardCursorName(string css)
+        {
+            return css != null && CursorTypes.TryGetValue(css, out var type) ? type.ToString() : null;
+        }
+
         internal static Cursor CursorFor(string name)
         {
-            switch (name)
-            {
-                case "pointer": return new Cursor(StandardCursorType.Hand);
-                case "text": return new Cursor(StandardCursorType.Ibeam);
-                case "move": return new Cursor(StandardCursorType.SizeAll);
-                case "col-resize": return new Cursor(StandardCursorType.SizeWestEast);
-                case "row-resize": return new Cursor(StandardCursorType.SizeNorthSouth);
-                case "default": return new Cursor(StandardCursorType.Arrow);
-                default: return null;
-            }
+            return name != null && CursorTypes.TryGetValue(name, out var type) ? new Cursor(type) : null;
         }
     }
 }

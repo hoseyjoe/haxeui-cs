@@ -34,7 +34,7 @@ namespace HaxeUICs
             if (style.Cursor != _cursorName)
             {
                 _cursorName = style.Cursor;
-                Cursor = UIStyle.CursorFor(style.Cursor);
+                if (!_cursorSuppressed) Cursor = UIStyle.CursorFor(style.Cursor);
             }
             _painter.InvalidateVisual();
         }
@@ -44,6 +44,19 @@ namespace HaxeUICs
             // Panel.Render is sealed in Avalonia 12, so a painter child underneath everything does the drawing.
             _painter = new UIPainter();
             AddContent(_painter);
+        }
+
+        bool _cursorSuppressed;
+
+        /// <summary>The CSS cursor this panel shows; null when it has none or it is disabled.</summary>
+        public string CursorName => _cursorSuppressed ? null : _cursorName;
+
+        /// <summary>A disabled component drops its cursor (as html5 does) and gets it back when enabled.</summary>
+        public void SetCursorSuppressed(bool suppressed)
+        {
+            if (suppressed == _cursorSuppressed) return;
+            _cursorSuppressed = suppressed;
+            Cursor = suppressed ? null : UIStyle.CursorFor(_cursorName);
         }
 
         public double Left { get; private set; }

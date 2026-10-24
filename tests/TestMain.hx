@@ -42,7 +42,8 @@ class TestMain {
 			new cases.TestGallery(),
 			new cases.TestKeys(),
 			new cases.TestFonts(),
-			new cases.TestFilters()
+			new cases.TestFilters(),
+			new cases.TestCursors()
 		];
 	}
 }

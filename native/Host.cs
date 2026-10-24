@@ -146,6 +146,15 @@ namespace HaxeUICs
             return window;
         }
 
+        /// <summary>The cursor the whole window shows (a splitter drag), or null for none.</summary>
+        public static string ScreenCursorName { get; private set; }
+
+        public static void SetScreenCursor(string css)
+        {
+            ScreenCursorName = css;
+            if (Window != null) Window.Cursor = UIStyle.CursorFor(css);
+        }
+
         public static void Post(ICallback callback)
         {
             Dispatcher.UIThread.Post(() => callback.Invoke());
