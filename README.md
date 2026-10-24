@@ -103,5 +103,8 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - **Fonts are system fonts, by family name.** A `font-name` that looks like a file is ignored.
 - Verified on **Windows** only; Avalonia should carry Mac and Linux, untested.
 - No text shadows, no `Toolkit.scale` (Avalonia's own DPI scaling applies), no CSS filters.
+- **`backdrop-filter` is not drawn.** Avalonia 12 has no way to blur what lies behind a control:
+  it offers no backdrop effect, and a `VisualBrush` of the window drawn inside that same window
+  recurses without end.
 - Haxe's C# target puts its top-level classes in the global namespace, so native code writes
   `System.Math` and `System.Array`. `-D erase-generics` breaks HaxeUI.
