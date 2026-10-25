@@ -37,4 +37,35 @@ class TestStd extends utest.Test {
 		Assert.isFalse(startsWith("<svg>", BOM));
 		Assert.isFalse(endsWith("</svg>", BOM));
 	}
+
+	/**
+	 * A generic class's instance reaching a generic interface it implements, with
+	 * another parameter: thenshim's `Promise<Bool>` handed back from a `then`.
+	 * Haxe's C# cast forwarder passes the wrong parameter (GenericInterfaceCast).
+	 */
+	function testGenericInterfaceCast() {
+		var value:Any = new CastBox<Bool>(true);
+		Assert.isTrue((value is ICastBox));
+		Assert.equals(true, unbox(value));
+	}
+
+	static function unbox(box:ICastBox<Any>):Any {
+		return box.get();
+	}
+}
+
+private interface ICastBox<T> {
+	function get():T;
+}
+
+private class CastBox<T> implements ICastBox<T> {
+	var value:T;
+
+	public function new(value:T) {
+		this.value = value;
+	}
+
+	public function get():T {
+		return value;
+	}
 }

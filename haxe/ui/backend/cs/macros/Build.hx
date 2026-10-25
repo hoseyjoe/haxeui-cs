@@ -21,20 +21,32 @@ import sys.io.File;
  * `-D haxeui_cs_publish=<rid>` instead of a debug build, publish a release build for that
  *                          runtime (win-x64, linux-x64, osx-arm64...): one self-contained
  *                          file, native libraries inside, no .pdb, in `<cs-out>/publish/<rid>/`
+ *
+ * `--macro haxe.ui.backend.cs.macros.Build.addPackage("Name", "1.2.3")` adds a NuGet package
+ * the app needs beside haxeui-cs's own (a SQLite provider, say).
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
 	static inline var SVG_SKIA_VERSION = "5.1.1";
 
+	static var appPackages:Map<String, String> = [];
+
 	public static function configure():Void {
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
+		Context.onGenerate(GenericInterfaceCast.gather);
 		Context.onAfterGenerate(afterGenerate);
+	}
+
+	/** A NuGet package the app's own code needs, written into the generated .csproj. **/
+	public static function addPackage(name:String, version:String):Void {
+		appPackages.set(name, version);
 	}
 
 	static function afterGenerate():Void {
 		var out = Path.normalize(FileSystem.absolutePath(Compiler.getOutput()));
 		var name = mainClassName();
 		var headless = Context.defined("haxeui_cs_headless");
+		GenericInterfaceCast.fix(Path.join([out, "src"]));
 
 		var csproj = Path.join([out, name + ".csproj"]);
 		File.saveContent(csproj, buildProject(name, headless, resourceItems(out)));
@@ -118,6 +130,10 @@ class Build {
 		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
 		if (headless) {
 			packages.push("Avalonia.Headless");
+		}
+		for (name => version in appPackages) {
+			if (packages.indexOf(name) < 0) packages.push(name);
+			versions.set(name, version);
 		}
 
 		var outputType = (headless || Context.defined("debug")) ? "Exe" : "WinExe";

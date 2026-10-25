@@ -43,6 +43,9 @@ The options also take `resizable` (default true), `minWidth`, `minHeight` and `m
 `app.icon = "icon.png"` sets the window's icon (a Haxe resource or an image file), and
 `app.exit()` closes the window, which ends the app as the user closing it does.
 
+A NuGet package the app's own code needs goes into the generated `.csproj` with
+`--macro haxe.ui.backend.cs.macros.Build.addPackage("Microsoft.Data.Sqlite", "10.0.0")`.
+
 | Define | Effect |
 |---|---|
 | `-D haxeui_cs_run` | run the program straight after building it |
@@ -135,6 +138,10 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - `StringTools.startsWith` and `endsWith` compare code unit by code unit, as on every other
   target. Haxe's C# std leaves them to .NET's culture rules, where a BOM or soft hyphen matches
   anything; haxeui-cs corrects that at compile time.
+- A generic class reaches a generic interface it implements with another parameter
+  (`Foo<Bool>` as `Iface<Dynamic>`, as thenshim's promises do). Haxe 4.3's C# cast forwarder
+  passes the class's own parameter, so the cast throws; haxeui-cs corrects the written `.cs`
+  for a class that implements the interface with its own parameters in order.
 - Pointer and key events bubble natively, as in the DOM; `event.cancel()` stops a pointer event.
   Clicks are made from press and release as a browser makes them: every click is a `CLICK`, and
   the second inside the double-click time is also a `DBL_CLICK`; a middle press and release is a
