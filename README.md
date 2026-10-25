@@ -139,6 +139,14 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
   `fillStyle(null)` ends it, and the path drawn in between is filled even without `beginPath`.
   Each `moveTo` starts a new polygon, filled on its own and then outlined, in drawing order: a
   later shape covers an earlier outline, and overlapping polygons of one fill cut no holes.
+- **`componentGraphics.layers`** (`haxe.ui.backend.cs.Layers`) is a haxeui-cs addition for
+  content that moves every frame while its pixels mostly don't, as an app on heaps drops to h2d:
+  groups with a matrix, an opacity (a group fades as one image) and an optional mask, holding RGBA
+  bitmaps placed in their group's units, drawn above the canvas drawing. Moving a group is a
+  repaint, not a raster. A bitmap may have more pixels than units (`layers.deviceScale`), so it
+  stays sharp at 150%, where `setPixels` is one pixel per unit, as html5's canvas is. They are drawn
+  straight through Skia: Avalonia's own opacity mask misplaces an image brush under a render
+  scaling, and its `PushOpacity` fades each drawing on its own.
 - `StringTools.startsWith` and `endsWith` compare code unit by code unit, as on every other
   target. Haxe's C# std leaves them to .NET's culture rules, where a BOM or soft hyphen matches
   anything; haxeui-cs corrects that at compile time.

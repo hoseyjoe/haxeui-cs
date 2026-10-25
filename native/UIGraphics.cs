@@ -29,9 +29,24 @@ namespace HaxeUICs
 
         readonly List<Command> _commands = new List<Command>();
         WriteableBitmap _pixels;
+        UILayers _layers;
 
         /// <summary>Called when the drawing changes, so its owner repaints.</summary>
         internal System.Action Changed;
+
+        /// <summary>Retained layers drawn above the commands (made on first use); Clear leaves them be.</summary>
+        public UILayers Layers
+        {
+            get
+            {
+                if (_layers == null)
+                {
+                    _layers = new UILayers();
+                    _layers.Changed = () => Changed?.Invoke();
+                }
+                return _layers;
+            }
+        }
 
         public void Clear()
         {
@@ -99,8 +114,8 @@ namespace HaxeUICs
         public void Render(DrawingContext context, float[] matrix = null)
         {
             if (_pixels != null) context.DrawImage(ColorMatrix.Filter(_pixels, matrix), new Rect(0, 0, _pixels.Size.Width, _pixels.Size.Height));
-            if (_commands.Count == 0) return;
-            new Replay(context, matrix).Run(_commands);
+            if (_commands.Count > 0) new Replay(context, matrix).Run(_commands);
+            _layers?.Render(context, matrix);
         }
 
         /// <summary>One pass over the commands, everything drawn in order: each figure is filled, then outlined.</summary>

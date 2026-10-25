@@ -14,6 +14,16 @@ import haxe.ui.util.Variant;
 class ComponentGraphicsImpl extends ComponentGraphicsBase {
     private var _hasSize:Bool = false;
     private var _graphics:UIGraphics;
+    private var _layers:haxe.ui.backend.cs.Layers;
+
+    /** Retained layers drawn above the canvas drawing (haxeui-cs only): see haxe.ui.backend.cs.Layers. **/
+    public var layers(get, never):haxe.ui.backend.cs.Layers;
+    private function get_layers():haxe.ui.backend.cs.Layers {
+        if (_layers == null) {
+            _layers = @:privateAccess new haxe.ui.backend.cs.Layers(_graphics.Layers, _component);
+        }
+        return _layers;
+    }
 
     public function new(component:Component) {
         super(component);

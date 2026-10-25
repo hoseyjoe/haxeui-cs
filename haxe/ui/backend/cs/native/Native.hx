@@ -147,6 +147,21 @@ extern class UIGraphics {
 	function Image(image:UIImage, x:Float, y:Float, width:Float, height:Float):Void;
 	function SetPixels(rgba:haxe.io.BytesData, width:Int, height:Int):Void;
 	function SetPixel(x:Int, y:Int, argb:UInt, width:Int, height:Int):Void;
+
+	var Layers(default, null):UILayers;
+}
+
+@:native("HaxeUICs.UILayers")
+extern class UILayers {
+	var Count(default, null):Int;
+
+	function AddGroup(parent:Int):Int;
+	function AddBitmap(parent:Int):Int;
+	function SetMatrix(layer:Int, a:Float, b:Float, c:Float, d:Float, e:Float, f:Float):Void;
+	function SetOpacity(layer:Int, opacity:Float):Void;
+	function SetVisible(layer:Int, visible:Bool):Void;
+	function SetPixels(layer:Int, rgba:haxe.io.BytesData, width:Int, height:Int, x:Float, y:Float, w:Float, h:Float):Void;
+	function Clear():Void;
 }
 
 @:native("HaxeUICs.UIText")
@@ -181,6 +196,7 @@ extern class UIImage {
 	var Height(default, null):Int;
 
 	static function FromBytes(data:haxe.io.BytesData):UIImage;
+	static function DeviceScale(visual:Control):Float;
 
 	var CachedSizes(default, null):Int;
 	function BitmapFor(pixelWidth:Float, pixelHeight:Float):Dynamic;

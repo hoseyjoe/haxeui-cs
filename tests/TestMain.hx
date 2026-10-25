@@ -38,6 +38,7 @@ class TestMain {
 			new cases.TestMouse(),
 			new cases.TestTextInput(),
 			new cases.TestGraphics(),
+			new cases.TestLayers(),
 			new cases.TestDialogs(),
 			new cases.TestGallery(),
 			new cases.TestKeys(),
