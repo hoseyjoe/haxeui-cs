@@ -44,7 +44,9 @@ The options also take `resizable` (default true), `minWidth`, `minHeight` and `m
 `app.exit()` closes the window, which ends the app as the user closing it does.
 
 A NuGet package the app's own code needs goes into the generated `.csproj` with
-`--macro haxe.ui.backend.cs.macros.Build.addPackage("Microsoft.Data.Sqlite", "10.0.0")`.
+`--macro haxe.ui.backend.cs.macros.Build.addPackage("Microsoft.Data.Sqlite", "10.0.0")`, and the
+app's own C# files (a `.cs` file, or a folder of them) with
+`--macro haxe.ui.backend.cs.macros.Build.addNative("src-cs/native")`, for externs to call.
 
 | Define | Effect |
 |---|---|

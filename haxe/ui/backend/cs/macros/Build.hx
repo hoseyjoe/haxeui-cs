@@ -23,13 +23,16 @@ import sys.io.File;
  *                          file, native libraries inside, no .pdb, in `<cs-out>/publish/<rid>/`
  *
  * `--macro haxe.ui.backend.cs.macros.Build.addPackage("Name", "1.2.3")` adds a NuGet package
- * the app needs beside haxeui-cs's own (a SQLite provider, say).
+ * the app needs beside haxeui-cs's own (a SQLite provider, say), and
+ * `--macro haxe.ui.backend.cs.macros.Build.addNative("path")` the app's own C# (a `.cs` file, or
+ * every `.cs` in a folder), compiled with haxeui-cs's `native/*.cs`.
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
 	static inline var SVG_SKIA_VERSION = "5.1.1";
 
 	static var appPackages:Map<String, String> = [];
+	static var appNatives:Array<String> = [];
 
 	public static function configure():Void {
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
@@ -40,6 +43,15 @@ class Build {
 	/** A NuGet package the app's own code needs, written into the generated .csproj. **/
 	public static function addPackage(name:String, version:String):Void {
 		appPackages.set(name, version);
+	}
+
+	/** The app's own C#: a `.cs` file, or every `.cs` in a folder, relative to where Haxe runs. **/
+	public static function addNative(path:String):Void {
+		var full = Path.normalize(FileSystem.absolutePath(path));
+		if (!FileSystem.exists(full)) {
+			Context.fatalError('haxeui-cs: addNative: $path does not exist', Context.currentPos());
+		}
+		if (appNatives.indexOf(full) < 0) appNatives.push(full);
 	}
 
 	static function afterGenerate():Void {
@@ -122,6 +134,9 @@ class Build {
 			if (!StringTools.endsWith(file, ".cs")) continue;
 			if (file == "TestDriver.cs" && !headless) continue;
 			native.push('    <Compile Include="${Path.join([nativeDir, file])}" />');
+		}
+		for (path in appNatives) {
+			native.push('    <Compile Include="${FileSystem.isDirectory(path) ? Path.join([path, "*.cs"]) : path}" />');
 		}
 
 		// Svg.Skia draws SVG images: 5.1.1 is the newest on Avalonia's own SkiaSharp (3.119) and
