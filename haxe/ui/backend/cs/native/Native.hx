@@ -44,6 +44,7 @@ extern class Host {
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
 	static function SetScreenCursor(css:String):Void;
+	static function SetBackground(argb:UInt):Void;
 	static function SetScale(scaleX:Float, scaleY:Float):Void;
 	static function StartEventsPump(pump:IEventsPump):Void;
 	static var EventsPumps(default, null):Int;

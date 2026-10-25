@@ -177,7 +177,7 @@ namespace HaxeUICs
                 Title = _title,
                 Width = _width,
                 Height = _height,
-                Background = Brushes.White,
+                Background = new SolidColorBrush(Color.FromUInt32(_background)),
             };
             window.Content = Root;
             ApplyOptions(window);
@@ -204,6 +204,19 @@ namespace HaxeUICs
             Root.RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Absolute);
             Root.RenderTransform = scaleX == 1 && scaleY == 1 ? null : new ScaleTransform(scaleX, scaleY);
         }
+
+        /// <summary>
+        /// What shows behind the components, as 0xAARRGGBB (white until the app says otherwise): an
+        /// app's dark theme sets it, as html5 sets the page's and Heaps the engine's clear colour.
+        /// Kept until the window exists.
+        /// </summary>
+        public static void SetBackground(uint argb)
+        {
+            _background = argb;
+            if (Window != null) Window.Background = new SolidColorBrush(Color.FromUInt32(argb));
+        }
+
+        static uint _background = 0xFFFFFFFF;
 
         /// <summary>The cursor the whole window shows (a splitter drag), or null for none.</summary>
         public static string ScreenCursorName { get; private set; }

@@ -57,6 +57,8 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
+`haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white
+until then); a dark theme sets its own, as an html5 app sets the page's background.
 
 ### Publishing
 
