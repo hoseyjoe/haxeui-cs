@@ -1,5 +1,7 @@
 # haxeui-cs Feature Completeness Implementation Plan
 
+> Paths are placeholders for the checkouts this was written against: `<haxeui-cs>` (this repo), `<haxeui-core-joe>` and `<haxeui-html5>` (haxelib checkouts), `<JoeClash>` and its worktrees `<JoeClash-cs>` and `<JoeClash-gate>`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make haxeui-cs a complete HaxeUI backend. Fix the bugs the 2026-10-23 inventory found, add what Joeditor needs (font files, shadows, text shadow, blur), then reach html5 parity on every remaining style, input and app feature. Finish with Linux and Mac runs.
@@ -17,21 +19,21 @@ New drawing features become fields or methods on `UIStyle`, `UIPanel`, `UIText` 
 ## Global Constraints
 
 **Toolchain and repos**
-- Haxe 4.3.7, .NET 10 (`net10.0`), Avalonia 12.1.4. haxeui-core-joe (`C:\HaxeToolkit\haxe\lib\haxeui-core\haxeui-core-joe`) is the `haxelib dev` checkout every build uses.
+- Haxe 4.3.7, .NET 10 (`net10.0`), Avalonia 12.1.4. haxeui-core-joe (`<haxeui-core-joe>`) is the `haxelib dev` checkout every build uses.
 - Every commit message ends with the line `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Nothing is ever pushed.
 
 **Core-joe changes**
-- They are `#if cs` / `#if haxeui_cs`, or correct on every target. Commit each one straight to haxeui-core-joe master (`git -C C:/HaxeToolkit/haxe/lib/haxeui-core/haxeui-core-joe ...`).
+- They are `#if cs` / `#if haxeui_cs`, or correct on every target. Commit each one straight to haxeui-core-joe master (`git -C <haxeui-core-joe> ...`).
 - They must not change behaviour on html5 or heaps.
 
 **JoeClash**
-- Never touch `D:\_github\_JoeClash` (Joe's checkout, which has his uncommitted work).
-- Gates run in a detached worktree, `D:\_github\_JoeClash-gate`, created from `main` the first time it is needed:
+- Never touch `<JoeClash>` (Joe's checkout, which has his uncommitted work).
+- Gates run in a detached worktree, `<JoeClash-gate>`, created from `main` the first time it is needed:
   ```
-  git -C D:/_github/_JoeClash worktree add --detach D:/_github/_JoeClash-gate main
+  git -C <JoeClash> worktree add --detach <JoeClash-gate> main
   ```
 - Nothing is committed to JoeClash. Task 38 removes the worktree.
-- **The Joeditor gate:** in `D:/_github/_JoeClash-gate`, run
+- **The Joeditor gate:** in `<JoeClash-gate>`, run
   ```
   haxe tools.joeditor.cs.hxml -D haxeui_cs_headless
   ```
@@ -39,7 +41,7 @@ New drawing features become fields or methods on `UIStyle`, `UIPanel`, `UIText` 
   ```
   dotnet bin/JoeditorCs/bin/Debug/net10.0/Joeditor.dll --cs-accept
   ```
-  It must print `accept: OK` and exit 0. Untracked art the run needs is copied (never moved) from `D:/_github/_JoeClash`.
+  It must print `accept: OK` and exit 0. Untracked art the run needs is copied (never moved) from `<JoeClash>`.
 - **The heaps gate**, after any core-joe commit: in the gate worktree, `haxe tests.hxml` passes 353/353, and `haxe tools.joeditor.hxml` still builds.
 
 **Tests**
@@ -50,7 +52,7 @@ New drawing features become fields or methods on `UIStyle`, `UIPanel`, `UIText` 
 - The headless window background is white (`0xFFFFFFFF`). Root components without a background show it.
 
 **Behaviour**
-- html5 (`C:\HaxeToolkit\haxe\lib\haxeui-html5\git`) is the behaviour reference, shadows and filters included. The one heaps item is 9-slice with repeated edges (G17).
+- html5 (`<haxeui-html5>`) is the behaviour reference, shadows and filters included. The one heaps item is 9-slice with repeated edges (G17).
 - A feature that cannot be done properly goes in the README's "Limits", with the reason. It is never shipped half-working.
 
 ## Review Focus
@@ -342,7 +344,7 @@ function testHttpImageAfterRemoval() { // Review Focus 6
 - [ ] **Step 4: Run the case.** Expected: PASS.
 - [ ] **Step 5: Run the whole suite and the heaps gate.** Then commit to core-joe and haxeui-cs.
   ```bash
-  git -C C:/HaxeToolkit/haxe/lib/haxeui-core/haxeui-core-joe commit -am "HttpImageLoader (cs): load off the UI thread; a failed load gives null, never an exception"
+  git -C <haxeui-core-joe> commit -am "HttpImageLoader (cs): load off the UI thread; a failed load gives null, never an exception"
   git add native haxe templates tests && git commit -m "Tests: HTTP images load in the background and fail quietly"
   ```
 
@@ -473,7 +475,7 @@ function testSpinGuardDropsTheCycle() {
 - [ ] **Step 4: Run them.** Expected: PASS.
 - [ ] **Step 5: Run the whole suite and the heaps gate, then commit.**
   ```bash
-  git -C C:/HaxeToolkit/haxe/lib/haxeui-core/haxeui-core-joe commit -am "Validation survives a throw: the next invalidation lays out again; SpinGuard drops the cycle"
+  git -C <haxeui-core-joe> commit -am "Validation survives a throw: the next invalidation lays out again; SpinGuard drops the cycle"
   git add tests/cases/TestCoreFixes.hx && git commit -m "Tests: layout continues after a component throws"
   ```
 
@@ -517,7 +519,7 @@ function testCollapsibleSideBarPropertyGrid() {
 - [ ] **Step 4: Run it.** Expected: the build succeeds and the case passes.
 - [ ] **Step 5: Run the whole suite, the gallery's cs build with no exclusions, and the heaps gate. Then commit.**
   ```bash
-  git -C C:/HaxeToolkit/haxe/lib/haxeui-core/haxeui-core-joe commit -am "Collapsible, PropertyGroup and SideBar compile for C#"
+  git -C <haxeui-core-joe> commit -am "Collapsible, PropertyGroup and SideBar compile for C#"
   git add tests tools/gallery && git commit -m "Suite compiles every core component and container"
   ```
 
@@ -541,7 +543,7 @@ function testCollapsibleSideBarPropertyGrid() {
   - it adds a `getFontFromHaxeResource` override.
 - Modify: `haxe/ui/backend/FontData.hx` (doc comment only: FontData is an Avalonia family reference).
 - Modify: `haxe/ui/backend/cs/native/Native.hx`.
-- Create: `tests/assets/DejaVuSansMono.ttf`, copied from `D:/_github/_JoeClash/lib/epubreader/tools/fonts-src/`. Copy its licence file too if one sits beside it.
+- Create: `tests/assets/DejaVuSansMono.ttf`, copied from `<JoeClash>/lib/epubreader/tools/fonts-src/`. Copy its licence file too if one sits beside it.
 - Modify: `tests/headless.hxml`. Add `--resource tests/assets/DejaVuSansMono.ttf@fonts/DejaVuSansMono.ttf`.
 - Create: `tests/cases/TestFonts.hx`, registered in `TestMain`.
 
@@ -795,7 +797,7 @@ function testBlurClears() { // Review Focus 1
   - The shadow, inner-shadow and blur samples, the theme's menus, dialogs and windows, and pressed buttons now match html5.
   - Fix any difference now, or ledger it as a ruling.
 - [ ] **Step 2:** Run the Joeditor gate. Expected: `accept: OK`.
-- [ ] **Step 3: The one-off Joeditor check** (spec "Verification"). It is uncommitted, and is reverted with `git -C D:/_github/_JoeClash-gate checkout -- .` afterwards.
+- [ ] **Step 3: The one-off Joeditor check** (spec "Verification"). It is uncommitted, and is reverted with `git -C <JoeClash-gate> checkout -- .` afterwards.
   1. In the gate worktree, add `font-name: GameFont.ttf` (the path `res/GameFont.ttf`) to the editor stylesheet's root style.
   2. In `MapView.shadow`'s `#if haxeui_cs` branch, set the label's `styleString` to add `text-shadow: 1px 1px 0px #000000 0.9`.
   3. Build with `-D haxeui_cs_headless` and run `--cs-shot`.
@@ -1084,7 +1086,7 @@ function testSplitterDragHoldsScreenCursor() {
 - [ ] **Step 4: Run them, the whole suite and the heaps gate.** Expected: PASS.
 - [ ] **Step 5: Commit both repos.**
   ```bash
-  git -C C:/HaxeToolkit/haxe/lib/haxeui-core/haxeui-core-joe commit -am "Splitter and Window drags hold the screen cursor on haxeui-cs too"
+  git -C <haxeui-core-joe> commit -am "Splitter and Window drags hold the screen cursor on haxeui-cs too"
   git add native haxe tests && git commit -m "Cursors: every CSS name Avalonia can show; disabled drops it; drags hold it"
   ```
 
@@ -1422,7 +1424,7 @@ function testCmdIsCtrlOnMac() {
 - [ ] **Step 4: Run the whole suite and the heaps gate.** Expected: PASS.
 - [ ] **Step 5: Commit both repos.**
   ```bash
-  git -C C:/HaxeToolkit/haxe/lib/haxeui-core/haxeui-core-joe commit -am "Component: keep removeAllComponents' doc comment on it"
+  git -C <haxeui-core-joe> commit -am "Component: keep removeAllComponents' doc comment on it"
   git add haxe native tests && git commit -m "Escape resource names in the csproj; file dialog failures are reported, never thrown"
   ```
 
@@ -1553,7 +1555,7 @@ function testCmdIsCtrlOnMac() {
   Expected: `~/.dotnet/dotnet --list-runtimes` lists `Microsoft.NETCore.App 10.x`.
 - [ ] **Step 2: Build on Windows, run under WSL.**
   1. `haxe tests/headless.hxml` builds the suite (and runs it on Windows).
-  2. Run the same DLL under WSL: `wsl -e bash -lc "cd /mnt/d/_github/haxeui-cs && ~/.dotnet/dotnet tests/bin/bin/Debug/net10.0/TestMain.dll"`
+  2. Run the same DLL under WSL: `wsl -e bash -lc "cd <haxeui-cs, as a WSL path> && ~/.dotnet/dotnet tests/bin/bin/Debug/net10.0/TestMain.dll"`
 
   Expected: `ALL TESTS OK`.
   - Text-metric failures caused by a missing default font are fixed by shipping or choosing a font, not by loosening tests.
@@ -1588,7 +1590,7 @@ function testCmdIsCtrlOnMac() {
   - letter-spacing and line-height (core has none);
   - and every other ruling that left something out.
 - [ ] **Step 2:** Run the whole suite, every desktop and early check, the gallery, the Joeditor gate and the heaps gate. Expected: all pass, and the gallery matches html5 everywhere except the README's limits.
-- [ ] **Step 3:** Remove the gate worktree: `git -C D:/_github/_JoeClash worktree remove D:/_github/_JoeClash-gate`.
+- [ ] **Step 3:** Remove the gate worktree: `git -C <JoeClash> worktree remove <JoeClash-gate>`.
 - [ ] **Step 4: Commit.**
   ```bash
   git add README.md

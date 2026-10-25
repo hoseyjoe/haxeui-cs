@@ -1,5 +1,7 @@
 # haxeui-cs — design
 
+> Paths are placeholders for the checkouts this was written against: `<haxeui-cs>` (this repo), `<haxeui-core-joe>` and `<haxeui-html5>` (haxelib checkouts), `<JoeClash>` and its worktrees `<JoeClash-cs>` and `<JoeClash-gate>`.
+
 Date: 2026-10-22. Status: draft, awaiting Joe's approval.
 
 Calls marked **[builder's call]** are Claude's, not Joe's. Everything else was
@@ -14,12 +16,12 @@ installable desktop program) but with HaxeUI as the front end, no bundled web
 browser, and access to .NET libraries.
 
 The first real app on it is **Joeditor**, JoeClash's story-script editor
-(`D:\_github\_JoeClash\tools\Joeditor`, about 10,600 lines). "Done" for v1 means
+(`<JoeClash>\tools\Joeditor`, about 10,600 lines). "Done" for v1 means
 Joeditor runs on haxeui-cs.
 
 ## Goals (v1)
 
-1. `haxeui-cs` is a haxelib at `D:\_github\haxeui-cs`. With it, a HaxeUI app built
+1. `haxeui-cs` is a haxelib at `<haxeui-cs>`. With it, a HaxeUI app built
    against **haxeui-core-joe** compiles to C# and runs as a .NET 10 desktop app
    using Avalonia, from one `haxe <file>.hxml` command.
 2. It is a **composite** backend. Each HaxeUI component is a plain Avalonia
@@ -81,7 +83,7 @@ Joeditor runs on haxeui-cs.
 | Decision | Choice | Why |
 |---|---|---|
 | Runtime | Haxe 4.3.7 C# target, .NET 10, Avalonia 12.1.4 | Avalonia covers Windows, Mac and Linux; Joe wants all three "if possible". Haxe 5 drops the C# target, so this stays on 4.3.x. |
-| Core | haxeui-core-joe (`C:\HaxeToolkit\haxe\lib\haxeui-core\haxeui-core-joe`, Joe's fork) | It has the full component set; it is Joe's, so C# fixes land directly; less C# generics trouble. haxeui3 is a proof-of-concept that lacks text fields, dropdowns, menus and dialogs. |
+| Core | haxeui-core-joe (`<haxeui-core-joe>`, Joe's fork) | It has the full component set; it is Joe's, so C# fixes land directly; less C# generics trouble. haxeui3 is a proof-of-concept that lacks text fields, dropdowns, menus and dialogs. |
 | Backend style | composite | |
 | First app | Joeditor | |
 

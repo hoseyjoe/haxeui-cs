@@ -1,6 +1,6 @@
 {
 	"name": "haxeui-cs",
-	"url": "",
+	"url": "https://github.com/hoseyjoe/haxeui-cs",
 	"license": "MIT",
 	"tags": ["ui", "gui", "cs", "dotnet", "avalonia"],
 	"description": "HaxeUI backend for Haxe's C# target, rendering through Avalonia",
