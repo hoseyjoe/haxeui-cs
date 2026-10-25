@@ -13,7 +13,7 @@ haxeui-core. Its first real app is JoeClash's story editor, Joeditor (`tools.joe
 
 - Haxe **4.3.x** (Haxe 5 drops the C# target)
 - .NET **10** SDK (`dotnet` on the PATH). Avalonia 12.1.4 arrives through NuGet on first build.
-- haxelibs: `haxeui-core` (haxeui-core-joe), `haxeui-cs` (this repo: `haxelib dev haxeui-cs D:/_github/haxeui-cs`)
+- haxelibs: `haxeui-core` (haxeui-core-joe), `haxeui-cs` (this repo: `haxelib dev haxeui-cs <path to your clone>`)
 
 ## Building an app
 
