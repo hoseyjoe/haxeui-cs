@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.Toolkit;
 import haxe.ui.backend.cs.ColorFilters;
 import haxe.ui.backend.cs.EventMapper;
 import haxe.ui.backend.cs.InputListener;
@@ -28,7 +29,17 @@ class ComponentImpl extends ComponentBase {
         if (nativePanel == null) {
             return;
         }
-        nativePanel.SetBounds(orNaN(left), orNaN(top), Math.NaN, Math.NaN);
+        // A root component's left and top are screen pixels: core places its drop-down lists,
+        // dialogs and tooltips from screenLeft and the screen's actualWidth, and hit-tests them
+        // there. Host.Root's transform scales whatever is in it, so a root goes in at its position
+        // over the scale. A child's position is HaxeUI units, scaled with its parent.
+        var root = parentComponent == null;
+        nativePanel.SetBounds(orNaN(left) / (root ? Toolkit.scaleX : 1), orNaN(top) / (root ? Toolkit.scaleY : 1), Math.NaN, Math.NaN);
+    }
+
+    /** Places the native panel again, for where the component now is: a root, or in a parent. **/
+    private function placeNative() {
+        handlePosition(left, top, null);
     }
 
     private override function handleSize(width:Null<Float>, height:Null<Float>, style:Style) {
@@ -148,11 +159,13 @@ class ComponentImpl extends ComponentBase {
 
     private override function handleAddComponent(child:Component):Component {
         nativePanel.InsertChild(child.nativePanel, nativePanel.ChildCount);
+        child.placeNative();
         return child;
     }
 
     private override function handleAddComponentAt(child:Component, index:Int):Component {
         nativePanel.InsertChild(child.nativePanel, index);
+        child.placeNative();
         return child;
     }
 

@@ -96,9 +96,12 @@ class TouchTooltips {
 	static function place(c:Component) {
 		var tip = @:privateAccess ToolTipManager.instance._toolTip;
 		if (!showing || tip == null) return;
-		var above = c.screenTop - (tip.height + GAP);
-		tip.top = above >= 0 ? above : c.screenTop + c.height + GAP;
-		var maxLeft = Screen.instance.width - tip.width;
+		// The tooltip is a root component, so its left and top are screen pixels, as screenTop is;
+		// sizes and GAP are layout units, scaled to match.
+		var gap = GAP * Toolkit.scaleY;
+		var above = c.screenTop - (tip.actualComponentHeight + gap);
+		tip.top = above >= 0 ? above : c.screenTop + c.actualComponentHeight + gap;
+		var maxLeft = Screen.instance.actualWidth - tip.actualComponentWidth;
 		tip.left = Math.max(0, Math.min(tip.left, maxLeft));
 	}
 

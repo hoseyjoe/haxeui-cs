@@ -1,5 +1,6 @@
 package cases;
 
+import haxe.ui.Toolkit;
 import haxe.ui.backend.cs.TestDriver;
 import haxe.ui.backend.cs.touch.TouchTooltips;
 import haxe.ui.components.Button;
@@ -36,6 +37,33 @@ class TestTouchTooltips extends utest.Test {
 		ToolTipManager.instance.unregisterTooltip(button);
 		Screen.instance.removeComponent(button);
 		ToolTipManager.instance.reset();
+		if (Toolkit.scale != 1) {
+			Toolkit.scale = 1;
+			var reset = new haxe.ui.containers.Box(); // the scale is taken up as a root component is added
+			Screen.instance.addComponent(reset);
+			Screen.instance.removeComponent(reset);
+		}
+		TestDriver.pump();
+	}
+
+	function testScaledTooltipIsAboveTheFinger() {
+		// A phone runs scaled: the tooltip goes clear above the pressed button, in screen pixels.
+		Screen.instance.removeComponent(button, false);
+		Toolkit.scale = 2;
+		button.top = 200;
+		Screen.instance.addComponent(button);
+		TestDriver.pump(2);
+		var c = TestDriver.centerOf(button);
+		TestDriver.mouseDown(c.x, c.y);
+		hold(0.7);
+		var tip = @:privateAccess ToolTipManager.instance._toolTip;
+		Assert.equals("Tip", tipText());
+		if (tip != null) {
+			var bottom = tip.screenTop + tip.actualComponentHeight;
+			Assert.isTrue(bottom <= button.screenTop, 'tooltip bottom $bottom, button top ${button.screenTop}');
+			Assert.isTrue(tip.screenTop >= 0, 'tooltip top ${tip.screenTop}');
+		}
+		TestDriver.mouseUp(c.x, c.y);
 		TestDriver.pump();
 	}
 

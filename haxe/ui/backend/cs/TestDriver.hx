@@ -101,8 +101,9 @@ class TestDriver {
 		HeadlessDriver.StopHttpServer();
 	}
 
+	/** The middle of `c` on screen, in pixels (screenLeft is; width is HaxeUI units). **/
 	public static function centerOf(c:haxe.ui.core.Component):{x:Float, y:Float} {
-		return {x: c.screenLeft + c.width / 2, y: c.screenTop + c.height / 2};
+		return {x: c.screenLeft + c.actualComponentWidth / 2, y: c.screenTop + c.actualComponentHeight / 2};
 	}
 
 	public static function clickComponent(c:haxe.ui.core.Component):Void {

@@ -39,6 +39,7 @@ class ScreenImpl extends ScreenBase {
         // Toolkit.scale is taken up as root components arrive (as heaps does).
         Host.SetScale(Toolkit.scaleX, Toolkit.scaleY);
         Host.Root.InsertChild(component.nativePanel, Host.Root.ChildCount);
+        @:privateAccess component.placeNative(); // a root's position is screen pixels (ComponentImpl.handlePosition)
         resizeComponent(component);
         return component;
     }

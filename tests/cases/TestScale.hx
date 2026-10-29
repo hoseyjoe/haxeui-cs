@@ -31,11 +31,14 @@ class TestScale extends utest.Test {
 	}
 
 	function testRootDrawsScaled() {
+		// A root component's left and top are screen pixels, as core places its drop-down lists,
+		// dialogs and tooltips; its size is HaxeUI units, drawn at the scale.
 		Toolkit.scale = 2;
 		redBox(10, 10, 50, 30);
-		Assert.equals(0xFFFF0000, TestDriver.pixel(25, 25), "inside, near the top left");
-		Assert.equals(0xFFFF0000, TestDriver.pixel(115, 75), "inside, near the bottom right");
-		Assert.equals(0xFFFFFFFF, TestDriver.pixel(125, 30), "past the scaled right edge");
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(5, 5), "before its left and top");
+		Assert.equals(0xFFFF0000, TestDriver.pixel(15, 15), "inside, near the top left");
+		Assert.equals(0xFFFF0000, TestDriver.pixel(105, 65), "inside, near the bottom right");
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(115, 30), "past the scaled right edge");
 	}
 
 	function testClickInHaxeUIUnits() {
@@ -53,6 +56,27 @@ class TestScale extends utest.Test {
 
 	function testPopupIsScaled() {
 		Toolkit.scale = 2;
+		var dd = dropDown();
+		var popup = open(dd);
+		Assert.isTrue(popup != dd, "the list opened");
+		// its right border, where a scaled popup draws it
+		var x = Std.int(popup.screenLeft + popup.actualComponentWidth) - 1;
+		var y = Std.int(popup.screenTop + popup.actualComponentHeight / 2);
+		Assert.isTrue(TestDriver.pixel(x, y) != 0xFFFFFFFF, 'popup border at ($x, $y)');
+	}
+
+	function testScaledPopupsLastItemCanBeChosen() {
+		// The drop-down takes a press outside its list as a dismissal, measured where core put the
+		// list: a list drawn anywhere else lost its lower items to that, closing unchosen.
+		Toolkit.scale = 2;
+		var dd = dropDown();
+		var popup = open(dd);
+		TestDriver.click(popup.screenLeft + popup.actualComponentWidth / 2, popup.screenTop + popup.actualComponentHeight * 0.75);
+		TestDriver.pump(3);
+		Assert.equals(1, dd.selectedIndex);
+	}
+
+	static function dropDown():DropDown {
 		var dd = new DropDown();
 		dd.left = 10;
 		dd.top = 10;
@@ -60,14 +84,14 @@ class TestScale extends utest.Test {
 		dd.dataSource = ArrayDataSource.fromArray([{text: "One"}, {text: "Two"}]);
 		Screen.instance.addComponent(dd);
 		TestDriver.pump(3);
-		TestDriver.click((dd.screenLeft + 10) * 2, (dd.screenTop + 10) * 2);
+		return dd;
+	}
+
+	/** Opens `dd`'s list with a click and returns it (the newest root component). **/
+	static function open(dd:DropDown):Component {
+		TestDriver.click(dd.screenLeft + 20, dd.screenTop + 20);
 		TestDriver.pump(3);
-		var popup:Component = Screen.instance.rootComponents[Screen.instance.rootComponents.length - 1];
-		Assert.isTrue(popup != dd, "the list opened");
-		// its right border, where a scaled popup draws it
-		var x = Std.int((popup.screenLeft + popup.width) * 2) - 1;
-		var y = Std.int((popup.screenTop + popup.height / 2) * 2);
-		Assert.isTrue(TestDriver.pixel(x, y) != 0xFFFFFFFF, 'popup border at ($x, $y)');
+		return Screen.instance.rootComponents[Screen.instance.rootComponents.length - 1];
 	}
 
 	function testSvgSharpWhenScaled() {
