@@ -2,6 +2,8 @@ package cases;
 
 import haxe.ui.Toolkit;
 import haxe.ui.backend.cs.TestDriver;
+import haxe.ui.backend.cs.TextLinkEvent;
+import haxe.ui.components.Label;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.components.DropDown;
 import haxe.ui.containers.Box;
@@ -74,6 +76,29 @@ class TestScale extends utest.Test {
 		TestDriver.click(popup.screenLeft + popup.actualComponentWidth / 2, popup.screenTop + popup.actualComponentHeight * 0.75);
 		TestDriver.pump(3);
 		Assert.equals(1, dd.selectedIndex);
+	}
+
+	function testScaledLinkIsFoundWhereItIsDrawn() {
+		// screenLeft is screen pixels and a pointer's position HaxeUI units: away from the origin
+		// they part, and a tap on a link drawn there missed it.
+		Toolkit.scale = 2;
+		var box = new haxe.ui.containers.Absolute();
+		box.left = 10;
+		box.top = 10;
+		box.width = 300;
+		box.height = 200;
+		var l = new Label();
+		l.left = 40;
+		l.top = 60;
+		l.htmlText = 'Go <a href="target">there</a> now';
+		box.addComponent(l);
+		Screen.instance.addComponent(box);
+		TestDriver.pump(3);
+		var got:Array<String> = [];
+		l.registerEvent(TextLinkEvent.LINK, e -> got.push(e.href + "#" + e.index));
+		var r = l.getTextDisplay().linkRects()[0];
+		TestDriver.click(l.screenLeft + (r.left + r.width / 2) * 2, l.screenTop + (r.top + r.height / 2) * 2);
+		Assert.same(["target#0"], got);
 	}
 
 	static function dropDown():DropDown {

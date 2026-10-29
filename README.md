@@ -253,8 +253,10 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
   `lineBoxes()` (each line's top and height, where a page could be cut), in the component's units.
 - Images may be PNG, JPEG and the like, or SVG, as a file, a resource, or the SVG markup itself
   (as html5 allows). An SVG is drawn afresh at the size it shows, so it stays sharp.
-- `Toolkit.scale` scales the whole UI from the window's top left; sizes and pointer positions stay
-  in HaxeUI's units. It is taken up as root components are added.
+- `Toolkit.scale` scales the whole UI from the window's top left; sizes and pointer positions
+  (`MouseEvent.screenX`) stay in HaxeUI's units. `screenLeft`/`screenTop`, and a root component's
+  `left` and `top`, are screen pixels, as core places its drop-down lists, dialogs and tooltips and
+  as on heaps. It is taken up as root components are added.
 - Text with no `font-size` from the theme is 13px; html5 leaves it to the browser (usually 16px).
 - A `callLater` callback that throws is reported on stderr and the rest of its frame still runs;
   an `onEnd` that throws is reported and the process exits with code 1. A file dialog whose
@@ -273,6 +275,8 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - Dashed and dotted borders whose sides differ are drawn square at the corners (a uniform dashed
   border does follow the radius).
 - Changing `Toolkit.scale` after the app has started shows from the next root component added.
+- Core's notifications and windows place themselves from `Screen.width` (units, not pixels), so
+  at a scale other than 1 they stop short of the right and bottom edges, as on heaps.
 - `letter-spacing` is not a style haxeui-core has, so no backend draws it (`line-height` is a
   haxeui-cs directive, above).
 - Haxe's C# target puts its top-level classes in the global namespace, so native code writes

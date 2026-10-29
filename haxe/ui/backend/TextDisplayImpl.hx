@@ -1,5 +1,6 @@
 package haxe.ui.backend;
 
+import haxe.ui.Toolkit;
 import haxe.ui.backend.cs.TextLinkEvent;
 import haxe.ui.backend.cs.directives.LineHeight;
 import haxe.ui.backend.cs.directives.TextShadow;
@@ -96,7 +97,8 @@ class TextDisplayImpl extends TextBase {
         if (component == null) {
             return;
         }
-        var index = linkAt(e.screenX - component.screenLeft, e.screenY - component.screenTop);
+        // The pointer is in HaxeUI units; screenLeft is screen pixels, as core keeps it.
+        var index = linkAt(e.screenX - component.screenLeft / Toolkit.scaleX, e.screenY - component.screenTop / Toolkit.scaleY);
         if (index < 0) {
             return;
         }
