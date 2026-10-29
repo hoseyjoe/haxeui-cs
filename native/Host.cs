@@ -39,6 +39,18 @@ namespace HaxeUICs
         bool OnCloseRequested();
     }
 
+    /// <summary>Asked when the user presses back (Android): true when it was handled.</summary>
+    public interface IBackListener
+    {
+        bool OnBack();
+    }
+
+    /// <summary>Told when the app goes to the background (Android's onPause).</summary>
+    public interface IPauseListener
+    {
+        void OnPause();
+    }
+
     public class HostApplication : Application
     {
         public override void Initialize()
@@ -369,6 +381,36 @@ namespace HaxeUICs
                 System.Console.Error.WriteLine("haxeui-cs: a close request handler threw: " + e);
                 return true;
             }
+        }
+
+        /// <summary>What back asks (BackButton's listeners); null takes no back.</summary>
+        public static IBackListener BackListener { get; set; }
+
+        /// <summary>What going to the background tells (AppLifecycle.onPause); null tells no one.</summary>
+        public static IPauseListener PauseListener { get; set; }
+
+        /// <summary>
+        /// Back was pressed: whether the app took it. One that throws is reported and back counts
+        /// as not taken, so the app still leaves rather than swallowing back for good.
+        /// </summary>
+        public static bool RaiseBack()
+        {
+            var listener = BackListener;
+            if (listener == null) return false;
+            try { return listener.OnBack(); }
+            catch (System.Exception e)
+            {
+                System.Console.Error.WriteLine("haxeui-cs: a back handler threw: " + e);
+                return false;
+            }
+        }
+
+        /// <summary>The app is going to the background. One that throws is reported and the app still goes.</summary>
+        public static void RaisePause()
+        {
+            try { PauseListener?.OnPause(); }
+            catch (System.Exception e) { System.Console.Error.WriteLine("haxeui-cs: a pause handler threw: " + e); }
+            WakeEventsPump(); // the handler may have started work (a save) of its own
         }
 
         public static void CloseWindow()

@@ -27,6 +27,16 @@ extern interface ICloseListener {
 	function OnCloseRequested():Bool;
 }
 
+@:native("HaxeUICs.IBackListener")
+extern interface IBackListener {
+	function OnBack():Bool;
+}
+
+@:native("HaxeUICs.IPauseListener")
+extern interface IPauseListener {
+	function OnPause():Void;
+}
+
 @:native("HaxeUICs.UIClipboard")
 extern class UIClipboard {
 	static function SetText(text:String, sensitive:Bool):Bool;
@@ -54,6 +64,10 @@ extern class Host {
 	static function CloseWindow():Void;
 	static var CloseListener:ICloseListener;
 	static function AskClose():Bool;
+	static var BackListener:IBackListener;
+	static var PauseListener:IPauseListener;
+	static function RaiseBack():Bool;
+	static function RaisePause():Void;
 	static function CaptureWindow(path:String):Bool;
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;

@@ -51,7 +51,8 @@ class TestMain {
 			new cases.TestSvgPalette(),
 			new cases.TestDirectives(),
 			new cases.TestStd(),
-			new cases.TestPickedFiles()
+			new cases.TestPickedFiles(),
+			new cases.TestLifecycle()
 		];
 	}
 }
