@@ -68,6 +68,13 @@ namespace HaxeUICs
                 window.Opened += (s, e) => Host.Listener.OnReady();
                 desktop.MainWindow = window;
             }
+            else if (ApplicationLifetime is ISingleViewApplicationLifetime single)
+            {
+                // Android: no window, one view the activity shows. Root is that view, and the Haxe
+                // program starts here, once per process (an activity made again reattaches Root).
+                single.MainView = Host.Root;
+                Host.EnterOnce();
+            }
             base.OnFrameworkInitializationCompleted();
         }
     }
@@ -155,8 +162,84 @@ namespace HaxeUICs
         public static double MinHeight => Window?.MinHeight ?? _minHeight;
         public static bool IsMaximized => Window != null ? Window.WindowState == WindowState.Maximized : _maximized;
 
-        public static double ClientWidth => Window != null ? Window.ClientSize.Width : _width;
-        public static double ClientHeight => Window != null ? Window.ClientSize.Height : _height;
+        public static double ClientWidth => Window != null ? Window.ClientSize.Width : _singleView && Root.Bounds.Width > 0 ? Root.Bounds.Width : _width;
+        public static double ClientHeight => Window != null ? Window.ClientSize.Height : _singleView && Root.Bounds.Height > 0 ? Root.Bounds.Height : _height;
+
+        /// <summary>
+        /// What holds Root: the window on the desktop, the activity's view on Android (null until
+        /// Root is shown). The clipboard and the file pickers go through it.
+        /// </summary>
+        public static TopLevel TopLevel => Window ?? (_root != null ? TopLevel.GetTopLevel(_root) : null);
+
+        /// <summary>Device pixels per Avalonia unit (Android's density; the desktop's display scale).</summary>
+        public static double RenderScaling => TopLevel?.RenderScaling ?? 1;
+
+        // ---- Android: one view, no window ----
+
+        /// <summary>The Haxe program's entry point, which the Android app calls once Avalonia is up.</summary>
+        public static System.Action Entry { get; set; }
+
+        /// <summary>The app's private files folder (Android); also the working directory there.</summary>
+        public static string FilesDir { get; set; }
+
+        /// <summary>Sends the app to the background without ending it (Android's back when nothing takes it).</summary>
+        public static System.Action LeaveApp { get; set; }
+
+        /// <summary>Ends the app's activity (app.exit() on Android).</summary>
+        public static System.Action FinishApp { get; set; }
+
+        static bool _singleView, _entered, _readySent;
+        static TopLevel _attachedTo;
+
+        /// <summary>Runs Entry, the first time only: Avalonia initialises once per process.</summary>
+        internal static void EnterOnce()
+        {
+            if (_entered || Entry == null) return;
+            _entered = true;
+            Entry();
+        }
+
+        /// <summary>
+        /// Android: Root is the view Android shows, so there is nothing to start or block on. Returns
+        /// at once; OnReady comes when Root is first shown with a size, OnResize after that.
+        /// </summary>
+        public static void RunSingleView(IHostListener listener)
+        {
+            Listener = listener;
+            _singleView = true;
+            Root.AttachedToVisualTree += (s, e) => AttachSingleView();
+            Root.PropertyChanged += (s, e) =>
+            {
+                if (e.Property == Visual.BoundsProperty) SingleViewResized();
+            };
+            if (TopLevel.GetTopLevel(Root) != null) AttachSingleView();
+        }
+
+        /// <summary>Root is in a (new) view: screen input and the background go to that view.</summary>
+        static void AttachSingleView()
+        {
+            var top = TopLevel.GetTopLevel(Root);
+            if (top == null || top == _attachedTo) return;
+            _attachedTo = top;
+            top.Background = new SolidColorBrush(Color.FromUInt32(_background));
+            _screenEvents = new EventRouter(top, true);
+            _screenEvents.Update(_screenKinds, _screenListener);
+            SingleViewResized();
+        }
+
+        static void SingleViewResized()
+        {
+            // Avalonia lays the view out at 1x1 before Android has given it a surface: HaxeUI is
+            // ready at the screen's real size, not at that, so a size of 1 is not one yet.
+            if (Root.Bounds.Width <= 1 || Root.Bounds.Height <= 1 || Listener == null) return;
+            if (!_readySent)
+            {
+                _readySent = true;
+                Listener.OnReady();
+                return;
+            }
+            Listener.OnResize(Root.Bounds.Width, Root.Bounds.Height);
+        }
 
         /// <summary>Starts Avalonia with a desktop window; blocks until that window closes.</summary>
         public static void RunDesktop(IHostListener listener, string title, int width, int height)
@@ -242,6 +325,7 @@ namespace HaxeUICs
         {
             _background = argb;
             if (Window != null) Window.Background = new SolidColorBrush(Color.FromUInt32(argb));
+            else if (_attachedTo != null) _attachedTo.Background = new SolidColorBrush(Color.FromUInt32(argb));
         }
 
         static uint _background = 0xFFFFFFFF;
@@ -422,7 +506,14 @@ namespace HaxeUICs
 
         public static void CloseWindow()
         {
-            if (Window == null) return;
+            if (Window == null)
+            {
+                // Android: app.exit() ends the activity, then the app, as closing the window does.
+                if (!_singleView) return;
+                FinishApp?.Invoke();
+                Listener?.OnClosed();
+                return;
+            }
             _closeByApp = true;
             Window.Close();
         }

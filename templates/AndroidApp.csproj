@@ -19,6 +19,10 @@
     <!-- Never trimmed: Haxe's output and HaxeUI find classes by name at run time. -->
     <PublishTrimmed>false</PublishTrimmed>
     <AndroidLinkMode>None</AndroidLinkMode>
+    <!-- JIT, not the Mono interpreter a debug build otherwise gets: the interpreter answers
+         `((object)o).GetType()` inside Haxe's Type.getClass<object> with System.Object, so every
+         component's class name is "Dynamic" and no theme CSS selector matches it. -->
+    <UseInterpreter>false</UseInterpreter>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

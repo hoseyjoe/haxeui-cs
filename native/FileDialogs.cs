@@ -31,7 +31,7 @@ namespace HaxeUICs
                     Answer(TestResponse, listener);
                     return;
                 }
-                var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+                var storage = Host.TopLevel?.StorageProvider;
                 if (storage == null || !storage.CanOpen)
                 {
                     Cancel(listener);
@@ -67,7 +67,7 @@ namespace HaxeUICs
                     Answer(TestResponse, listener);
                     return;
                 }
-                var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+                var storage = Host.TopLevel?.StorageProvider;
                 if (storage == null || !storage.CanSave)
                 {
                     Cancel(listener);
@@ -99,7 +99,7 @@ namespace HaxeUICs
                     Answer(TestResponse, listener);
                     return;
                 }
-                var storage = TopLevel.GetTopLevel(Host.Window)?.StorageProvider;
+                var storage = Host.TopLevel?.StorageProvider;
                 if (storage == null || !storage.CanPickFolder)
                 {
                     Cancel(listener);

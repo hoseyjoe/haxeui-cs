@@ -52,8 +52,11 @@ extern class Host {
 	static var ClientWidth(default, null):Float;
 	static var ClientHeight(default, null):Float;
 	static var ScreenCursorName(default, null):String;
+	static var RenderScaling(default, null):Float;
+	static var FilesDir:String;
 
 	static function RunDesktop(listener:IHostListener, title:String, width:Int, height:Int):Void;
+	static function RunSingleView(listener:IHostListener):Void;
 	#if haxeui_cs_headless
 	static function StartHeadless(listener:IHostListener, width:Int, height:Int):Void;
 	#end

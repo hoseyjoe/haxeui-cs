@@ -2,6 +2,7 @@
 using System;
 using Android.App;
 using Android.Content.PM;
+using Android.OS;
 using Android.Runtime;
 using Avalonia.Android;
 
@@ -13,6 +14,18 @@ namespace HaxeUICs.App
     {
         protected AndroidApp(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
+        }
+
+        /// <summary>
+        /// Before Avalonia starts, and so before the Haxe program does: the files dir is the working
+        /// directory, so a relative path (a state file) lands in the app's private storage.
+        /// </summary>
+        public override void OnCreate()
+        {
+            HaxeUICs.Host.FilesDir = FilesDir.AbsolutePath;
+            System.Environment.CurrentDirectory = HaxeUICs.Host.FilesDir;
+            HaxeUICs.Host.Entry = MainActivity.RunHaxe;
+            base.OnCreate();
         }
     }
 
@@ -27,6 +40,20 @@ namespace HaxeUICs.App
             | ConfigChanges.KeyboardHidden | ConfigChanges.Density)]
     public class MainActivity : AvaloniaMainActivity
     {
+        protected override void OnCreate(Bundle savedInstanceState)
+        {
+            HaxeUICs.Host.LeaveApp = () => MoveTaskToBack(true);
+            HaxeUICs.Host.FinishApp = FinishAndRemoveTask;
+            base.OnCreate(savedInstanceState);
+        }
+
+        /// <summary>Going to the background, where Android may end the app without a word.</summary>
+        protected override void OnPause()
+        {
+            base.OnPause();
+            HaxeUICs.Host.RaisePause();
+        }
+
         /// <summary>The Haxe program's entry point: Haxe's runtime, then its main().</summary>
         internal static void RunHaxe()
         {

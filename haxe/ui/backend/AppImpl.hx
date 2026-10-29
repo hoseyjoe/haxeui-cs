@@ -8,6 +8,8 @@ import haxe.ui.backend.cs.native.Native;
  * exists. On the desktop the host's loop runs inside `init`, so `ready()`
  * returns only when the window has closed; headless (`-D haxeui_cs_headless`)
  * it returns straight after `onReady`, and the caller drives the dispatcher.
+ * On Android (`-D haxeui_cs_android`) it returns at once: `main` is itself
+ * called from Android's activity, and `onReady` follows when the view shows.
  */
 class AppImpl extends AppBase {
     public function new() {
@@ -46,6 +48,10 @@ class AppImpl extends AppBase {
         var height = (options != null && options.height != null) ? options.height : 600;
         Host.Title = title;
         Host.StartHeadless(new HostListener(onReady, onEnd, false), width, height);
+        #elseif haxeui_cs_android
+        // The screen is the window: its size, title and options don't apply. Returns at once;
+        // onReady follows when Android shows the view.
+        Host.RunSingleView(new HostListener(onReady, onEnd, true));
         #else
         var width = (options != null && options.width != null) ? options.width : 1024;
         var height = (options != null && options.height != null) ? options.height : 768;

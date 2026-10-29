@@ -17,7 +17,7 @@ namespace HaxeUICs
         const int TimeoutMs = 2000;
         const int RetryMs = 20;
 
-        static IClipboard Clipboard => Host.Window?.Clipboard;
+        static IClipboard Clipboard => Host.TopLevel?.Clipboard;
 
         /// <summary>
         /// Windows' formats that keep a copy out of clipboard history (Win+V), the cloud clipboard
