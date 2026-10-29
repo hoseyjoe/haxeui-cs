@@ -14,6 +14,10 @@ class TestTouchTooltips extends utest.Test {
 	var clicks:Int;
 
 	function setup() {
+		// HaxeUI keeps one tooltip for everything, and its fades chain their end handlers onto the
+		// tooltip: one left over from another test can hide the one this test shows, or the other
+		// way round. Each test here starts and ends with a fresh one.
+		ToolTipManager.instance.reset();
 		TouchTooltips.install();
 		button = new Button();
 		button.text = "X";
@@ -29,9 +33,9 @@ class TestTouchTooltips extends utest.Test {
 	}
 
 	function teardown() {
-		ToolTipManager.instance.hideCurrentToolTip();
 		ToolTipManager.instance.unregisterTooltip(button);
 		Screen.instance.removeComponent(button);
+		ToolTipManager.instance.reset();
 		TestDriver.pump();
 	}
 
