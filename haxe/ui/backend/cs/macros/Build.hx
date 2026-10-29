@@ -21,6 +21,12 @@ import sys.io.File;
  * `-D haxeui_cs_publish=<rid>` instead of a debug build, publish a release build for that
  *                          runtime (win-x64, linux-x64, osx-arm64...): one self-contained
  *                          file, native libraries inside, no .pdb, in `<cs-out>/publish/<rid>/`
+ * `-D haxeui_cs_android`   an Android app instead (`templates/AndroidApp.csproj` and
+ *                          `templates/android/MainActivity.cs`): a debug APK, and with
+ *                          `haxeui_cs_run` installed and launched on the device adb sees
+ *                          (ANDROID_SERIAL picks one). Needs `-D haxeui_cs_android_id=<id>` and
+ *                          `-D haxeui_cs_android_label=<label>`; `-D haxeui_cs_android_abi=`
+ *                          `arm64-v8a` (a phone, the default) or `x86_64` (the emulator)
  *
  * `--macro haxe.ui.backend.cs.macros.Build.addPackage("Name", "1.2.3")` adds a NuGet package
  * the app needs beside haxeui-cs's own (a SQLite provider, say), and
@@ -59,6 +65,10 @@ class Build {
 		var out = Path.normalize(FileSystem.absolutePath(Compiler.getOutput()));
 		var name = mainClassName();
 		var headless = Context.defined("haxeui_cs_headless");
+		if (Context.defined("haxeui_cs_android")) {
+			android(out, name);
+			return;
+		}
 		GenericInterfaceCast.fix(Path.join([out, "src"]));
 		markEntryPointSta(Path.join([out, "src"]));
 
@@ -83,6 +93,82 @@ class Build {
 				Sys.exit(code);
 			}
 		}
+	}
+
+	/**
+	 * The Android app: the project and its MainActivity, a debug APK, and with `haxeui_cs_run` that
+	 * APK installed and launched. Haxe's `main` is not the process's entry point there: Android
+	 * starts MainActivity, and the host calls `main` from it (Host.Entry), so there is no
+	 * `[STAThread]` to add either.
+	 */
+	static function android(out:String, name:String):Void {
+		if (Context.defined("haxeui_cs_publish")) {
+			Context.fatalError("haxeui-cs: -D haxeui_cs_publish is not supported with -D haxeui_cs_android yet", Context.currentPos());
+		}
+		var id = definedText("haxeui_cs_android_id");
+		if (id == null) {
+			Context.fatalError("haxeui-cs: -D haxeui_cs_android needs -D haxeui_cs_android_id=<application id>", Context.currentPos());
+		}
+		var label = definedText("haxeui_cs_android_label");
+		if (label == null) {
+			Context.fatalError("haxeui-cs: -D haxeui_cs_android needs -D haxeui_cs_android_label=<label>", Context.currentPos());
+		}
+		var abi = definedText("haxeui_cs_android_abi");
+		var rid = switch (abi) {
+			case null | "arm64-v8a": "android-arm64";
+			case "x86_64": "android-x64";
+			case _: Context.fatalError('haxeui-cs: -D haxeui_cs_android_abi=$abi: arm64-v8a or x86_64', Context.currentPos());
+		}
+		GenericInterfaceCast.fix(Path.join([out, "src"]));
+
+		var main = Compiler.getConfiguration().mainClass;
+		var activity = File.getContent(Path.join([libraryRoot(), "templates", "android", "MainActivity.cs"]))
+			.split("::LABEL::").join(csString(label))
+			.split("::MAIN::").join(main.pack.concat([main.name]).join("."));
+		FileSystem.createDirectory(Path.join([out, "android"]));
+		File.saveContent(Path.join([out, "android", "MainActivity.cs"]), activity);
+
+		var csproj = Path.join([out, name + ".csproj"]);
+		var packages = ["Avalonia", "Avalonia.Android", "Avalonia.Themes.Simple", "Svg.Skia"];
+		File.saveContent(csproj, File.getContent(Path.join([libraryRoot(), "templates", "AndroidApp.csproj"]))
+			.split("::NAME::").join(name)
+			.split("::APP_ID::").join(StringTools.htmlEscape(id))
+			.split("::LABEL::").join(StringTools.htmlEscape(label))
+			.split("::RID::").join(rid)
+			.split("::NATIVE_DIR::").join(nativeItems(false).join("\n"))
+			.split("::RESOURCES::").join(resourceItems(out).join("\n"))
+			.split("::PACKAGES::").join(packageItems(packages).join("\n")));
+
+		if (Context.defined("haxeui_cs_no_dotnet")) {
+			return;
+		}
+		var code = Sys.command("dotnet", ["build", csproj, "-c", "Debug", "-nologo", "-v", "q"]);
+		if (code != 0) {
+			Sys.exit(code);
+		}
+		if (Context.defined("haxeui_cs_run")) {
+			var apk = Path.join([out, "bin", "Debug", "net10.0-android", rid, id + "-Signed.apk"]);
+			// Not incremental: adb's incremental install has hung an emulator part way.
+			code = Sys.command("adb", ["install", "--no-incremental", "-r", apk]);
+			if (code != 0) {
+				Sys.exit(code);
+			}
+			code = Sys.command("adb", ["shell", "monkey", "-p", id, "-c", "android.intent.category.LAUNCHER", "1"]);
+			if (code != 0) {
+				Sys.exit(code);
+			}
+		}
+	}
+
+	/** A define's value, or null when it is not set (a bare `-D name` has the value "1"). **/
+	static function definedText(name:String):Null<String> {
+		var value = Context.definedValue(name);
+		return value == null || value == "" || value == "1" ? null : value;
+	}
+
+	/** Text for a C# string literal. **/
+	static function csString(text:String):String {
+		return text.split("\\").join("\\\\").split("\"").join("\\\"");
 	}
 
 	/**
@@ -129,7 +215,8 @@ class Build {
 		}
 	}
 
-	static function buildProject(name:String, headless:Bool, resources:Array<String>):String {
+	/** haxeui-cs's `native/*.cs` (TestDriver only headless) and the app's own, as Compile items. **/
+	static function nativeItems(headless:Bool):Array<String> {
 		var nativeDir = Path.join([libraryRoot(), "native"]);
 		var native = [];
 		for (file in FileSystem.readDirectory(nativeDir)) {
@@ -140,17 +227,26 @@ class Build {
 		for (path in appNatives) {
 			native.push('    <Compile Include="${FileSystem.isDirectory(path) ? Path.join([path, "*.cs"]) : path}" />');
 		}
+		return native;
+	}
 
+	/** haxeui-cs's packages and then the app's, as PackageReference items. **/
+	static function packageItems(packages:Array<String>):Array<String> {
 		// Svg.Skia draws SVG images: 5.1.1 is the newest on Avalonia's own SkiaSharp (3.119) and
 		// HarfBuzzSharp (8.3.1.3); later ones need SkiaSharp 4 and would pull it out from under Avalonia.
 		var versions = ["Svg.Skia" => SVG_SKIA_VERSION];
-		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
-		if (headless) {
-			packages.push("Avalonia.Headless");
-		}
 		for (name => version in appPackages) {
 			if (packages.indexOf(name) < 0) packages.push(name);
 			versions.set(name, version);
+		}
+		return [for (p in packages) '    <PackageReference Include="$p" Version="${versions.exists(p) ? versions.get(p) : AVALONIA_VERSION}" />'];
+	}
+
+	static function buildProject(name:String, headless:Bool, resources:Array<String>):String {
+		var native = nativeItems(headless);
+		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
+		if (headless) {
+			packages.push("Avalonia.Headless");
 		}
 
 		var outputType = (headless || Context.defined("debug")) ? "Exe" : "WinExe";
@@ -161,7 +257,7 @@ class Build {
 			.split("::DEFINES::").join(headless ? ";HAXEUI_CS_HEADLESS" : "")
 			.split("::NATIVE_DIR::").join(native.join("\n"))
 			.split("::RESOURCES::").join(resources.join("\n"))
-			.split("::PACKAGES::").join([for (p in packages) '    <PackageReference Include="$p" Version="${versions.exists(p) ? versions.get(p) : AVALONIA_VERSION}" />'].join("\n"));
+			.split("::PACKAGES::").join(packageItems(packages).join("\n"));
 	}
 
 	/**

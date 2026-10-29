@@ -165,9 +165,13 @@ namespace HaxeUICs
             _title = title ?? "";
             _width = width;
             _height = height;
+#if ANDROID
+            throw new System.PlatformNotSupportedException("haxeui-cs: Android starts the app from MainActivity, not RunDesktop");
+#else
             AppBuilder.Configure<HostApplication>()
                 .UsePlatformDetect()
                 .StartWithClassicDesktopLifetime(System.Array.Empty<string>());
+#endif
         }
 
 #if HAXEUI_CS_HEADLESS

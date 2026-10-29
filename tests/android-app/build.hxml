@@ -1,0 +1,12 @@
+# Android check: the backend built as an Android app, run on a device. `haxe tests/android-app/build.hxml`
+# from the repo root writes and builds the APK; check-device.sh installs it and checks it on the device
+# that ANDROID_SERIAL names. check-project.sh checks the generated project without a device.
+-cp tests/android-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_android
+-D haxeui_cs_android_id=org.haxeui.cs.androidapp
+-D haxeui_cs_android_label=android-app
+-cs tests/android-app/bin
+-w -WAll
