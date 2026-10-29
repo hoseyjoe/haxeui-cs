@@ -29,7 +29,7 @@ extern interface ICloseListener {
 
 @:native("HaxeUICs.UIClipboard")
 extern class UIClipboard {
-	static function SetText(text:String):Bool;
+	static function SetText(text:String, sensitive:Bool):Bool;
 	static function GetText():String;
 	static function Clear():Bool;
 }
@@ -343,6 +343,7 @@ extern class HeadlessDriver {
 	static function Capture(path:String):Void;
 	static function PixelAt(x:Int, y:Int):Int;
 	static function PixelsAt(x:Int, y:Int, w:Int, h:Int):cs.NativeArray<Int>;
+	static function ClipboardFormat(name:String):String;
 	static function MouseMove(x:Float, y:Float):Void;
 	static function MouseDown(x:Float, y:Float, button:Int):Void;
 	static function MouseUp(x:Float, y:Float, button:Int):Void;

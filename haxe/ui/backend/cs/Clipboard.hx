@@ -9,9 +9,13 @@ import haxe.ui.backend.cs.native.Native.UIClipboard;
  * there is no clipboard: `setText` and `clear` answer false, `getText` null.
  */
 class Clipboard {
-	/** False if the text could not be put on the clipboard. **/
-	public static function setText(text:String):Bool {
-		return UIClipboard.SetText(text);
+	/**
+	 * False if the text could not be put on the clipboard. `sensitive` text (a password) is kept
+	 * out of Windows' clipboard history (Win+V), its cloud clipboard and clipboard monitors, as
+	 * KeePass keeps it; elsewhere it is copied as any text.
+	 */
+	public static function setText(text:String, sensitive:Bool = false):Bool {
+		return UIClipboard.SetText(text, sensitive);
 	}
 
 	/** The clipboard's text, or null when it holds none or can't be read. **/

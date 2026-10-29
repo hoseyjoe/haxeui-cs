@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Headless;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Platform;
 using Avalonia.Threading;
 
@@ -194,6 +195,16 @@ namespace HaxeUICs
                 raw = (raw & 0xFF00FF00u) | ((raw & 0x00FF0000u) >> 16) | ((raw & 0x000000FFu) << 16);
             }
             return unchecked((int)raw);
+        }
+
+        /// <summary>
+        /// What the clipboard holds in the platform format of that name, as lowercase hex; null
+        /// when it holds nothing in that format.
+        /// </summary>
+        public static string ClipboardFormat(string name)
+        {
+            var task = Host.Window.Clipboard.TryGetValueAsync(DataFormat.CreateBytesPlatformFormat(name));
+            return UIClipboard.Wait(task) && task.Result is { } bytes ? System.Convert.ToHexStringLower(bytes) : null;
         }
 
         /// <summary>The pixel at (x, y) of a freshly rendered frame, as ARGB (0 outside the frame).</summary>

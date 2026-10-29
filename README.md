@@ -71,7 +71,11 @@ and the window closes.
 answered at once as Heaps' `hxd.System.setClipboardText` is: each waits for the OS in a nested
 dispatcher frame, so the window keeps painting, and gives up after two seconds if another program
 holds the clipboard. What the app copied is handed to the OS on the way out (`OleFlushClipboard`), so
-it stays on the clipboard after the app ends, as in any program.
+it stays on the clipboard after the app ends, as in any program. `setText(text, true)` copies a
+password: on Windows the text goes on with `ExcludeClipboardContentFromMonitorProcessing`,
+`CanIncludeInClipboardHistory` and `CanUploadToCloudClipboard` (a DWORD 0) beside it, as KeePass's
+does, so it stays out of clipboard history (Win+V), the cloud clipboard and clipboard monitors, and
+a later `clear` leaves nothing of it behind. Other systems get plain text.
 
 ### Publishing
 
@@ -114,7 +118,9 @@ HaxeUIApp's preloader is) appears once it does. `haxe tests/window-app/build.hxm
 with every window option, checks an idle app stays idle, and ends itself with `app.exit()`.
 `haxe tests/clipboard-app/build.hxml` checks the OS clipboard (headless, Avalonia's is in memory) and
 `WindowClose` in a real window; the text it prints last must still be on the clipboard after it ends
-(`Get-Clipboard` on Windows).
+(`Get-Clipboard` on Windows). On Windows it reads a sensitive copy's formats back through Win32 and,
+with `history.ps1`, checks that clipboard history took a plain copy but not the sensitive one (with
+history off it says so and skips that).
 
 ### Linux
 

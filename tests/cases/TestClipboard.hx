@@ -1,6 +1,7 @@
 package cases;
 
 import haxe.ui.backend.cs.Clipboard;
+import haxe.ui.backend.cs.TestDriver;
 import utest.Assert;
 
 /** The system clipboard's text (headless: Avalonia's in-memory clipboard). **/
@@ -30,6 +31,40 @@ class TestClipboard extends utest.Test {
 		Clipboard.setText("secret");
 		Assert.isTrue(Clipboard.clear());
 		Assert.isNull(Clipboard.getText(), "nothing on the clipboard");
+	}
+
+	static final SENSITIVE = [
+		"ExcludeClipboardContentFromMonitorProcessing",
+		"CanIncludeInClipboardHistory",
+		"CanUploadToCloudClipboard"
+	];
+
+	function testSensitiveRoundTrip() {
+		Assert.isTrue(Clipboard.setText("hunter2", true));
+		Assert.equals("hunter2", Clipboard.getText());
+	}
+
+	/** Windows' marks beside the text, each a DWORD 0; no other OS has them. **/
+	function testSensitiveKeptOutOfHistory() {
+		Clipboard.setText("hunter2", true);
+		var windows = Sys.systemName() == "Windows";
+		for (name in SENSITIVE)
+			Assert.equals(windows ? "00000000" : null, TestDriver.clipboardFormat(name), name);
+	}
+
+	function testPlainTextHasNoHistoryMarks() {
+		Clipboard.setText("hunter2", true);
+		Clipboard.setText("plain");
+		for (name in SENSITIVE)
+			Assert.isNull(TestDriver.clipboardFormat(name), name);
+		Assert.equals("plain", Clipboard.getText());
+	}
+
+	function testClearRemovesHistoryMarks() {
+		Clipboard.setText("hunter2", true);
+		Clipboard.clear();
+		for (name in SENSITIVE)
+			Assert.isNull(TestDriver.clipboardFormat(name), name);
 	}
 
 	function testEmptyText() {

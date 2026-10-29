@@ -1,10 +1,12 @@
 # Desktop check of the real clipboard and the close guard: `haxe tests/clipboard-app/build.hxml`
 # from the repo root; exits 0. It leaves "haxeui-cs clipboard-app <n>" on the clipboard, printed on
-# its last line, which must still be there after it exits (`Get-Clipboard` on Windows).
+# its last line, which must still be there after it exits (`Get-Clipboard` on Windows). On Windows
+# it also checks clipboard history with history.ps1 (history off: it says so and skips that).
 -cp tests/clipboard-app
 -main Main
 -lib haxeui-core
 -lib haxeui-cs
+--macro haxe.ui.backend.cs.macros.Build.addNative("tests/clipboard-app/Win32Clipboard.cs")
 -D haxeui_cs_run
 -cs tests/clipboard-app/bin
 -w -WAll

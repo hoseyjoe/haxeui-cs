@@ -41,6 +41,11 @@ class TestDriver {
 		return [for (i in 0...data.length) data[i]];
 	}
 
+	/** What the clipboard holds in the platform format named so, as lowercase hex; null if nothing. **/
+	public static function clipboardFormat(name:String):Null<String> {
+		return HeadlessDriver.ClipboardFormat(name);
+	}
+
 	// Pointer input, in window coordinates. Buttons: 0 left, 1 middle, 2 right.
 
 	public static function mouseMove(x:Float, y:Float):Void {
