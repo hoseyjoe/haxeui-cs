@@ -150,6 +150,10 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - `StringTools.startsWith` and `endsWith` compare code unit by code unit, as on every other
   target. Haxe's C# std leaves them to .NET's culture rules, where a BOM or soft hyphen matches
   anything; haxeui-cs corrects that at compile time.
+- `haxe.zip.Uncompress` works (Haxe's C# std throws "Not implemented"), on .NET's
+  `System.IO.Compression`, so `haxe.zip.Reader.unzip` and the zip, EPUB and PNG readers built on
+  it run. `windowBits` is zlib's: 15 zlib, -15 raw deflate, 31 gzip, 47 either. The input is
+  inflated whole on the first `execute`; feeding it in pieces is not supported.
 - A generic class reaches a generic interface it implements with another parameter
   (`Foo<Bool>` as `Iface<Dynamic>`, as thenshim's promises do). Haxe 4.3's C# cast forwarder
   passes the class's own parameter, so the cast throws; haxeui-cs corrects the written `.cs`
@@ -168,11 +172,18 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - **`text-shadow: <dx>px <dy>px <blur>px <#rrggbb> [<alpha>]`** is a haxeui-cs directive (core
   has none) that shadows a text's glyphs. Other backends ignore it. `rotation` and
   `clip-path: inset(...)` work as on html5.
+- **`line-height: <number> | <n>px | <n>% | normal`** is a haxeui-cs directive too: every line
+  of a component's text is that tall, a number or percentage being of the font size, as in CSS.
 - `font-name` takes a system family, a CSS generic family (`monospace`, `serif`, `sans-serif`,
   `cursive`, `system-ui`), or a `.ttf`/`.otf` font file: a Haxe resource or a file path.
-- Labels show `htmlText`: `b`, `i`, `u`, `s`, `br`, `font` (color, size, face) and
-  `span style="color: ..."`; other tags are dropped and their text kept. Text inputs edit plain
-  text: HTML is shown with its tags stripped.
+- Labels show `htmlText`: `b`, `i`, `u`, `s`, `br`, `font` (color, size, face),
+  `span style="color: ..."` and `a href`; other tags are dropped and their text kept. Text inputs
+  edit plain text: HTML is shown with its tags stripped.
+- A link is blue and underlined until a `font` inside it says otherwise, and shows a hand. A click
+  on one dispatches **`TextLinkEvent.LINK`** (`haxe.ui.backend.cs`, with `href` and `index`) on
+  the component; nothing is followed unless the app listens. The text display
+  (`getTextDisplay()`) answers `linkCount()`, `linkHref(i)`, `linkAt(x, y)`, `linkRects()` and
+  `lineBoxes()` (each line's top and height, where a page could be cut), in the component's units.
 - Images may be PNG, JPEG and the like, or SVG, as a file, a resource, or the SVG markup itself
   (as html5 allows). An SVG is drawn afresh at the size it shows, so it stays sharp.
 - `Toolkit.scale` scales the whole UI from the window's top left; sizes and pointer positions stay
@@ -195,6 +206,7 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - Dashed and dotted borders whose sides differ are drawn square at the corners (a uniform dashed
   border does follow the radius).
 - Changing `Toolkit.scale` after the app has started shows from the next root component added.
-- `letter-spacing` and `line-height` are not styles haxeui-core has, so no backend draws them.
+- `letter-spacing` is not a style haxeui-core has, so no backend draws it (`line-height` is a
+  haxeui-cs directive, above).
 - Haxe's C# target puts its top-level classes in the global namespace, so native code writes
   `System.Math` and `System.Array`. `-D erase-generics` breaks HaxeUI.

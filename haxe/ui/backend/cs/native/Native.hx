@@ -180,14 +180,26 @@ extern class UIText extends Control {
 	function SetWrap(wrap:Bool):Void;
 	function SetHtml(html:String):Void;
 	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;
+	function SetLineHeight(height:Float):Void;
 	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
 	function MeasureText(maxWidth:Float):Void;
+
+	var LinkCount(default, null):Int;
+	function LinkHref(index:Int):String;
+	function LinkRects():cs.NativeArray<Float>;
+	function LinkAt(x:Float, y:Float):Int;
+	function LineBoxes():cs.NativeArray<Float>;
 }
 
 @:native("HaxeUICs.UIFonts")
 extern class UIFonts {
 	static function FromBytes(key:String, data:haxe.io.BytesData):String;
 	static function FromFile(path:String):String;
+}
+
+@:native("HaxeUICs.Inflate")
+extern class Inflate {
+	static function Run(data:haxe.io.BytesData, offset:Int, length:Int, windowBits:Int):haxe.io.BytesData;
 }
 
 @:native("HaxeUICs.UIImage")

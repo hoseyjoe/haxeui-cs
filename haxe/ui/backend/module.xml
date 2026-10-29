@@ -8,6 +8,7 @@
 
     <cssExtensions>
         <cssDirective name="text-shadow" class="haxe.ui.backend.cs.directives.TextShadow" />
+        <cssDirective name="line-height" class="haxe.ui.backend.cs.directives.LineHeight" />
         <cssDirective name="rotation" class="haxe.ui.backend.cs.directives.Rotate" />
         <cssDirective name="clip-path" class="haxe.ui.backend.cs.directives.ClipPath" />
     </cssExtensions>

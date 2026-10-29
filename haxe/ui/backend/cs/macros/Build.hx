@@ -36,6 +36,7 @@ class Build {
 
 	public static function configure():Void {
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
+		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeUncompress.build())", "haxe.zip.Uncompress");
 		Context.onGenerate(GenericInterfaceCast.gather);
 		Context.onAfterGenerate(afterGenerate);
 	}

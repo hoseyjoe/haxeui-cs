@@ -66,7 +66,7 @@ namespace HaxeUICs
             if (style.Cursor != _cursorName)
             {
                 _cursorName = style.Cursor;
-                if (!_cursorSuppressed) Cursor = UIStyle.CursorFor(style.Cursor);
+                if (!_cursorSuppressed && !_overLink) Cursor = UIStyle.CursorFor(style.Cursor);
             }
             _painter.InvalidateVisual();
         }
@@ -88,7 +88,48 @@ namespace HaxeUICs
         {
             if (suppressed == _cursorSuppressed) return;
             _cursorSuppressed = suppressed;
+            _overLink = false;
             Cursor = suppressed ? null : UIStyle.CursorFor(_cursorName);
+        }
+
+        // ---- a hand over a link in this panel's text, as a browser shows one ----
+
+        bool _linkHandlers, _overLink;
+
+        /// <summary>A text in this panel's content has new HTML; from its first link on, the
+        /// pointer is watched for whether it is over one.</summary>
+        public void LinksChanged()
+        {
+            if (_linkHandlers || !HasLinks()) return;
+            _linkHandlers = true;
+            AddHandler(PointerMovedEvent, (s, e) => SetOverLink(OverLink(e)), Avalonia.Interactivity.RoutingStrategies.Bubble, true);
+            AddHandler(PointerExitedEvent, (s, e) => SetOverLink(false), Avalonia.Interactivity.RoutingStrategies.Direct, true);
+        }
+
+        bool HasLinks()
+        {
+            for (var i = 0; i < _contentCount; i++)
+                if (Children[i] is UIText text && text.LinkCount > 0) return true;
+            return false;
+        }
+
+        bool OverLink(Avalonia.Input.PointerEventArgs e)
+        {
+            for (var i = 0; i < _contentCount; i++)
+            {
+                if (!(Children[i] is UIText text) || text.LinkCount == 0 || !text.IsVisible) continue;
+                var p = e.GetPosition(text);
+                if (text.LinkAt(p.X, p.Y) >= 0) return true;
+            }
+            return false;
+        }
+
+        void SetOverLink(bool over)
+        {
+            if (_cursorSuppressed) over = false;
+            if (over == _overLink) return;
+            _overLink = over;
+            Cursor = UIStyle.CursorFor(over ? "pointer" : _cursorName);
         }
 
         public double Left { get; private set; }
@@ -246,6 +287,7 @@ namespace HaxeUICs
             Children.Insert(_contentCount, content);
             _contentCount++;
             PassColorMatrix(content);
+            if (content is UIText) LinksChanged();
         }
 
         public bool HitTest(Point point)

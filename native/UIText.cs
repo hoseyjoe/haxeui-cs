@@ -32,15 +32,20 @@ namespace HaxeUICs
         string _html;
 
         /// <summary>
-        /// Shows HTML text: b/strong, i/em, u, s/strike/del, br, font (color, size, face) and
-        /// span style="color: ...". Other tags are dropped and their text kept; entities are
-        /// decoded and whitespace collapses as in HTML. Null goes back to plain Text.
+        /// Shows HTML text: b/strong, i/em, u, s/strike/del, br, font (color, size, face),
+        /// span style="color: ..." and a href. Other tags are dropped and their text kept; entities
+        /// are decoded and whitespace collapses as in HTML. Null goes back to plain Text.
         /// </summary>
         public void SetHtml(string html)
         {
             if (html == _html) return;
             _html = html;
             if (html != null) BuildInlines();
+            else if (_linkHrefs.Count > 0)
+            {
+                _linkHrefs.Clear();
+                _linkRanges.Clear();
+            }
         }
 
         class RunStyle
@@ -49,6 +54,7 @@ namespace HaxeUICs
             public uint? Color;
             public double? Size;
             public string Face;
+            public int Link = -1;
             public RunStyle Copy() => (RunStyle)MemberwiseClone();
         }
 
@@ -56,9 +62,83 @@ namespace HaxeUICs
         static readonly Regex Space = new Regex(@"\s+");
         static readonly double[] HtmlSizes = { 10, 13, 16, 18, 24, 32, 48 };
 
+        // ---- links: a href, as ranges of the laid-out text ----
+
+        readonly List<string> _linkHrefs = new List<string>();
+        readonly List<(int start, int length, int link)> _linkRanges = new List<(int, int, int)>();
+
+        /// <summary>The links in the HTML text, in document order.</summary>
+        public int LinkCount => _linkHrefs.Count;
+
+        public string LinkHref(int index) => index >= 0 && index < _linkHrefs.Count ? _linkHrefs[index] : null;
+
+        /// <summary>
+        /// Every link's areas, in this text's own units, as [link, x, y, width, height] for each
+        /// piece of a line a link covers: a link broken over two lines has two.
+        /// </summary>
+        public double[] LinkRects()
+        {
+            var rects = new List<double>();
+            if (_linkRanges.Count == 0) return rects.ToArray();
+            var layout = CurrentLayout();
+            foreach (var range in _linkRanges)
+            {
+                foreach (var r in layout.HitTestTextRange(range.start, range.length))
+                {
+                    if (r.Width <= 0) continue;
+                    rects.Add(range.link);
+                    rects.Add(r.X);
+                    rects.Add(r.Y);
+                    rects.Add(r.Width);
+                    rects.Add(r.Height);
+                }
+            }
+            return rects.ToArray();
+        }
+
+        /// <summary>The link at a point in this text's own units, or -1.</summary>
+        public int LinkAt(double x, double y)
+        {
+            var rects = LinkRects();
+            for (var i = 0; i < rects.Length; i += 5)
+            {
+                if (x >= rects[i + 1] && x < rects[i + 1] + rects[i + 3] && y >= rects[i + 2] && y < rects[i + 2] + rects[i + 4])
+                    return (int)rects[i];
+            }
+            return -1;
+        }
+
+        /// <summary>Each laid-out line's top and height, in this text's own units, as [top, height, ...].</summary>
+        public double[] LineBoxes()
+        {
+            var layout = CurrentLayout();
+            var boxes = new double[layout.TextLines.Count * 2];
+            var top = 0.0;
+            for (var i = 0; i < layout.TextLines.Count; i++)
+            {
+                boxes[i * 2] = top;
+                boxes[i * 2 + 1] = layout.TextLines[i].Height;
+                top += layout.TextLines[i].Height;
+            }
+            return boxes;
+        }
+
+        /// <summary>
+        /// The text laid out at the width HaxeUI gave it. MeasureText lays it out at the width it
+        /// asks about, and Avalonia's own pass may not have run since, so measure again first.
+        /// </summary>
+        Avalonia.Media.TextFormatting.TextLayout CurrentLayout()
+        {
+            Measure(new Size(double.IsNaN(Width) ? double.PositiveInfinity : Width, double.PositiveInfinity));
+            return TextLayout;
+        }
+
         void BuildInlines()
         {
             var inlines = new InlineCollection();
+            var offset = 0;
+            _linkHrefs.Clear();
+            _linkRanges.Clear();
             var style = new RunStyle();
             var open = new List<(string tag, RunStyle before)>();
             var text = new StringBuilder();
@@ -68,7 +148,10 @@ namespace HaxeUICs
                 if (text.Length == 0) return;
                 var words = System.Net.WebUtility.HtmlDecode(Space.Replace(text.ToString(), " "));
                 text.Clear();
-                if (words.Length > 0) inlines.Add(MakeRun(words, style));
+                if (words.Length == 0) return;
+                inlines.Add(MakeRun(words, style));
+                if (style.Link >= 0) _linkRanges.Add((offset, words.Length, style.Link));
+                offset += words.Length;
             }
             var i = 0;
             while (i < html.Length)
@@ -101,6 +184,7 @@ namespace HaxeUICs
                 if (tagName == "br")
                 {
                     inlines.Add(new LineBreak());
+                    offset += System.Environment.NewLine.Length; // what Avalonia's LineBreak puts in the text
                     continue;
                 }
                 var next = style.Copy();
@@ -135,6 +219,20 @@ namespace HaxeUICs
                             if (colour.Success) next.Color = ParseColor(colour.Groups[1].Value.Trim()) ?? next.Color;
                         }
                         break;
+                    case "a":
+                        // As a browser's default style: blue and underlined, until a font tag inside says otherwise.
+                        string href = null;
+                        foreach (Match m in Attribute.Matches(attributes))
+                        {
+                            if (m.Groups[1].Value.ToLowerInvariant() != "href") continue;
+                            href = System.Net.WebUtility.HtmlDecode(m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Success ? m.Groups[3].Value : m.Groups[4].Value);
+                        }
+                        if (href == null) break; // an anchor that links nowhere is plain text
+                        next.Link = _linkHrefs.Count;
+                        _linkHrefs.Add(href);
+                        next.Color = 0xFF0000EEu;
+                        next.Underline = true;
+                        break;
                     default:
                         continue; // unknown: dropped, its text kept
                 }
@@ -143,6 +241,7 @@ namespace HaxeUICs
             }
             Flush();
             Inlines = inlines;
+            (Parent as UIPanel)?.LinksChanged();
         }
 
         Run MakeRun(string text, RunStyle style)
@@ -213,6 +312,12 @@ namespace HaxeUICs
                 Color = Color.FromUInt32(argb | 0xFF000000u),
                 Opacity = ((argb >> 24) & 0xFF) / 255.0,
             };
+        }
+
+        /// <summary>The height of every line (haxeui-cs's line-height); 0 or less goes back to the font's own.</summary>
+        public void SetLineHeight(double height)
+        {
+            LineHeight = height > 0 ? height : double.NaN;
         }
 
         public void SetWrap(bool wrap)

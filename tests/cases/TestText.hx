@@ -5,6 +5,7 @@ import haxe.ui.components.TextField;
 import haxe.ui.core.Component;
 import haxe.ui.core.Screen;
 import haxe.ui.backend.cs.TestDriver;
+import haxe.ui.backend.cs.TextLinkEvent;
 import utest.Assert;
 
 /** Text display: measuring, wrapping, font styling and rendering. **/
@@ -127,6 +128,126 @@ class TestText extends utest.Test {
 	function testHtmlEntities() {
 		var plain = show("a & b").width;
 		Assert.floatEquals(plain, html("a &amp; b").width, 0.5);
+	}
+
+	function testHtmlLinks() {
+		var l = html('Read <a href="one.html">the first</a> and <a href="two?a=1&amp;b=2">the second</a>.');
+		var text = l.getTextDisplay();
+		Assert.equals(2, text.linkCount());
+		Assert.equals("one.html", text.linkHref(0));
+		Assert.equals("two?a=1&b=2", text.linkHref(1));
+		Assert.isNull(text.linkHref(2));
+		Assert.equals("Read the first and the second.", (cs.Syntax.code("{0}.Inlines.Text", text.textNative) : String), "the anchors' text is kept");
+	}
+
+	function testHtmlAnchorWithoutHrefIsText() {
+		var l = html('<a name="here">anchor</a>');
+		Assert.equals(0, l.getTextDisplay().linkCount());
+	}
+
+	function testLinkRectsAndHitTest() {
+		var l = html('Read <a href="x">the first</a> now', "font-size: 20px;");
+		var text = l.getTextDisplay();
+		var rects = text.linkRects();
+		Assert.equals(1, rects.length);
+		var r = rects[0];
+		Assert.equals(0, r.index);
+		Assert.isTrue(r.left > 20 && r.left + r.width < l.width - 20, 'link at ${r.left}..${r.left + r.width} of ${l.width}');
+		Assert.equals(0, text.linkAt(r.left + r.width / 2, r.top + r.height / 2));
+		Assert.equals(-1, text.linkAt(2, r.top + r.height / 2), "on Read");
+		Assert.equals(-1, text.linkAt(l.width - 2, r.top + r.height / 2), "on now");
+	}
+
+	/** Each br counts in the text the link ranges index: a link after one starts its line. **/
+	function testLinkAfterLineBreaks() {
+		var l = html('one<br>two<br><a href="x">three</a> four', "font-size: 20px;");
+		var r = l.getTextDisplay().linkRects()[0];
+		Assert.isTrue(r.left < 2, 'starts its line: ${r.left}');
+		Assert.isTrue(r.top > l.height / 2, 'on the third line: ${r.top} of ${l.height}');
+		var three = html("three", "font-size: 20px;").width;
+		Assert.floatEquals(three, r.width, 3, 'covers "three": ${r.width} vs $three');
+	}
+
+	function testLinkBrokenOverLinesHasARectEach() {
+		var l = new Label();
+		l.htmlText = 'x <a href="long">one two three four five six seven eight</a>';
+		l.wordWrap = true;
+		l.width = 120;
+		Screen.instance.addComponent(l);
+		TestDriver.pump(3);
+		var rects = l.getTextDisplay().linkRects();
+		Assert.isTrue(rects.length >= 2, '${rects.length} rects');
+		for (r in rects) {
+			Assert.equals(0, r.index);
+			Assert.isTrue(r.left + r.width <= 121, 'inside the width: ${r.left + r.width}');
+		}
+	}
+
+	function testLinkClickDispatchesTextLinkEvent() {
+		var l = html('Go <a href="target">there</a> now', "font-size: 20px;");
+		var got:Array<String> = [];
+		l.registerEvent(TextLinkEvent.LINK, e -> got.push(e.href + "#" + e.index));
+		var r = l.getTextDisplay().linkRects()[0];
+		TestDriver.click(l.screenLeft + 3, l.screenTop + r.top + r.height / 2);
+		Assert.equals(0, got.length, "a click off the link");
+		TestDriver.click(l.screenLeft + r.left + r.width / 2, l.screenTop + r.top + r.height / 2);
+		Assert.same(["target#0"], got);
+	}
+
+	function testLinkShowsAHand() {
+		var l = html('Go <a href="target">there</a> now', "font-size: 20px;");
+		var r = l.getTextDisplay().linkRects()[0];
+		var y = l.screenTop + r.top + r.height / 2;
+		TestDriver.mouseMove(l.screenLeft + r.left + r.width / 2, y);
+		Assert.isTrue(cs.Syntax.code("{0}.Cursor != null", l.nativePanel), "a hand over the link");
+		TestDriver.mouseMove(l.screenLeft + 3, y);
+		Assert.isTrue(cs.Syntax.code("{0}.Cursor == null", l.nativePanel), "the label's own (none) beside it");
+	}
+
+	function testPlainTextAfterHtmlHasNoLinks() {
+		var l = html('<a href="x">link</a>');
+		l.text = "plain";
+		TestDriver.pump(2);
+		Assert.equals(0, l.getTextDisplay().linkCount());
+		Assert.equals(0, l.getTextDisplay().linkRects().length);
+	}
+
+	function testLineBoxes() {
+		var l = new Label();
+		l.text = "the quick brown fox jumps over a lazy dog and on";
+		l.wordWrap = true;
+		l.width = 80;
+		l.styleString = "font-size: 16px;";
+		Screen.instance.addComponent(l);
+		TestDriver.pump(3);
+		var boxes = l.getTextDisplay().lineBoxes();
+		Assert.isTrue(boxes.length >= 3, '${boxes.length} lines');
+		var bottom = boxes[0].top;
+		for (b in boxes) {
+			Assert.floatEquals(bottom, b.top, 0.01, "each line starts where the last ended");
+			Assert.isTrue(b.height > 10 && b.height < 30, 'height ${b.height}');
+			bottom = b.top + b.height;
+		}
+		Assert.floatEquals(l.getTextDisplay().textHeight, bottom - boxes[0].top, 1.5);
+	}
+
+	function testLineHeightDirective() {
+		var normal = lines("font-size: 20px;");
+		var doubled = lines("font-size: 20px; line-height: 2;");
+		var px = lines("font-size: 20px; line-height: 31px;");
+		var percent = lines("font-size: 20px; line-height: 150%;");
+		Assert.equals(normal.boxes.length, doubled.boxes.length, "the same lines");
+		for (b in doubled.boxes) Assert.floatEquals(40, b.height, 0.01);
+		for (b in px.boxes) Assert.floatEquals(31, b.height, 0.01);
+		for (b in percent.boxes) Assert.floatEquals(30, b.height, 0.01);
+		Assert.isTrue(doubled.label.height > normal.label.height + 10, 'taller: ${doubled.label.height} vs ${normal.label.height}');
+		var reset = lines("font-size: 20px; line-height: normal;");
+		Assert.floatEquals(normal.boxes[0].height, reset.boxes[0].height, 0.01);
+	}
+
+	static function lines(styleString:String):{label:Label, boxes:Array<{top:Float, height:Float}>} {
+		var l = html("one<br>two<br>three", styleString);
+		return {label: l, boxes: l.getTextDisplay().lineBoxes()};
 	}
 
 	static function html(markup:String, ?styleString:String):Label {
