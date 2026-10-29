@@ -110,6 +110,7 @@ extern class KeyCodes {
 extern interface IFileDialogListener {
 	function OnFiles(paths:cs.NativeArray<String>):Void;
 	function OnCancelled():Void;
+	function OnFailed(message:String):Void;
 }
 
 @:native("HaxeUICs.FileDialogs")

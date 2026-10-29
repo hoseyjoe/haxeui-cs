@@ -54,6 +54,7 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-D haxeui_cs_headless` | headless Avalonia (real Skia drawing, no OS window) plus `haxe.ui.backend.cs.TestDriver`, for tests |
 | `-D haxeui_cs_no_dotnet` | stop after writing the `.csproj` |
 | `-D haxeui_cs_publish=<rid>` | publish a release build as one self-contained file instead (see Publishing) |
+| `-D haxeui_cs_android` | an Android app instead (see Android) |
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
@@ -66,6 +67,12 @@ from then on, as heaps-svg's `SvgIcons.setPalette` does for a dark theme's icons
 button, Alt+F4), as a Heaps app's `hxd.Window.onClose` is: return false to keep it open, offer
 unsaved work for saving, then call `app.exit()`, which never asks it. One that throws is reported
 and the window closes.
+
+`haxe.ui.backend.cs.BackButton.addListener(fn)` hears Android's back (gesture or button), newest
+listener first: a listener that returns true has taken it (closing a dialog, going up a level), and
+when none does the app goes to the background. `removeListener` and `clearListeners` undo that.
+`haxe.ui.backend.cs.AppLifecycle.onPause` runs when the app goes to the background, where Android
+may end it without a word: the place to save. The desktop never calls either.
 
 `haxe.ui.backend.cs.Clipboard` has `setText`, `getText` and `clear` (every format, not just text),
 answered at once as Heaps' `hxd.System.setClipboardText` is: each waits for the OS in a nested
@@ -106,6 +113,35 @@ the `dotnet publish` of the generated `.csproj` with `--self-contained`,
 - For a Mac it is a plain program, not a signed `.app` bundle. On Linux a real window needs the
   libraries in the Linux section below.
 
+### Android
+
+`-D haxeui_cs_android` builds an Android app from the same program: a debug APK, from
+`templates/AndroidApp.csproj` and `templates/android/MainActivity.cs`. With `-D haxeui_cs_run` it is
+installed on the device adb sees (`ANDROID_SERIAL` picks one) and launched. It needs .NET's
+`android` workload (`dotnet workload install android`), the Android SDK it brings, and adb.
+
+```
+haxe app.hxml -D haxeui_cs_android -D haxeui_cs_android_id=com.example.app -D haxeui_cs_android_label="My app" -D haxeui_cs_run
+```
+
+| Define | Effect |
+|---|---|
+| `-D haxeui_cs_android_id=<id>` | the application id (required) |
+| `-D haxeui_cs_android_label=<label>` | the name under the launcher icon (required) |
+| `-D haxeui_cs_android_abi=<abi>` | `arm64-v8a`, a phone (the default), or `x86_64`, the emulator |
+
+- `main` runs from `MainActivity` once per process, with the app's private files folder as the
+  working directory, so a relative path (a state file) lands there. `ready()` returns at once; its
+  callback runs when the screen has a size. Rotating resizes the app (RESIZE), it never restarts it.
+- The app fills the screen with the system bars hidden; a swipe from an edge shows them for a while.
+- Back goes to `BackButton`'s listeners, else sends the app to the background. Save in
+  `AppLifecycle.onPause`: Android ends background apps when it needs the memory.
+- `Dialogs.openFile` shows the system picker. The file chosen is copied into `files/picked/` (the
+  same file picked again is the same copy) and that path is the answer; a copy that fails is said in
+  a message box. One file at a time; extensions do not filter it. Folder and save dialogs cancel.
+- A finger has no hover, so tooltips come by long press, and letting go is not a click.
+- Not yet: publishing (`haxeui_cs_publish`), and trimming (never: classes are found by name).
+
 ## Testing
 
 `haxe tests/headless.hxml` builds and runs the backend's own suite headlessly (add
@@ -121,6 +157,12 @@ with every window option, checks an idle app stays idle, and ends itself with `a
 (`Get-Clipboard` on Windows). On Windows it reads a sensitive copy's formats back through Win32 and,
 with `history.ps1`, checks that clipboard history took a plain copy but not the sensitive one (with
 history off it says so and skips that).
+
+`bash tests/android-app/check-device.sh` (with `ANDROID_SERIAL` set) builds, installs and drives a
+small Android app on a device and reads what it reports from logcat: a tap is a click, rotation,
+back with and without a listener, a kill and relaunch, full screen, a long-press tooltip, the system
+picker (it pushes a file to Downloads and picks it through the picker's own screens) and the
+keyboard. It uninstalls the app first and puts the rotation settings back.
 
 ### Linux
 

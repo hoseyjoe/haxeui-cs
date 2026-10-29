@@ -34,10 +34,13 @@ class FileDialogSupport {
 class FileDialogListener implements IFileDialogListener {
 	var onFiles:Array<String>->Void;
 	var onCancelled:Void->Void;
+	var onFailed:Null<String->Void>;
 
-	public function new(onFiles:Array<String>->Void, onCancelled:Void->Void) {
+	/** `onFailed` (only Android's open dialog reports one) is a cancel when not given. **/
+	public function new(onFiles:Array<String>->Void, onCancelled:Void->Void, ?onFailed:String->Void) {
 		this.onFiles = onFiles;
 		this.onCancelled = onCancelled;
+		this.onFailed = onFailed;
 	}
 
 	public function OnFiles(paths:cs.NativeArray<String>):Void {
@@ -46,5 +49,10 @@ class FileDialogListener implements IFileDialogListener {
 
 	public function OnCancelled():Void {
 		onCancelled();
+	}
+
+	public function OnFailed(message:String):Void {
+		if (onFailed != null) onFailed(message);
+		else onCancelled();
 	}
 }

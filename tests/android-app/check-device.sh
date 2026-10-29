@@ -23,6 +23,18 @@ wait_for() {
   fail "timed out waiting for /$1/"
 }
 launch() { adb shell monkey -p "$id" -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1; }
+# Where the fixture says a control is, in device pixels: "x y".
+at() { lines | grep -E "^android-app: at $1 " | tail -1 | awk '{print $4, $5}'; }
+# Taps the first view on screen (another app's, a system picker) whose text or content
+# description is $1; false if none.
+tap_text() {
+  adb shell uiautomator dump /sdcard/check-ui.xml > /dev/null 2>&1
+  local b
+  b=$(adb shell cat /sdcard/check-ui.xml | tr '>' '\n' | grep -E "(text|content-desc)=\"$1\"" | head -1 | grep -oE 'bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' | grep -oE '[0-9]+')
+  [ -n "$b" ] || return 1
+  set -- $b
+  adb shell input tap $(( ($1 + $3) / 2 )) $(( ($2 + $4) / 2 ))
+}
 
 adb uninstall "$id" > /dev/null 2>&1
 adb logcat -c
@@ -34,8 +46,8 @@ wait_for "^android-app: ready [1-9][0-9]{2,}x[1-9][0-9]{2,} scale 1$"
 pass "main ran once in the files dir; ready"
 
 # 2. a tap is a click
-wait_for "^android-app: button [0-9]+ [0-9]+$"
-read -r x y < <(lines | grep -E "^android-app: button " | tail -1 | awk '{print $3, $4}')
+wait_for "^android-app: at field [0-9]+ [0-9]+$"
+read -r x y < <(at tap)
 adb shell input tap "$x" "$y"
 wait_for "^android-app: clicked$"
 pass "tap at $x,$y clicked the button"
@@ -75,7 +87,67 @@ launch
 wait_for "^android-app: main ran 2 cwd /data/(data|user/0)/$id/files$"
 pass "after a kill, main ran again and found its earlier run"
 
-# 6. nothing crashed; a picture of the screen for a look
+# 6. full screen: the status bar is hidden (this API 36 phone lists it as an InsetsSource line)
+wait_for "^android-app: at field .*" # the relaunched run has laid out
+for _ in $(seq 1 20); do
+  adb shell dumpsys window | grep -qE "InsetsSource id=[^ ]+ type=statusBars .*visible=false" && break
+  sleep 0.5
+done
+adb shell dumpsys window | grep -qE "InsetsSource id=[^ ]+ type=statusBars .*visible=false" || fail "the status bar is showing"
+pass "immersive: the status bar is hidden"
+
+# 7. back with a listener armed: the listener takes it, the app stays in front
+sleep 1
+read -r x y < <(at trap)
+adb shell input tap "$x" "$y"
+wait_for "^android-app: back armed$"
+paused=$(count '^android-app: paused$')
+adb shell input keyevent KEYCODE_BACK
+wait_for "^android-app: back trapped$"
+sleep 1
+[ "$(count '^android-app: paused$')" = "$paused" ] || fail "a trapped back still left the app"
+pass "back went to the armed listener and the app stayed"
+
+# 8. a long press shows the tooltip, and letting go is not a click
+read -r x y < <(at hold)
+adb shell input swipe "$x" "$y" "$x" "$y" 2000 &
+wait_for "^android-app: tooltip shown$"
+wait
+sleep 1
+[ "$(count '^android-app: tip clicked$')" = 0 ] || fail "letting go of a long press clicked the button"
+pass "a long press showed the tooltip; letting go did not click"
+
+# 9. the system picker: the chosen file is copied into files/picked, the same file twice is one copy
+adb push tests/assets/red4x4.png /sdcard/Download/pick.png > /dev/null
+bytes=$(wc -c < tests/assets/red4x4.png | tr -d ' ')
+pick() {
+  read -r x y < <(at open)
+  adb shell input tap "$x" "$y"
+  for _ in $(seq 1 20); do
+    sleep 1
+    tap_text 'pick\.png' && return 0
+    # It opens on Recent files, where a file adb pushed is not listed: Downloads, from the drawer.
+    tap_text Downloads || tap_text 'Show roots'
+  done
+  fail "pick.png never showed in the picker"
+}
+pick
+wait_for "^android-app: opened /data/(data|user/0)/$id/files/picked/pick.png $bytes$"
+pick
+for _ in $(seq 1 20); do [ "$(count "^android-app: opened .*/files/picked/pick.png $bytes$")" = 2 ] && break; sleep 0.5; done
+[ "$(count "^android-app: opened .*/files/picked/pick.png $bytes$")" = 2 ] || fail "picking the same file again did not give the same copy"
+[ "$(count '^android-app: opened .*pick \(')" = 0 ] || fail "picking the same file again made a second copy"
+adb shell rm /sdcard/Download/pick.png /sdcard/check-ui.xml
+pass "picked files land in files/picked; the same file again is the same copy"
+
+# 10. tapping a text field brings up the keyboard
+read -r x y < <(at field)
+adb shell input tap "$x" "$y"
+for _ in $(seq 1 20); do adb shell dumpsys input_method | grep -q "mInputShown=true" && break; sleep 0.5; done
+adb shell dumpsys input_method | grep -q "mInputShown=true" || fail "no keyboard after tapping the text field"
+pass "a text field brings up the keyboard"
+
+# 11. nothing crashed; a picture of the screen for a look
 sleep 2
 adb exec-out screencap -p > "$bin/screen.png"
 adb logcat -d -b crash | grep -q "$id" && fail "a crash was logged for $id"

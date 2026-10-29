@@ -9,6 +9,8 @@ namespace HaxeUICs
     {
         void OnFiles(string[] paths);
         void OnCancelled();
+        /// <summary>The dialog closed on a file that could not be read; the message says why.</summary>
+        void OnFailed(string message);
     }
 
     /// <summary>The OS open/save file pickers, through Avalonia's StorageProvider.</summary>
@@ -37,6 +39,10 @@ namespace HaxeUICs
                     Cancel(listener);
                     return;
                 }
+#if ANDROID
+                await OpenOnAndroid(storage, title, listener);
+                return;
+#endif
                 var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
                     Title = title,
@@ -67,6 +73,11 @@ namespace HaxeUICs
                     Answer(TestResponse, listener);
                     return;
                 }
+#if ANDROID
+                // Android's picker hands back a content URI, never a path to write to.
+                Cancel(listener);
+                return;
+#endif
                 var storage = Host.TopLevel?.StorageProvider;
                 if (storage == null || !storage.CanSave)
                 {
@@ -99,6 +110,11 @@ namespace HaxeUICs
                     Answer(TestResponse, listener);
                     return;
                 }
+#if ANDROID
+                // A picked folder is a content URI tree, never a path the app can list.
+                Cancel(listener);
+                return;
+#endif
                 var storage = Host.TopLevel?.StorageProvider;
                 if (storage == null || !storage.CanPickFolder)
                 {
@@ -127,6 +143,39 @@ namespace HaxeUICs
             }
         }
 
+#if ANDROID
+        /// <summary>
+        /// Android's picker answers with a content URI, not a path: the one file chosen (patterns do
+        /// not apply) is copied into the app's files/picked/ by PickedFiles, off the UI thread, and
+        /// that copy's path is the answer. A copy that fails is reported to the listener.
+        /// </summary>
+        static async System.Threading.Tasks.Task OpenOnAndroid(IStorageProvider storage, string title, IFileDialogListener listener)
+        {
+            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
+            if (files.Count == 0)
+            {
+                Cancel(listener);
+                return;
+            }
+            var file = files[0];
+            var properties = await file.GetBasicPropertiesAsync();
+            long size = properties?.Size is ulong known ? (long)known : -1;
+            string path;
+            try
+            {
+                path = await System.Threading.Tasks.Task.Run(() => PickedFiles.Import(
+                    System.IO.Path.Combine(Host.FilesDir, "picked"), file.Name, size,
+                    () => file.OpenReadAsync().GetAwaiter().GetResult()));
+            }
+            catch (System.IO.IOException e)
+            {
+                Fail(e.Message, listener);
+                return;
+            }
+            Answer(new[] { path }, listener);
+        }
+#endif
+
         // These run from async void methods: anything thrown there would reach Avalonia's
         // dispatcher and end the app, so failures are reported instead, never thrown.
         static void Answer(string[] paths, IFileDialogListener listener)
@@ -143,6 +192,12 @@ namespace HaxeUICs
         static void Cancel(IFileDialogListener listener)
         {
             try { listener.OnCancelled(); }
+            catch (System.Exception e) { Report(e); }
+        }
+
+        static void Fail(string message, IFileDialogListener listener)
+        {
+            try { listener.OnFailed(message); }
             catch (System.Exception e) { Report(e); }
         }
 

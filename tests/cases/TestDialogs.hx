@@ -120,4 +120,7 @@ private class ThrowingListener implements IFileDialogListener {
 
 	public function OnCancelled():Void {
 	}
+
+	public function OnFailed(message:String):Void {
+	}
 }

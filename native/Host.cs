@@ -215,16 +215,37 @@ namespace HaxeUICs
             if (TopLevel.GetTopLevel(Root) != null) AttachSingleView();
         }
 
-        /// <summary>Root is in a (new) view: screen input and the background go to that view.</summary>
+        /// <summary>
+        /// Root is in a (new) view: screen input, the background and back go to that view, and it
+        /// fills the screen with the system bars hidden (a swipe from an edge shows them for a while).
+        /// </summary>
         static void AttachSingleView()
         {
             var top = TopLevel.GetTopLevel(Root);
             if (top == null || top == _attachedTo) return;
+            if (_attachedTo != null) _attachedTo.BackRequested -= OnBackRequested;
             _attachedTo = top;
             top.Background = new SolidColorBrush(Color.FromUInt32(_background));
+            top.BackRequested += OnBackRequested;
+            if (top.InsetsManager is { } insets)
+            {
+                insets.DisplayEdgeToEdgePreference = true;
+                insets.IsSystemBarVisible = false;
+            }
             _screenEvents = new EventRouter(top, true);
             _screenEvents.Update(_screenKinds, _screenListener);
             SingleViewResized();
+        }
+
+        /// <summary>
+        /// Back: the app's BackButton listeners first; when none takes it, the app goes to the
+        /// background as Android's home screen apps do. Always handled, so Avalonia never ends the
+        /// activity itself.
+        /// </summary>
+        static void OnBackRequested(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (!RaiseBack()) LeaveApp?.Invoke();
         }
 
         static void SingleViewResized()
