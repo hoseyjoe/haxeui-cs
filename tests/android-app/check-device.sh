@@ -42,7 +42,10 @@ haxe tests/android-app/build.hxml -D haxeui_cs_run > "$bin/device-build.log" 2>&
 
 # 1. main runs in the files dir, then HaxeUI is ready with a real screen size at scale 1
 wait_for "^android-app: main ran 1 cwd /data/(data|user/0)/$id/files$"
-wait_for "^android-app: ready [1-9][0-9]{2,}x[1-9][0-9]{2,} scale 1$"
+wait_for "^android-app: ready [1-9][0-9]{2,}x[1-9][0-9]{2,} scale 1 density "
+# HaxeUI is often scaled from the density in ready, before its first component: it must be the
+# device's real one by then, not a placeholder 1.
+lines | grep -qE "^android-app: ready .* density 1$" && fail "the density in ready is 1"
 pass "main ran once in the files dir; ready"
 
 # 2. a tap is a click

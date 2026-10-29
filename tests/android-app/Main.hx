@@ -60,7 +60,7 @@ class Main {
 			AppLifecycle.onPause = () -> Sys.println("android-app: paused");
 			Screen.instance.registerEvent(UIEvent.RESIZE, _ -> Sys.println('android-app: resized ${size()}'));
 			app.start();
-			Sys.println('android-app: ready ${size()} scale ${Toolkit.scaleX}');
+			Sys.println('android-app: ready ${size()} scale ${Toolkit.scaleX} density ${Host.RenderScaling}');
 
 			// Where to tap, in device pixels, once everything has been laid out: "at <name> x y".
 			haxe.ui.util.Timer.delay(() -> {

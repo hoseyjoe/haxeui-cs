@@ -172,7 +172,15 @@ namespace HaxeUICs
         public static TopLevel TopLevel => Window ?? (_root != null ? TopLevel.GetTopLevel(_root) : null);
 
         /// <summary>Device pixels per Avalonia unit (Android's density; the desktop's display scale).</summary>
-        public static double RenderScaling => TopLevel?.RenderScaling ?? 1;
+        public static double RenderScaling =>
+#if ANDROID
+            // The display's density, which is what Avalonia lays the view out by: the view's
+            // TopLevel.RenderScaling still says 1 when OnReady comes (its ClientSize is already the
+            // surface over the density), and an app scales HaxeUI from this before its first component.
+            Android.App.Application.Context.Resources?.DisplayMetrics?.Density ?? 1;
+#else
+            TopLevel?.RenderScaling ?? 1;
+#endif
 
         // ---- Android: one view, no window ----
 
