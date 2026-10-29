@@ -47,6 +47,8 @@ class TestMain {
 			new cases.TestCursors(),
 			new cases.TestScale(),
 			new cases.TestApp(),
+			new cases.TestClipboard(),
+			new cases.TestSvgPalette(),
 			new cases.TestDirectives(),
 			new cases.TestStd()
 		];

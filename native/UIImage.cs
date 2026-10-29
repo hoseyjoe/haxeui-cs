@@ -12,10 +12,60 @@ namespace HaxeUICs
     public class UIImage
     {
         readonly Bitmap _bitmap;
-        readonly Svg.Skia.SKSvg _svg; // owns the picture
-        readonly SkiaSharp.SKPicture _picture;
+        Svg.Skia.SKSvg _svg; // owns the picture
+        SkiaSharp.SKPicture _picture;
+        readonly string _svgText; // as authored, for drawing again in another palette
+        int _paletteVersion;
         readonly Dictionary<(int, int), Bitmap> _rasters = new Dictionary<(int, int), Bitmap>();
         readonly List<(int, int)> _rasterOrder = new List<(int, int)>();
+
+        static Dictionary<int, int> _palette;
+        static int _currentPaletteVersion;
+
+        /// <summary>
+        /// Recolours every SVG image, on screen and from now on: each #rrggbb (or #rgb) colour in
+        /// `from` is drawn as the one at the same index in `to`, as heaps-svg's SvgIcons.setPalette
+        /// does for a theme's icons. Null or empty arrays draw them as authored.
+        /// </summary>
+        public static void SetPalette(int[] from, int[] to)
+        {
+            Dictionary<int, int> palette = null;
+            if (from != null && to != null && from.Length > 0)
+            {
+                palette = new Dictionary<int, int>();
+                for (var i = 0; i < System.Math.Min(from.Length, to.Length); i++)
+                    palette[from[i] & 0xFFFFFF] = to[i] & 0xFFFFFF;
+            }
+            _palette = palette;
+            _currentPaletteVersion++;
+            foreach (var visual in Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(Host.Root))
+                visual.InvalidateVisual();
+            Host.Root.InvalidateVisual();
+        }
+
+        static readonly System.Text.RegularExpressions.Regex HexColour =
+            new System.Text.RegularExpressions.Regex("(?<!url\\()#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])");
+
+        /// <summary>The SVG's text with the palette's colours in place of its own.</summary>
+        static string Recolour(string svg)
+        {
+            var palette = _palette;
+            if (palette == null) return svg;
+            return HexColour.Replace(svg, m =>
+            {
+                var hex = m.Groups[1].Value;
+                if (hex.Length == 3) hex = new string(new[] { hex[0], hex[0], hex[1], hex[1], hex[2], hex[2] });
+                var rgb = System.Convert.ToInt32(hex, 16);
+                return palette.TryGetValue(rgb, out var to) ? "#" + to.ToString("x6") : m.Value;
+            });
+        }
+
+        static SkiaSharp.SKPicture Parse(string svgText, out Svg.Skia.SKSvg svg)
+        {
+            svg = new Svg.Skia.SKSvg();
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Recolour(svgText)));
+            return svg.Load(stream);
+        }
 
         /// <summary>
         /// Device pixels per layout unit where a visual draws: the screen's render scaling times any
@@ -47,10 +97,12 @@ namespace HaxeUICs
             Height = bitmap.PixelSize.Height;
         }
 
-        UIImage(Svg.Skia.SKSvg svg, SkiaSharp.SKPicture picture)
+        UIImage(Svg.Skia.SKSvg svg, SkiaSharp.SKPicture picture, string svgText)
         {
             _svg = svg;
             _picture = picture;
+            _svgText = svgText;
+            _paletteVersion = _currentPaletteVersion;
             Width = System.Math.Max(1, (int)System.Math.Ceiling(picture.CullRect.Width));
             Height = System.Math.Max(1, (int)System.Math.Ceiling(picture.CullRect.Height));
         }
@@ -81,11 +133,10 @@ namespace HaxeUICs
         {
             try
             {
-                var svg = new Svg.Skia.SKSvg();
-                using var stream = new MemoryStream(data);
-                var picture = svg.Load(stream);
+                var text = System.Text.Encoding.UTF8.GetString(data);
+                var picture = Parse(text, out var svg);
                 if (picture == null || picture.CullRect.Width <= 0 || picture.CullRect.Height <= 0) return null;
-                return new UIImage(svg, picture);
+                return new UIImage(svg, picture, text);
             }
             catch (System.Exception)
             {
@@ -100,6 +151,24 @@ namespace HaxeUICs
         public Bitmap BitmapFor(double pixelWidth, double pixelHeight)
         {
             if (_bitmap != null) return _bitmap;
+            if (_paletteVersion != _currentPaletteVersion)
+            {
+                // the palette changed since this was drawn: drawn again in the new one
+                _paletteVersion = _currentPaletteVersion;
+                try
+                {
+                    var picture = Parse(_svgText, out var svg);
+                    if (picture != null)
+                    {
+                        _svg?.Dispose();
+                        _svg = svg;
+                        _picture = picture;
+                    }
+                }
+                catch (System.Exception) { } // kept in the old colours
+                _rasters.Clear();
+                _rasterOrder.Clear();
+            }
             var w = System.Math.Clamp((int)System.Math.Ceiling(pixelWidth), 1, 4096);
             var h = System.Math.Clamp((int)System.Math.Ceiling(pixelHeight), 1, 4096);
             if (_rasters.TryGetValue((w, h), out var done)) return done;

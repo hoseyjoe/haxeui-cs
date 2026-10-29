@@ -33,6 +33,12 @@ namespace HaxeUICs
         void OnClosed();
     }
 
+    /// <summary>Asked before a close the app did not ask for: false keeps the window open.</summary>
+    public interface ICloseListener
+    {
+        bool OnCloseRequested();
+    }
+
     public class HostApplication : Application
     {
         public override void Initialize()
@@ -186,6 +192,12 @@ namespace HaxeUICs
                 if (e.Property == TopLevel.ClientSizeProperty)
                     Listener?.OnResize(window.ClientSize.Width, window.ClientSize.Height);
             };
+            window.Closing += (s, e) =>
+            {
+                if (_closeByApp) return;
+                if (!AskClose()) e.Cancel = true;
+                WakeEventsPump(); // the handler may have started work (a prompt) of its own
+            };
             window.Closed += (s, e) => Listener?.OnClosed();
             _screenEvents = new EventRouter(window, true);
             _screenEvents.Update(_screenKinds, _screenListener);
@@ -335,13 +347,40 @@ namespace HaxeUICs
             return true;
         }
 
+        /// <summary>
+        /// What a close the app did not ask for (the close button, Alt+F4) consults; null lets
+        /// every close through. A close by CloseWindow (app.exit()) never asks it.
+        /// </summary>
+        public static ICloseListener CloseListener { get; set; }
+
+        static bool _closeByApp;
+
+        /// <summary>
+        /// Whether the window may close now, as the close listener answers. One that throws is
+        /// reported and the window closes: an app's bug never makes a window that can't be closed.
+        /// </summary>
+        public static bool AskClose()
+        {
+            var listener = CloseListener;
+            if (listener == null) return true;
+            try { return listener.OnCloseRequested(); }
+            catch (System.Exception e)
+            {
+                System.Console.Error.WriteLine("haxeui-cs: a close request handler threw: " + e);
+                return true;
+            }
+        }
+
         public static void CloseWindow()
         {
-            Window?.Close();
+            if (Window == null) return;
+            _closeByApp = true;
+            Window.Close();
         }
 
         public static void Exit(int code)
         {
+            UIClipboard.Flush(); // what the app copied stays on the clipboard after it ends, as in any program
             Environment.Exit(code);
         }
     }

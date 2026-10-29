@@ -22,6 +22,18 @@ extern interface IHostListener {
 	function OnClosed():Void;
 }
 
+@:native("HaxeUICs.ICloseListener")
+extern interface ICloseListener {
+	function OnCloseRequested():Bool;
+}
+
+@:native("HaxeUICs.UIClipboard")
+extern class UIClipboard {
+	static function SetText(text:String):Bool;
+	static function GetText():String;
+	static function Clear():Bool;
+}
+
 @:native("HaxeUICs.Host")
 extern class Host {
 	static var Window(default, null):Dynamic;
@@ -40,6 +52,8 @@ extern class Host {
 	static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic;
 	static function StopTimer(handle:Dynamic):Void;
 	static function CloseWindow():Void;
+	static var CloseListener:ICloseListener;
+	static function AskClose():Bool;
 	static function CaptureWindow(path:String):Bool;
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
@@ -206,6 +220,7 @@ extern class Inflate {
 extern class UIImage {
 	var Width(default, null):Int;
 	var Height(default, null):Int;
+	static function SetPalette(from:cs.NativeArray<Int>, to:cs.NativeArray<Int>):Void;
 
 	static function FromBytes(data:haxe.io.BytesData):UIImage;
 	static function DeviceScale(visual:Control):Float;

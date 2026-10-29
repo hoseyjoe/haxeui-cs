@@ -60,6 +60,7 @@ class Build {
 		var name = mainClassName();
 		var headless = Context.defined("haxeui_cs_headless");
 		GenericInterfaceCast.fix(Path.join([out, "src"]));
+		markEntryPointSta(Path.join([out, "src"]));
 
 		var csproj = Path.join([out, name + ".csproj"]);
 		File.saveContent(csproj, buildProject(name, headless, resourceItems(out)));
@@ -185,6 +186,24 @@ class Build {
 		}
 		walk(Path.join([out, "src", "Resources"]), "");
 		return items;
+	}
+
+	/**
+	 * `[STAThread]` on the generated `Main`, as every Avalonia app's Program.Main has: Windows' OLE
+	 * (the clipboard, drag and drop) works only on a single-threaded apartment, and Haxe's entry
+	 * point leaves the main thread multi-threaded. Elsewhere the attribute does nothing.
+	 */
+	static function markEntryPointSta(src:String):Void {
+		var main = Compiler.getConfiguration().mainClass;
+		var file = Path.join([src].concat(main.pack).concat([main.name + ".cs"]));
+		// `EntryPoint__Main` for a top-level class, the class itself for one in a package
+		var entry = ~/^([ \t]*)public static void Main\(\)\s*\{/m;
+		var text = FileSystem.exists(file) ? File.getContent(file) : "";
+		if (!entry.match(text)) {
+			Context.fatalError('haxeui-cs: no entry point in $file to mark [STAThread]', Context.currentPos());
+		}
+		var indent = entry.matched(1);
+		File.saveContent(file, entry.matchedLeft() + indent + "[System.STAThread]\n" + entry.matched(0) + entry.matchedRight());
 	}
 
 	static function mainClassName():String {

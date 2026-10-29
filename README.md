@@ -59,6 +59,19 @@ app's own C# files (a `.cs` file, or a folder of them) with
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
 `haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white
 until then); a dark theme sets its own, as an html5 app sets the page's background.
+`haxe.ui.backend.cs.SvgPalette.set([0x555B66 => 0xFFFFFF])` recolours every SVG image, on screen and
+from then on, as heaps-svg's `SvgIcons.setPalette` does for a dark theme's icons (`null`: as authored).
+
+`haxe.ui.backend.cs.WindowClose.onRequest` is asked when the user closes the window (its close
+button, Alt+F4), as a Heaps app's `hxd.Window.onClose` is: return false to keep it open, offer
+unsaved work for saving, then call `app.exit()`, which never asks it. One that throws is reported
+and the window closes.
+
+`haxe.ui.backend.cs.Clipboard` has `setText`, `getText` and `clear` (every format, not just text),
+answered at once as Heaps' `hxd.System.setClipboardText` is: each waits for the OS in a nested
+dispatcher frame, so the window keeps painting, and gives up after two seconds if another program
+holds the clipboard. What the app copied is handed to the OS on the way out (`OleFlushClipboard`), so
+it stays on the clipboard after the app ends, as in any program.
 
 ### Publishing
 
@@ -99,6 +112,9 @@ pixels. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a 
 `haxe tests/early-add/build.hxml` checks that a component added before the window exists (as
 HaxeUIApp's preloader is) appears once it does. `haxe tests/window-app/build.hxml` opens a window
 with every window option, checks an idle app stays idle, and ends itself with `app.exit()`.
+`haxe tests/clipboard-app/build.hxml` checks the OS clipboard (headless, Avalonia's is in memory) and
+`WindowClose` in a real window; the text it prints last must still be on the clipboard after it ends
+(`Get-Clipboard` on Windows).
 
 ### Linux
 
@@ -132,6 +148,9 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 
 ## Behaviour worth knowing
 
+- The generated `Main` is marked `[STAThread]`, as every Avalonia app's is: Windows' OLE (the
+  clipboard, drag and drop) works only on a single-threaded apartment, and Haxe's entry point
+  leaves the main thread multi-threaded.
 - `callLater` runs with the next frame (about 60 a second), as html5's `requestAnimationFrame`.
   Haxe's own event loop (`haxe.Timer`, `haxe.MainLoop`) runs when it next needs to and straight
   after any frame, input or timer; an idle app is woken about four times a second, not a hundred.
