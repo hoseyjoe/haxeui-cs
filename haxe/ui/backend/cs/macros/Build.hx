@@ -299,6 +299,10 @@ class Build {
 		if (!entry.match(text)) {
 			Context.fatalError('haxeui-cs: no entry point in $file to mark [STAThread]', Context.currentPos());
 		}
+		// already marked: a second afterGenerate, or another build over the same output
+		if (StringTools.endsWith(StringTools.rtrim(entry.matchedLeft()), "[System.STAThread]")) {
+			return;
+		}
 		var indent = entry.matched(1);
 		File.saveContent(file, entry.matchedLeft() + indent + "[System.STAThread]\n" + entry.matched(0) + entry.matchedRight());
 	}
