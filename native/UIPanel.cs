@@ -55,7 +55,8 @@ namespace HaxeUICs
         public void ApplyStyle(UIStyle style)
         {
             _painter.Style = style;
-            Opacity = style.Opacity;
+            _styleOpacity = style.Opacity;
+            Opacity = _styleOpacity * _alpha;
             if (style.Blur != _blur)
             {
                 _blur = style.Blur;
@@ -179,6 +180,7 @@ namespace HaxeUICs
             _painter.Width = W;
             _painter.Height = H;
             if (!double.IsNaN(_insetTop)) UpdateClip(); // the inset is measured from the edges
+            if (_rotation != 0 && (_scaleX != 1 || _scaleY != 1)) UpdateTransform(); // turned about the centre
             Place();
         }
 
@@ -227,11 +229,59 @@ namespace HaxeUICs
             Clip = visible.HasValue ? new RectangleGeometry(visible.Value) : null;
         }
 
+        double _rotation, _scaleX = 1, _scaleY = 1;
+        double _styleOpacity = 1, _alpha = 1;
+
         /// <summary>html5's rotation directive: turned about the panel's centre, in degrees.</summary>
         public void SetRotation(double degrees)
         {
-            RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
-            RenderTransform = degrees == 0 || double.IsNaN(degrees) ? null : new RotateTransform(degrees);
+            _rotation = double.IsNaN(degrees) ? 0 : degrees;
+            UpdateTransform();
+        }
+
+        /// <summary>
+        /// Drawn at a scale about the panel's own top-left, as a display-list backend scales an object
+        /// about its origin (haxeui-heaps' h2d scaleX/scaleY). Layout is untouched: HaxeUI still sizes
+        /// and places the component unscaled, so its hit box is the unscaled one; a scale is for a
+        /// transition, not a resting state. It composes with SetRotation.
+        /// </summary>
+        public void SetScale(double scaleX, double scaleY)
+        {
+            if (scaleX == _scaleX && scaleY == _scaleY) return;
+            _scaleX = scaleX;
+            _scaleY = scaleY;
+            UpdateTransform();
+        }
+
+        /// <summary>A fade of the owner's own, multiplied into the style's opacity rather than replacing
+        /// it (haxeui-heaps' h2d alpha on a component).</summary>
+        public void SetAlpha(double alpha)
+        {
+            if (alpha == _alpha) return;
+            _alpha = alpha;
+            Opacity = _styleOpacity * _alpha;
+        }
+
+        void UpdateTransform()
+        {
+            var scaled = _scaleX != 1 || _scaleY != 1;
+            if (!scaled)
+            {
+                RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative);
+                RenderTransform = _rotation == 0 ? null : new RotateTransform(_rotation);
+                return;
+            }
+            RenderTransformOrigin = new RelativePoint(0, 0, RelativeUnit.Absolute);
+            if (_rotation == 0)
+            {
+                RenderTransform = new ScaleTransform(_scaleX, _scaleY);
+                return;
+            }
+            // Both: turned about the unscaled centre, then the whole scaled about the top-left.
+            var group = new TransformGroup();
+            group.Children.Add(new RotateTransform(_rotation, W * 0.5, H * 0.5));
+            group.Children.Add(new ScaleTransform(_scaleX, _scaleY));
+            RenderTransform = group;
         }
 
         public void SetVisible(bool visible)

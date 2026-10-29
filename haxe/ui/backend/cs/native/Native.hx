@@ -164,6 +164,10 @@ extern class UIPanel extends Control {
 	function SetCursorSuppressed(suppressed:Bool):Void;
 	function SetColorMatrix(matrix:cs.NativeArray<Single>):Void;
 	function SetRotation(degrees:Float):Void;
+	/** Drawn scaled about its top-left (layout and hit box untouched); composes with SetRotation. **/
+	function SetScale(scaleX:Float, scaleY:Float):Void;
+	/** A fade multiplied into the style's opacity. **/
+	function SetAlpha(alpha:Float):Void;
 	function SetClipInset(top:Float, right:Float, bottom:Float, left:Float):Void;
 }
 

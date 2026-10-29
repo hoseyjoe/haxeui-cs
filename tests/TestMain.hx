@@ -50,6 +50,7 @@ class TestMain {
 			new cases.TestClipboard(),
 			new cases.TestSvgPalette(),
 			new cases.TestDirectives(),
+			new cases.TestPanelTransform(),
 			new cases.TestStd(),
 			new cases.TestPickedFiles(),
 			new cases.TestLifecycle(),
