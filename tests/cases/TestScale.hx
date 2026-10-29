@@ -101,6 +101,32 @@ class TestScale extends utest.Test {
 		Assert.same(["target#0"], got);
 	}
 
+	function testScaledLinkInAScrolledViewIsFound() {
+		// as a reader has it: the text is in a ScrollView, scrolled down
+		Toolkit.scale = 2;
+		var view = new haxe.ui.containers.ScrollView();
+		view.left = 10;
+		view.top = 10;
+		view.width = 300;
+		view.height = 150;
+		var spacer = new Box();
+		spacer.width = 250;
+		spacer.height = 200;
+		view.addComponent(spacer);
+		var l = new Label();
+		l.htmlText = 'Go <a href="target">there</a> now';
+		view.addComponent(l);
+		Screen.instance.addComponent(view);
+		TestDriver.pump(3);
+		view.vscrollPos = 120;
+		TestDriver.pump(3);
+		var got:Array<String> = [];
+		l.registerEvent(TextLinkEvent.LINK, e -> got.push(e.href + "#" + e.index));
+		var r = l.getTextDisplay().linkRects()[0];
+		TestDriver.click(l.screenLeft + (r.left + r.width / 2) * 2, l.screenTop + (r.top + r.height / 2) * 2);
+		Assert.same(["target#0"], got);
+	}
+
 	static function dropDown():DropDown {
 		var dd = new DropDown();
 		dd.left = 10;
