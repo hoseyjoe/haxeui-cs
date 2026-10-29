@@ -103,6 +103,11 @@ extern class FileDialogs {
 	static function OpenFolder(title:String, multiple:Bool, defaultPath:String, listener:IFileDialogListener):Void;
 }
 
+@:native("HaxeUICs.PickedFiles")
+extern class PickedFiles {
+	static function ImportBytes(dir:String, displayName:String, bytes:haxe.io.BytesData, knownSize:Bool, failAfter:Int):String;
+}
+
 /** Avalonia's base control: only ever passed back to C#. **/
 @:native("Avalonia.Controls.Control")
 extern class Control {

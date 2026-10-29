@@ -50,7 +50,8 @@ class TestMain {
 			new cases.TestClipboard(),
 			new cases.TestSvgPalette(),
 			new cases.TestDirectives(),
-			new cases.TestStd()
+			new cases.TestStd(),
+			new cases.TestPickedFiles()
 		];
 	}
 }
