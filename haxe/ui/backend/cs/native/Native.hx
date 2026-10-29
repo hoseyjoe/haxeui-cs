@@ -68,6 +68,7 @@ extern class Host {
 	static var PauseListener:IPauseListener;
 	static function RaiseBack():Bool;
 	static function RaisePause():Void;
+	static function SuppressNextClick():Void;
 	static function CaptureWindow(path:String):Bool;
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;

@@ -52,7 +52,8 @@ class TestMain {
 			new cases.TestDirectives(),
 			new cases.TestStd(),
 			new cases.TestPickedFiles(),
-			new cases.TestLifecycle()
+			new cases.TestLifecycle(),
+			new cases.TestTouchTooltips()
 		];
 	}
 }

@@ -383,6 +383,9 @@ namespace HaxeUICs
             }
         }
 
+        /// <summary>The press under way makes no click when released: a long press that showed a tooltip.</summary>
+        public static void SuppressNextClick() => EventRouter.SuppressNextClick();
+
         /// <summary>What back asks (BackButton's listeners); null takes no back.</summary>
         public static IBackListener BackListener { get; set; }
 

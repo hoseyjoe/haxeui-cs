@@ -63,6 +63,13 @@ namespace HaxeUICs
         int _pressClickCount;
         static ClickState s_click;
 
+        // Set during a press that turned into something else (a long press showing a tooltip):
+        // its release makes no click. Cleared by the next press.
+        static bool s_suppressClick;
+
+        /// <summary>The press under way makes no CLICK (or DBL_CLICK) when it is released.</summary>
+        internal static void SuppressNextClick() => s_suppressClick = true;
+
         public EventRouter(Interactive target, bool handledEventsToo)
         {
             _target = target;
@@ -125,6 +132,7 @@ namespace HaxeUICs
             var kind = e.GetCurrentPoint(null).Properties.PointerUpdateKind;
             if (kind == PointerUpdateKind.MiddleButtonPressed) _middlePressedHere = true;
             if (kind != PointerUpdateKind.LeftButtonPressed) return;
+            s_suppressClick = false;
             _pressedHere = true;
             _pressClickCount = e.ClickCount;
         }
@@ -141,7 +149,7 @@ namespace HaxeUICs
             if (e.InitialPressMouseButton != MouseButton.Left || !_pressedHere) return;
             _pressedHere = false;
             if (!Inside(e)) return;
-            if (s_click == null || s_click.Release != e) s_click = new ClickState { Release = e };
+            if (s_click == null || s_click.Release != e) s_click = new ClickState { Release = e, Cancelled = s_suppressClick };
             var click = s_click;
             if (click.Cancelled) return;
             Pointer(EventKind.CLICK, e, 0, click);
