@@ -244,6 +244,11 @@ extern class Inflate {
 	static function Run(data:haxe.io.BytesData, offset:Int, length:Int, windowBits:Int):haxe.io.BytesData;
 }
 
+@:native("HaxeUICs.Deflate")
+extern class Deflate {
+	static function Run(data:haxe.io.BytesData, offset:Int, length:Int, level:Int):haxe.io.BytesData;
+}
+
 @:native("HaxeUICs.UIImage")
 extern class UIImage {
 	var Width(default, null):Int;

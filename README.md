@@ -221,6 +221,9 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
   `System.IO.Compression`, so `haxe.zip.Reader.unzip` and the zip, EPUB and PNG readers built on
   it run. `windowBits` is zlib's: 15 zlib, -15 raw deflate, 31 gzip, 47 either. The input is
   inflated whole on the first `execute`; feeding it in pieces is not supported.
+- `haxe.zip.Compress` works too, the same way: a zlib stream at zlib's levels 0 to 9, so what
+  writes compressed data (a KDBX database, a zip, a PNG) runs. The input is compressed whole on the
+  first `execute`.
 - A generic class reaches a generic interface it implements with another parameter
   (`Foo<Bool>` as `Iface<Dynamic>`, as thenshim's promises do). Haxe 4.3's C# cast forwarder
   passes the class's own parameter, so the cast throws; haxeui-cs corrects the written `.cs`

@@ -52,6 +52,7 @@ class TestMain {
 			new cases.TestDirectives(),
 			new cases.TestPanelTransform(),
 			new cases.TestStd(),
+			new cases.TestCompress(),
 			new cases.TestPickedFiles(),
 			new cases.TestLifecycle(),
 			new cases.TestTouchTooltips()
