@@ -177,6 +177,8 @@ namespace HaxeUICs
             // The display's density, which is what Avalonia lays the view out by: the view's
             // TopLevel.RenderScaling still says 1 when OnReady comes (its ClientSize is already the
             // surface over the density), and an app scales HaxeUI from this before its first component.
+            // The two agree once the view is attached, unless the display's density changes under a
+            // running app; an app that fixes its scale at start, as heaps-android's do, keeps it.
             Android.App.Application.Context.Resources?.DisplayMetrics?.Density ?? 1;
 #else
             TopLevel?.RenderScaling ?? 1;
@@ -523,6 +525,7 @@ namespace HaxeUICs
                 System.Console.Error.WriteLine("haxeui-cs: a back handler threw: " + e);
                 return false;
             }
+            finally { WakeEventsPump(); } // the handler may have started work (a timer) of its own
         }
 
         /// <summary>The app is going to the background. One that throws is reported and the app still goes.</summary>

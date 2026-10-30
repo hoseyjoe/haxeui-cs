@@ -125,6 +125,7 @@ extern class FileDialogs {
 @:native("HaxeUICs.PickedFiles")
 extern class PickedFiles {
 	static function ImportBytes(dir:String, displayName:String, bytes:haxe.io.BytesData, knownSize:Bool, failAfter:Int):String;
+	static function ImportCut(dir:String, displayName:String, bytes:haxe.io.BytesData, endAfter:Int):String;
 }
 
 /** Avalonia's base control: only ever passed back to C#. **/

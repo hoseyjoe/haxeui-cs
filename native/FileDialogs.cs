@@ -147,28 +147,30 @@ namespace HaxeUICs
         /// <summary>
         /// Android's picker answers with a content URI, not a path: the one file chosen (patterns do
         /// not apply) is copied into the app's files/picked/ by PickedFiles, off the UI thread, and
-        /// that copy's path is the answer. A copy that fails is reported to the listener.
+        /// that copy's path is the answer. Any failure from the picker on is reported to the listener,
+        /// which shows it, rather than passing for a cancel.
         /// </summary>
         static async System.Threading.Tasks.Task OpenOnAndroid(IStorageProvider storage, string title, IFileDialogListener listener)
         {
-            var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
-            if (files.Count == 0)
-            {
-                Cancel(listener);
-                return;
-            }
-            var file = files[0];
-            var properties = await file.GetBasicPropertiesAsync();
-            long size = properties?.Size is ulong known ? (long)known : -1;
             string path;
             try
             {
+                var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
+                if (files.Count == 0)
+                {
+                    Cancel(listener);
+                    return;
+                }
+                var file = files[0];
+                var properties = await file.GetBasicPropertiesAsync();
+                long size = properties?.Size is ulong known ? (long)known : -1;
                 path = await System.Threading.Tasks.Task.Run(() => PickedFiles.Import(
                     System.IO.Path.Combine(Host.FilesDir, "picked"), file.Name, size,
                     () => file.OpenReadAsync().GetAwaiter().GetResult()));
             }
-            catch (System.IO.IOException e)
+            catch (System.Exception e)
             {
+                Report(e);
                 Fail(e.Message, listener);
                 return;
             }

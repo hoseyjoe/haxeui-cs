@@ -154,9 +154,13 @@ haxe app.hxml -D haxeui_cs_android -D haxeui_cs_android_id=com.example.app -D ha
 - Back goes to `BackButton`'s listeners, else sends the app to the background. Save in
   `AppLifecycle.onPause`: Android ends background apps when it needs the memory.
 - `Dialogs.openFile` shows the system picker. The file chosen is copied into `files/picked/` (the
-  same file picked again is the same copy) and that path is the answer; a copy that fails is said in
-  a message box. One file at a time; extensions do not filter it. Folder and save dialogs cancel.
+  same file picked again is the same copy) and that path is the answer; any failure, including a
+  copy that comes up short, is said in a message box. A name too long for the phone's file system
+  is cut to fit. One file at a time; extensions do not filter it. Folder and save dialogs cancel.
 - A finger has no hover, so tooltips come by long press, and letting go is not a click.
+- `haxe.ui.backend.cs.Density.scaleFor(designWidth)` is the `Toolkit.scale` that gives `designWidth`
+  units across the short edge in whole device pixels per unit, the same physical size as
+  heaps-android. Set it before the first component.
 - Not yet: publishing (`haxeui_cs_publish`), so neither its trimming nor its compression.
 
 ## Testing
@@ -276,7 +280,8 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 - `Toolkit.scale` scales the whole UI from the window's top left; sizes and pointer positions
   (`MouseEvent.screenX`) stay in HaxeUI's units. `screenLeft`/`screenTop`, and a root component's
   `left` and `top`, are screen pixels, as core places its drop-down lists, dialogs and tooltips and
-  as on heaps. It is taken up as root components are added.
+  as on heaps. It is taken up as root components are added, and those already up stay where they
+  are in pixels.
 - Text with no `font-size` from the theme is 13px; html5 leaves it to the browser (usually 16px).
 - A `callLater` callback that throws is reported on stderr and the rest of its frame still runs;
   an `onEnd` that throws is reported and the process exits with code 1. A file dialog whose

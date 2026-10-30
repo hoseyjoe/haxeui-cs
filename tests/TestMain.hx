@@ -56,6 +56,7 @@ class TestMain {
 			new cases.TestCompress(),
 			new cases.TestPickedFiles(),
 			new cases.TestLifecycle(),
+			new cases.TestDensity(),
 			new cases.TestTouchTooltips()
 		];
 	}

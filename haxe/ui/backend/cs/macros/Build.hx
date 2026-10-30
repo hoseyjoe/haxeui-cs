@@ -44,6 +44,9 @@ class Build {
 	static var appNatives:Array<String> = [];
 
 	public static function configure():Void {
+		if (Context.defined("haxeui_cs_android") && Context.defined("haxeui_cs_headless")) {
+			Context.fatalError("haxeui-cs: -D haxeui_cs_android and -D haxeui_cs_headless cannot be used together", Context.currentPos());
+		}
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeUncompress.build())", "haxe.zip.Uncompress");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeCompress.build())", "haxe.zip.Compress");

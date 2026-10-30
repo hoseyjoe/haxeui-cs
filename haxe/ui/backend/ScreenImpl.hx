@@ -11,6 +11,8 @@ import haxe.ui.events.UIEvent;
 class ScreenImpl extends ScreenBase {
     private var _mapping:Map<String, UIEvent->Void> = new Map<String, UIEvent->Void>();
     private var _input:InputListener = new InputListener();
+    private var _appliedScaleX:Float = 1;
+    private var _appliedScaleY:Float = 1;
 
     public function new() {
         // ScreenBase declares `rootComponents = []` but has no constructor to run it from.
@@ -36,8 +38,16 @@ class ScreenImpl extends ScreenBase {
     }
 
     public override function addComponent(component:Component):Component {
-        // Toolkit.scale is taken up as root components arrive (as heaps does).
+        // Toolkit.scale is taken up as root components arrive (as heaps does). Those already up were
+        // placed under the old one: their screen pixels mean something else under the new transform.
         Host.SetScale(Toolkit.scaleX, Toolkit.scaleY);
+        if (Toolkit.scaleX != _appliedScaleX || Toolkit.scaleY != _appliedScaleY) {
+            _appliedScaleX = Toolkit.scaleX;
+            _appliedScaleY = Toolkit.scaleY;
+            for (root in rootComponents) {
+                @:privateAccess root.placeNative();
+            }
+        }
         Host.Root.InsertChild(component.nativePanel, Host.Root.ChildCount);
         @:privateAccess component.placeNative(); // a root's position is screen pixels (ComponentImpl.handlePosition)
         resizeComponent(component);

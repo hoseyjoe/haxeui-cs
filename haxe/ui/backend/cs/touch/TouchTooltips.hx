@@ -16,7 +16,8 @@ import haxe.ui.util.Timer;
  * same; lifting the finger or moving it hides it, and that release is not a click.
  *
  * heaps-android's LongPressTooltips, on HaxeUI's screen events rather than the Heaps window's, so
- * everything here is in layout units. Drags come first: a press on anything registered with
+ * the finger is followed in layout units; the tooltip is placed in screen pixels, as any root
+ * component is (see place()). Drags come first: a press on anything registered with
  * DragManager (or inside one) never arms, and movement past the slop cancels the press or hides a
  * tooltip already up.
  */

@@ -28,5 +28,15 @@ grep -qF '<RuntimeIdentifier>android-x64</RuntimeIdentifier>' "$csproj" || fail 
 sed '/haxeui_cs_android_id/d' tests/android-app/build.hxml > "$bin-noid.hxml"
 if haxe "$bin-noid.hxml" -D haxeui_cs_no_dotnet > "$bin.log" 2>&1; then fail "a build without an application id succeeded"; fi
 grep -qF 'haxeui-cs: -D haxeui_cs_android needs -D haxeui_cs_android_id=<application id>' "$bin.log" || { cat "$bin.log"; fail "no clear error without an application id"; }
-rm -f "$bin-noid.hxml" "$bin.log"
+
+# Android and the headless test host are two different apps: the build must stop and say so.
+if haxe tests/android-app/build.hxml -D haxeui_cs_no_dotnet -D haxeui_cs_headless > "$bin.log" 2>&1; then fail "a headless Android build succeeded"; fi
+grep -qF 'haxeui-cs: -D haxeui_cs_android and -D haxeui_cs_headless cannot be used together' "$bin.log" || { cat "$bin.log"; fail "no clear error for a headless Android build"; }
+
+# Without a main class there is no entry point to generate: the build must stop and say so.
+sed '/^-main/d' tests/android-app/build.hxml > "$bin-nomain.hxml"
+echo '--macro include("Main")' >> "$bin-nomain.hxml"
+if haxe "$bin-nomain.hxml" -D haxeui_cs_no_dotnet > "$bin.log" 2>&1; then fail "a build without a main class succeeded"; fi
+grep -qF 'haxeui-cs: the app needs a -main class' "$bin.log" || { cat "$bin.log"; fail "no clear error without a main class"; }
+rm -f "$bin-noid.hxml" "$bin-nomain.hxml" "$bin.log"
 echo "check-project: OK"

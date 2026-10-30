@@ -6,6 +6,7 @@ import haxe.ui.backend.cs.TextLinkEvent;
 import haxe.ui.components.Label;
 import haxe.ui.backend.cs.native.Native;
 import haxe.ui.components.DropDown;
+import haxe.ui.containers.Absolute;
 import haxe.ui.containers.Box;
 import haxe.ui.core.Component;
 import haxe.ui.core.Screen;
@@ -41,6 +42,45 @@ class TestScale extends utest.Test {
 		Assert.equals(0xFFFF0000, TestDriver.pixel(15, 15), "inside, near the top left");
 		Assert.equals(0xFFFF0000, TestDriver.pixel(105, 65), "inside, near the bottom right");
 		Assert.equals(0xFFFFFFFF, TestDriver.pixel(115, 30), "past the scaled right edge");
+	}
+
+	function testRootStaysWhereItIsWhenTheScaleChanges() {
+		// Placed in screen pixels and hit-tested there by core: a scale taken up later must not move it.
+		var b = redBox(40, 40, 10, 10);
+		Toolkit.scale = 2;
+		redBox(200, 200, 10, 10);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(45, 45), "still at its left and top");
+		Assert.equals(0xFFFFFFFF, TestDriver.pixel(85, 85), "not at twice them");
+		var clicked = false;
+		b.registerEvent(MouseEvent.CLICK, _ -> clicked = true);
+		TestDriver.click(45, 45);
+		Assert.isTrue(clicked, "clicked where it is drawn");
+	}
+
+	function testComponentMovedToTheRootAndBack() {
+		// A child's position is HaxeUI units and a root's screen pixels, so moving one re-places it.
+		Toolkit.scale = 2;
+		var parent = new Absolute();
+		parent.width = 100;
+		parent.height = 100;
+		Screen.instance.addComponent(parent);
+		var b = new Box();
+		b.left = 40;
+		b.top = 40;
+		b.width = 10;
+		b.height = 10;
+		b.styleString = "border-size: 0px; padding: 0px; background-color: #FF0000;";
+		parent.addComponent(b);
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(85, 85), "a child: its units, scaled");
+		parent.removeComponent(b, false);
+		Screen.instance.addComponent(b);
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(45, 45), "a root: its screen pixels");
+		Screen.instance.removeComponent(b, false);
+		parent.addComponent(b);
+		TestDriver.pump(3);
+		Assert.equals(0xFFFF0000, TestDriver.pixel(85, 85), "a child again");
 	}
 
 	function testClickInHaxeUIUnits() {
