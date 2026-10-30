@@ -6,6 +6,7 @@ import haxe.ui.core.Component;
 import haxe.ui.core.Screen;
 import haxe.ui.backend.cs.TestDriver;
 import haxe.ui.backend.cs.TextLinkEvent;
+import haxe.ui.backend.cs.native.Native.UIText;
 import utest.Assert;
 
 /** Text display: measuring, wrapping, font styling and rendering. **/
@@ -243,6 +244,109 @@ class TestText extends utest.Test {
 		Assert.isTrue(doubled.label.height > normal.label.height + 10, 'taller: ${doubled.label.height} vs ${normal.label.height}');
 		var reset = lines("font-size: 20px; line-height: normal;");
 		Assert.floatEquals(normal.boxes[0].height, reset.boxes[0].height, 0.01);
+	}
+
+	static inline var LONG = "the quick brown fox jumps over a lazy dog and on";
+
+	static function measured(text:UIText, maxWidth:Float):{w:Float, h:Float} {
+		text.MeasureText(maxWidth);
+		return {w: text.MeasuredWidth, h: text.MeasuredHeight};
+	}
+
+	static function plainText(content:String, size:Float):UIText {
+		var text = new UIText();
+		text.SetWrap(true);
+		text.SetFont(null, size, false, false, false, false);
+		text.Text = content;
+		return text;
+	}
+
+	function testMeasuringAgainDoesNotLayOutAgain() {
+		var text = plainText(LONG, 16);
+		var unbounded = measured(text, 0);
+		var wrapped = measured(text, 80);
+		var layouts = text.MeasureLayouts;
+		for (_ in 0...3) {
+			var u = measured(text, 0);
+			var w = measured(text, 80);
+			Assert.equals(unbounded.w, u.w);
+			Assert.equals(unbounded.h, u.h);
+			Assert.equals(wrapped.w, w.w);
+			Assert.equals(wrapped.h, w.h);
+		}
+		Assert.equals(layouts, text.MeasureLayouts, "the same text at the same widths is only laid out once each");
+		Assert.isTrue(wrapped.h > unbounded.h, 'wrapped ${wrapped.h} vs one line ${unbounded.h}');
+	}
+
+	function testAColourAndABoxDoNotMeasureAgain() {
+		var text = plainText(LONG, 16);
+		measured(text, 80);
+		var layouts = text.MeasureLayouts;
+		text.SetColor(0xFF112233);
+		text.SetBounds(5, 6, 200, 300);
+		measured(text, 80);
+		Assert.equals(layouts, text.MeasureLayouts);
+	}
+
+	function testMeasuringFollowsWhatTheTextIs() {
+		var text = plainText(LONG, 16);
+		measured(text, 80);
+
+		// A new width, text, size, wrap, line height or HTML each answer as a new text would.
+		Assert.same(measured(plainText(LONG, 16), 200), measured(text, 200), "width");
+		text.Text = "short";
+		Assert.same(measured(plainText("short", 16), 80), measured(text, 80), "text");
+		text.Text = LONG;
+		text.SetFont(null, 30, false, false, false, false);
+		Assert.same(measured(plainText(LONG, 30), 80), measured(text, 80), "size");
+
+		var noWrap = plainText(LONG, 30);
+		noWrap.SetWrap(false);
+		text.SetWrap(false);
+		Assert.same(measured(noWrap, 80), measured(text, 80), "wrap");
+		text.SetWrap(true);
+
+		var tall = plainText(LONG, 30);
+		tall.SetLineHeight(60);
+		text.SetLineHeight(60);
+		Assert.same(measured(tall, 80), measured(text, 80), "line height");
+		text.SetLineHeight(0);
+
+		var one = plainText(LONG, 30);
+		one.SetHtml("one<br>two");
+		var other = plainText(LONG, 30);
+		other.SetHtml("one<br>two<br>three<br>four");
+		text.SetHtml("one<br>two");
+		Assert.same(measured(one, 80), measured(text, 80), "html");
+		text.SetHtml("one<br>two<br>three<br>four");
+		Assert.same(measured(other, 80), measured(text, 80), "other html");
+	}
+
+	function testAnEmptyTextIsOneLineTallAndNoneWide() {
+		var text = plainText("", 16);
+		var empty = measured(text, 0);
+		Assert.equals(0.0, empty.w);
+		Assert.isTrue(empty.h > 10, 'height ${empty.h}');
+		Assert.equals("", text.Text);
+		Assert.same(empty, measured(text, 0));
+		text.Text = "words";
+		Assert.isTrue(measured(text, 0).w > 10);
+	}
+
+	function testLinesAndLinksAfterAMeasureThatWasRemembered() {
+		var label = html('<a href="a">the quick brown fox</a> jumps over a lazy dog', "font-size: 16px; width: 80px;");
+		label.wordWrap = true;
+		TestDriver.pump(3);
+		var display = label.getTextDisplay();
+		var lines = display.lineBoxes().length;
+		var rects = display.linkRects().length;
+		Assert.isTrue(lines >= 3, '$lines lines');
+		var native = display.textNative;
+		measured(native, 0);
+		measured(native, 80);
+		measured(native, 0);
+		Assert.equals(lines, display.lineBoxes().length);
+		Assert.equals(rects, display.linkRects().length);
 	}
 
 	static function lines(styleString:String):{label:Label, boxes:Array<{top:Float, height:Float}>} {

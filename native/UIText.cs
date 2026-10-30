@@ -266,6 +266,9 @@ namespace HaxeUICs
         public double MeasuredWidth { get; private set; }
         public double MeasuredHeight { get; private set; }
 
+        /// <summary>How many times MeasureText has actually laid the text out (for the tests).</summary>
+        public int MeasureLayouts { get; private set; }
+
         public bool IsBold => FontWeight >= FontWeight.Bold;
 
         public UIText()
@@ -339,6 +342,62 @@ namespace HaxeUICs
         /// size HaxeUI last gave it. Empty text measures as one line, so an empty label keeps its height.
         /// </summary>
         public void MeasureText(double maxWidth)
+        {
+            if (maxWidth <= 0) maxWidth = 0;
+            if (maxWidth == _askedA)
+            {
+                MeasuredWidth = _widthA;
+                MeasuredHeight = _heightA;
+                return;
+            }
+            if (maxWidth == _askedB)
+            {
+                MeasuredWidth = _widthB;
+                MeasuredHeight = _heightB;
+                return;
+            }
+            MeasureLayouts++;
+            _measuring = true;
+            try { LayOutToMeasure(maxWidth); }
+            finally { _measuring = false; }
+            _askedA = _askedB;
+            _widthA = _widthB;
+            _heightA = _heightB;
+            _askedB = maxWidth;
+            _widthB = MeasuredWidth;
+            _heightB = MeasuredHeight;
+        }
+
+        // ---- what MeasureText last answered: shaping a paragraph is slow, and HaxeUI's layout asks
+        // the same question many times over, with no limit and at the one width ----
+
+        double _askedA = double.NaN, _widthA, _heightA, _askedB = double.NaN, _widthB, _heightB;
+        bool _measuring;
+
+        void ForgetMeasured()
+        {
+            _askedA = double.NaN;
+            _askedB = double.NaN;
+        }
+
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+            if (_measuring) return;
+            // Anything else might change what the text measures; these never do.
+            var p = change.Property;
+            if (p == WidthProperty || p == HeightProperty || p == BoundsProperty || p == ForegroundProperty
+                || p == Canvas.LeftProperty || p == Canvas.TopProperty) return;
+            ForgetMeasured();
+        }
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            ForgetMeasured(); // layout rounds to the display it is now on
+        }
+
+        void LayOutToMeasure(double maxWidth)
         {
             var width = Width;
             var height = Height;
