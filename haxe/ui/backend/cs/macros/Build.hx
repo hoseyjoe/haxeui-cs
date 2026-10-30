@@ -21,6 +21,9 @@ import sys.io.File;
  * `-D haxeui_cs_publish=<rid>` instead of a debug build, publish a release build for that
  *                          runtime (win-x64, linux-x64, osx-arm64...): one self-contained
  *                          file, native libraries inside, no .pdb, in `<cs-out>/publish/<rid>/`
+ * `-D haxeui_cs_trim`      with `haxeui_cs_publish`: trim the libraries that declare themselves
+ *                          trimmable (.NET's own, Avalonia's); the app's own code is kept whole
+ * `-D haxeui_cs_compress`  with `haxeui_cs_publish`: compress the file (smaller, slower to start)
  * `-D haxeui_cs_android`   an Android app instead (`templates/AndroidApp.csproj` and
  *                          `templates/android/MainActivity.cs`): a debug APK, and with
  *                          `haxeui_cs_run` installed and launched on the device adb sees
@@ -175,8 +178,9 @@ class Build {
 
 	/**
 	 * A release build as one self-contained file for `rid`: the .NET runtime and the native
-	 * libraries (Skia, HarfBuzz...) inside, no .pdb beside it. Not trimmed: Haxe's output and
-	 * HaxeUI find classes by name at run time, which trimming would cut away.
+	 * libraries (Skia, HarfBuzz...) inside, no .pdb beside it. Not trimmed unless asked
+	 * (`haxeui_cs_trim`), and then only partly: Haxe's output and HaxeUI find classes by name at
+	 * run time, so the app's own assembly, which does not declare itself trimmable, is kept whole.
 	 */
 	static function publish(out:String, name:String, csproj:String, rid:String):Void {
 		// a bare `-D haxeui_cs_publish` has the value "1"
@@ -184,11 +188,18 @@ class Build {
 			Context.fatalError("haxeui-cs: -D haxeui_cs_publish needs a runtime id, e.g. -D haxeui_cs_publish=win-x64", Context.currentPos());
 		}
 		var dir = Path.join([out, "publish", rid]);
-		var code = Sys.command("dotnet", [
+		var args = [
 			"publish", csproj, "-c", "Release", "-r", rid, "--self-contained",
-			"-p:PublishSingleFile=true", "-p:IncludeNativeLibrariesForSelfExtract=true", "-p:DebugType=none",
-			"-o", dir, "-nologo", "-v", "q"
-		]);
+			"-p:PublishSingleFile=true", "-p:IncludeNativeLibrariesForSelfExtract=true", "-p:DebugType=none"
+		];
+		if (Context.defined("haxeui_cs_trim")) {
+			// partial: only the assemblies marked IsTrimmable, so not the app's own
+			args = args.concat(["-p:PublishTrimmed=true", "-p:TrimMode=partial"]);
+		}
+		if (Context.defined("haxeui_cs_compress")) {
+			args.push("-p:EnableCompressionInSingleFile=true");
+		}
+		var code = Sys.command("dotnet", args.concat(["-o", dir, "-nologo", "-v", "q"]));
 		if (code != 0) {
 			Sys.exit(code);
 		}

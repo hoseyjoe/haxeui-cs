@@ -54,6 +54,8 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-D haxeui_cs_headless` | headless Avalonia (real Skia drawing, no OS window) plus `haxe.ui.backend.cs.TestDriver`, for tests |
 | `-D haxeui_cs_no_dotnet` | stop after writing the `.csproj` |
 | `-D haxeui_cs_publish=<rid>` | publish a release build as one self-contained file instead (see Publishing) |
+| `-D haxeui_cs_trim` | with `haxeui_cs_publish`: trim the libraries that allow it, not the app's own (see Publishing) |
+| `-D haxeui_cs_compress` | with `haxeui_cs_publish`: compress the file, smaller and slower to start (see Publishing) |
 | `-D haxeui_cs_android` | an Android app instead (see Android) |
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
@@ -101,10 +103,25 @@ the `dotnet publish` of the generated `.csproj` with `--self-contained`,
 `-p:PublishSingleFile=true`, `-p:IncludeNativeLibrariesForSelfExtract=true` and
 `-p:DebugType=none`, so it can also be run by hand with other settings.
 
-- It is about 100 MB. `-p:EnableCompressionInSingleFile=true` (by hand) makes it smaller and
-  slower to start.
-- It is not trimmed, and should not be (`PublishTrimmed`): Haxe's output and HaxeUI find classes by
-  name at run time.
+- It is about 100 MB, most of it the .NET libraries. `-D haxeui_cs_trim` trims those to what is
+  used (`PublishTrimmed`, `TrimMode=partial`), and `-D haxeui_cs_compress` compresses the file
+  (`EnableCompressionInSingleFile`). For one app on win-x64:
+
+  | | File | Window shows |
+  |---|---|---|
+  | neither | 102 MB | 1.4 s |
+  | `haxeui_cs_compress` | 48 MB | 2.2 s |
+  | `haxeui_cs_trim` | 44 MB | |
+  | both | 23 MB | 1.6 s |
+
+  An installer or zip compresses the untrimmed file to 32-43 MB without the slower start.
+- Trimming is only partial: just the assemblies that declare themselves trimmable (.NET's own,
+  Avalonia's) lose what nothing calls. Haxe's output and HaxeUI find classes by name at run time,
+  so the app's own assembly, which does not, is kept whole. The trimmer's warnings while
+  publishing (IL2070, IL2075...) are Haxe's dynamic field access (`haxe.lang.Runtime`), which it
+  cannot follow: a `Dynamic` reaching a .NET or Avalonia member by name could find it trimmed away,
+  so try a trimmed build's native paths (files, clipboard, network) before shipping it. The test
+  suite passes trimmed: `haxe tests/headless.hxml -D haxeui_cs_publish=win-x64 -D haxeui_cs_trim`.
 - `Sys.programPath()` is an empty string in a single-file program (Haxe's own `Sys`; .NET warns
   about it while publishing). For the program's own folder use
   `cs.Syntax.code("System.AppContext.BaseDirectory")`. Relative paths are still relative to the
@@ -140,7 +157,7 @@ haxe app.hxml -D haxeui_cs_android -D haxeui_cs_android_id=com.example.app -D ha
   same file picked again is the same copy) and that path is the answer; a copy that fails is said in
   a message box. One file at a time; extensions do not filter it. Folder and save dialogs cancel.
 - A finger has no hover, so tooltips come by long press, and letting go is not a click.
-- Not yet: publishing (`haxeui_cs_publish`), and trimming (never: classes are found by name).
+- Not yet: publishing (`haxeui_cs_publish`), so neither its trimming nor its compression.
 
 ## Testing
 
