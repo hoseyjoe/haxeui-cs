@@ -216,6 +216,7 @@ extern class UIText extends Control {
 	var MeasuredWidth(default, null):Float;
 	var MeasuredHeight(default, null):Float;
 	var MeasureLayouts(default, null):Int;
+	function MeasureOneLine():Void;
 
 	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool):Void;
 	function SetColor(argb:UInt):Void;

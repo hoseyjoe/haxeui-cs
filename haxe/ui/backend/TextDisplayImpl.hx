@@ -1,6 +1,7 @@
 package haxe.ui.backend;
 
 import haxe.ui.Toolkit;
+import haxe.ui.components.Label;
 import haxe.ui.backend.cs.TextLinkEvent;
 import haxe.ui.backend.cs.directives.LineHeight;
 import haxe.ui.backend.cs.directives.TextShadow;
@@ -206,6 +207,15 @@ class TextDisplayImpl extends TextBase {
     }
 
     private override function measureText() {
+        // Validation goes deepest first, so a Label's text is asked before LabelLayout has given
+        // it a width. If that width won't come from the text, then neither will anything else
+        // ask how wide its one long line is, and a paragraph is slow to lay out.
+        if (_width <= 0 && (parentComponent is Label) && !parentComponent.autoWidth) {
+            textNative.MeasureOneLine();
+            _textWidth = textNative.MeasuredWidth;
+            _textHeight = textNative.MeasuredHeight;
+            return;
+        }
         textNative.MeasureText(_displayData.wordWrap && _width > 0 ? _width : 0);
         _textWidth = textNative.MeasuredWidth;
         _textHeight = textNative.MeasuredHeight;

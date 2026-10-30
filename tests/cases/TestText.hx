@@ -261,6 +261,87 @@ class TestText extends utest.Test {
 		return text;
 	}
 
+	static function inBox(boxWidth:Null<Float>, label:Label):Component {
+		var box = new Component();
+		if (boxWidth != null) {
+			box.width = boxWidth;
+		}
+		box.addComponent(label);
+		Screen.instance.addComponent(box);
+		TestDriver.pump(3);
+		return box;
+	}
+
+	function testALabelGivenItsWidthIsOnlyLaidOutAtThatWidth() {
+		var label = new Label();
+		label.percentWidth = 100;
+		label.styleString = "font-size: 16px;";
+		label.htmlText = LONG;
+		inBox(100, label);
+		Assert.equals(1, label.getTextDisplay().textNative.MeasureLayouts, "its width doesn't come from its text, so its one long line is never asked for");
+		var wrapped = measured(plainText(LONG, 16), 100);
+		Assert.equals(wrapped.h, label.height);
+		Assert.isTrue(label.height > 30, 'wrapped to ${label.height}');
+	}
+
+	function testAFixedWidthLabelIsOnlyLaidOutAtThatWidth() {
+		var label = new Label();
+		label.width = 100;
+		label.styleString = "font-size: 16px;";
+		label.text = LONG;
+		Screen.instance.addComponent(label);
+		TestDriver.pump(3);
+		Assert.equals(1, label.getTextDisplay().textNative.MeasureLayouts);
+		Assert.equals(measured(plainText(LONG, 16), 100).h, label.height);
+	}
+
+	function testALabelSizedByItsTextStillGetsItsWholeWidth() {
+		var label = new Label();
+		label.styleString = "font-size: 16px;";
+		label.text = LONG;
+		Screen.instance.addComponent(label);
+		TestDriver.pump(3);
+		Assert.equals(measured(plainText(LONG, 16), 0).w, label.width);
+	}
+
+	function testALabelThatDoesNotWrapStillKnowsItsWholeWidth() {
+		var label = new Label();
+		label.percentWidth = 100;
+		label.styleString = "font-size: 16px; word-wrap: false;";
+		label.text = LONG;
+		inBox(100, label);
+		var line = measured(plainText(LONG, 16), 0);
+		Assert.equals(line.w, label.getTextDisplay().textWidth);
+		Assert.equals(line.h, label.height);
+	}
+
+	function testALabelWithNoWidthYetIsOneLineTall() {
+		var label = new Label();
+		label.percentWidth = 100;
+		label.styleString = "font-size: 16px;";
+		label.text = LONG;
+		inBox(0, label);
+		Assert.equals(measured(plainText("|", 16), 0).h, label.getTextDisplay().textHeight);
+		Assert.equals(0, label.getTextDisplay().textNative.MeasureLayouts);
+	}
+
+	function testOneLineFollowsTheFontAndTheLineHeight() {
+		var text = plainText(LONG, 24);
+		text.MeasureOneLine();
+		Assert.equals(0.0, text.MeasuredWidth);
+		Assert.equals(measured(plainText("|", 24), 0).h, text.MeasuredHeight);
+		var bold = plainText(LONG, 24);
+		bold.SetFont(null, 24, true, false, false, false);
+		bold.MeasureOneLine();
+		var boldLine = plainText("|", 24);
+		boldLine.SetFont(null, 24, true, false, false, false);
+		Assert.equals(measured(boldLine, 0).h, bold.MeasuredHeight);
+		text.SetLineHeight(50);
+		text.MeasureOneLine();
+		Assert.equals(50.0, text.MeasuredHeight);
+		Assert.equals(0, text.MeasureLayouts);
+	}
+
 	function testMeasuringAgainDoesNotLayOutAgain() {
 		var text = plainText(LONG, 16);
 		var unbounded = measured(text, 0);

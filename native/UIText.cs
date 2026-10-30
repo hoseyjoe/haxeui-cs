@@ -368,6 +368,17 @@ namespace HaxeUICs
             _heightB = MeasuredHeight;
         }
 
+        /// <summary>
+        /// Measures one line of no width, in this font and line height, without laying the text out:
+        /// the answer for a text that will wrap at a width it hasn't been given yet.
+        /// </summary>
+        public void MeasureOneLine()
+        {
+            using var line = new Avalonia.Media.TextFormatting.TextLayout("|", new Typeface(FontFamily, FontStyle, FontWeight), FontSize, null, lineHeight: LineHeight);
+            MeasuredWidth = 0;
+            MeasuredHeight = System.Math.Ceiling(line.Height);
+        }
+
         // ---- what MeasureText last answered: shaping a paragraph is slow, and HaxeUI's layout asks
         // the same question many times over, with no limit and at the one width ----
 
