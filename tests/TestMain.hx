@@ -33,6 +33,7 @@ class TestMain {
 			new cases.TestLayout(),
 			new cases.TestEventLoop(),
 			new cases.TestStyles(),
+			new cases.TestStyleSheet(),
 			new cases.TestText(),
 			new cases.TestImages(),
 			new cases.TestMouse(),
