@@ -40,10 +40,10 @@ class TestApp extends utest.Test {
 			return false;
 		};
 		// as the close button does: a close the app did not ask for
-		cs.Syntax.code("HaxeUICs.Host.Window.Close()");
+		Host.Window.Close();
 		TestDriver.pump();
 		Assert.equals(1, asked);
-		Assert.isTrue(cs.Syntax.code("HaxeUICs.Host.Window.IsVisible"), "the window stays open");
+		Assert.isTrue(Host.Window.IsVisible, "the window stays open");
 	}
 
 	function testCloseAllowed() {

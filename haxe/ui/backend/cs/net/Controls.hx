@@ -45,6 +45,9 @@ extern class Visual extends AvaloniaObject {
 	var Clip:Geometry;
 	function InvalidateVisual():Void;
 	function Render(context:DrawingContext):Void;
+	@:event private var AttachedToVisualTree:EventHandler_1<VisualTreeAttachmentEventArgs>;
+	function add_AttachedToVisualTree(value:EventHandler_1<VisualTreeAttachmentEventArgs>):Void;
+	function remove_AttachedToVisualTree(value:EventHandler_1<VisualTreeAttachmentEventArgs>):Void;
 }
 
 @:native("Avalonia.VisualExtensions")
@@ -212,8 +215,24 @@ extern class Canvas extends Panel {
 	static function SetTop(element:AvaloniaObject, value:Float):Void;
 }
 
+@:native("Avalonia.Controls.Platform.IInsetsManager")
+extern interface IInsetsManager {
+	var DisplayEdgeToEdgePreference:Bool;
+	var IsSystemBarVisible:cs.system.Nullable_1<Bool>;
+}
+
 @:native("Avalonia.Controls.TopLevel")
 extern class TopLevel extends TemplatedControl {
+	static var ClientSizeProperty(default, never):AvaloniaProperty;
+	var ClientSize(default, never):Size;
+	var Content:cs.system.Object;
+	var InsetsManager(default, never):IInsetsManager;
+	@:event private var BackRequested:EventHandler_1<RoutedEventArgs>;
+	function add_BackRequested(value:EventHandler_1<RoutedEventArgs>):Void;
+	function remove_BackRequested(value:EventHandler_1<RoutedEventArgs>):Void;
+	@:event private var Closed:EventHandler;
+	function add_Closed(value:EventHandler):Void;
+	function remove_Closed(value:EventHandler):Void;
 	static function GetTopLevel(visual:Visual):TopLevel;
 	var Clipboard(default, never):haxe.ui.backend.cs.net.Clipboard.IClipboard;
 	var FocusManager(default, never):IFocusManager;

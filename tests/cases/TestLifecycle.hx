@@ -14,6 +14,34 @@ private class IdlePump implements IEventsPump {
 	}
 }
 
+private class Call implements ICallback {
+	final run:Void->Void;
+
+	public function new(run:Void->Void) {
+		this.run = run;
+	}
+
+	public function Invoke():Void {
+		run();
+	}
+}
+
+private class ThrowingClose implements ICloseListener {
+	public function new() {}
+
+	public function OnCloseRequested():Bool {
+		throw "oops";
+	}
+}
+
+private class ThrowingBack implements IBackListener {
+	public function new() {}
+
+	public function OnBack():Bool {
+		throw "oops";
+	}
+}
+
 /** Back and going to the background, raised from the host as Android raises them. **/
 class TestLifecycle extends utest.Test {
 	function teardown() {
@@ -91,6 +119,24 @@ class TestLifecycle extends utest.Test {
 	function testThrowingListenerIsUnhandled() {
 		BackButton.addListener(() -> throw "deliberate failure in a back handler");
 		Assert.isFalse(Host.RaiseBack());
+	}
+
+	function testHaxeThrowIsReported() {
+		var ran = false;
+		Host.NextFrame(new Call(() -> throw "oops"));
+		Host.NextFrame(new Call(() -> ran = true));
+		HeadlessDriver.Pump(1);
+		Assert.isTrue(ran, "the rest of the frame still runs");
+
+		var close = Host.CloseListener;
+		Host.CloseListener = new ThrowingClose();
+		Assert.isTrue(Host.AskClose(), "a close handler that throws lets the window close");
+		Host.CloseListener = close;
+
+		var back = Host.BackListener;
+		Host.BackListener = new ThrowingBack();
+		Assert.isFalse(Host.RaiseBack(), "a back handler that throws has not taken back");
+		Host.BackListener = back;
 	}
 
 	function testPauseCallsHandler() {

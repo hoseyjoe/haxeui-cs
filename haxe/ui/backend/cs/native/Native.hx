@@ -5,86 +5,23 @@ package haxe.ui.backend.cs.native;
  * Each extern carries the name of the C# type it binds.
  */
 
-@:native("HaxeUICs.ICallback")
-extern interface ICallback {
-	function Invoke():Void;
-}
+typedef ICallback = haxe.ui.backend.cs.native.impl.Host.ICallback;
 
-@:native("HaxeUICs.IEventsPump")
-extern interface IEventsPump {
-	function Pump():Float;
-}
+typedef IEventsPump = haxe.ui.backend.cs.native.impl.Host.IEventsPump;
 
-@:native("HaxeUICs.IHostListener")
-extern interface IHostListener {
-	function OnReady():Void;
-	function OnResize(width:Float, height:Float):Void;
-	function OnClosed():Void;
-}
+typedef IHostListener = haxe.ui.backend.cs.native.impl.Host.IHostListener;
 
-@:native("HaxeUICs.ICloseListener")
-extern interface ICloseListener {
-	function OnCloseRequested():Bool;
-}
+typedef ICloseListener = haxe.ui.backend.cs.native.impl.Host.ICloseListener;
 
-@:native("HaxeUICs.IBackListener")
-extern interface IBackListener {
-	function OnBack():Bool;
-}
+typedef IBackListener = haxe.ui.backend.cs.native.impl.Host.IBackListener;
 
-@:native("HaxeUICs.IPauseListener")
-extern interface IPauseListener {
-	function OnPause():Void;
-}
+typedef IPauseListener = haxe.ui.backend.cs.native.impl.Host.IPauseListener;
+
+typedef Host = haxe.ui.backend.cs.native.impl.Host.Host;
+
+typedef HostApplication = haxe.ui.backend.cs.native.impl.Host.HostApplication;
 
 typedef UIClipboard = haxe.ui.backend.cs.native.impl.UIClipboard;
-
-@:native("HaxeUICs.Host")
-extern class Host {
-	static var Window(default, null):Dynamic;
-	static var TopLevel(default, null):haxe.ui.backend.cs.net.Controls.TopLevel;
-	static var Root(default, null):UIPanel;
-	static var Title:String;
-	static var ClientWidth(default, null):Float;
-	static var ClientHeight(default, null):Float;
-	static var ScreenCursorName(default, null):String;
-	static var RenderScaling(default, null):Float;
-	static var FilesDir:String;
-
-	static function RunDesktop(listener:IHostListener, title:String, width:Int, height:Int):Void;
-	static function RunSingleView(listener:IHostListener):Void;
-	#if haxeui_cs_headless
-	static function StartHeadless(listener:IHostListener, width:Int, height:Int):Void;
-	#end
-	static function Post(callback:ICallback):Void;
-	static function NextFrame(callback:ICallback):Void;
-	static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic;
-	static function StopTimer(handle:Dynamic):Void;
-	static function CloseWindow():Void;
-	static var CloseListener:ICloseListener;
-	static function AskClose():Bool;
-	static var BackListener:IBackListener;
-	static var PauseListener:IPauseListener;
-	static function RaiseBack():Bool;
-	static function RaisePause():Void;
-	static function SuppressNextClick():Void;
-	static function WakeEventsPump():Void;
-	static function CaptureWindow(path:String):Bool;
-	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
-	static function Exit(code:Int):Void;
-	static function SetScreenCursor(css:String):Void;
-	static function SetBackground(argb:UInt):Void;
-	static function SetScale(scaleX:Float, scaleY:Float):Void;
-	static function StartEventsPump(pump:IEventsPump):Void;
-	static var EventsPumps(default, null):Int;
-	static function ConfigureWindow(resizable:Bool, minWidth:Int, minHeight:Int, maximized:Bool):Void;
-	static function SetIcon(image:haxe.io.BytesData):Void;
-	static var HasIcon(default, null):Bool;
-	static var IsResizable(default, null):Bool;
-	static var MinWidth(default, null):Float;
-	static var MinHeight(default, null):Float;
-	static var IsMaximized(default, null):Bool;
-}
 
 typedef IPanelListener = haxe.ui.backend.cs.native.impl.UIEvents.IPanelListener;
 

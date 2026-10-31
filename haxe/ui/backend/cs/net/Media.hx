@@ -457,11 +457,19 @@ extern interface IImage {}
 
 @:native("Avalonia.Media.Imaging.Bitmap")
 extern class Bitmap implements IImage {
+	@:overload function Save(fileName:String, quality:Nullable_1<Int>):Void;
 	@:overload function new(stream:Stream);
 	var PixelSize(default, never):PixelSize;
 	var Dpi(default, never):Vector;
 	var Size(default, never):Size;
 	@:overload function CopyPixels(buffer:ILockedFramebuffer):Void;
+}
+
+@:native("Avalonia.Media.Imaging.RenderTargetBitmap")
+extern class RenderTargetBitmap extends Bitmap {
+	@:overload function new(pixelSize:PixelSize);
+	function Render(visual:haxe.ui.backend.cs.net.Controls.Visual):Void;
+	function Dispose():Void;
 }
 
 @:native("Avalonia.Media.Imaging.WriteableBitmap")
