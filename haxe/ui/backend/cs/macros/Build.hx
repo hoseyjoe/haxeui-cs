@@ -36,7 +36,9 @@ import sys.io.File;
  * `--macro haxe.ui.backend.cs.macros.Build.addNative("path")` the app's own C# (a `.cs` file, or
  * every `.cs` in a folder), compiled with haxeui-cs's `native/*.cs`.
  *
- * With hxc's `-D dotnet` none of this runs: see configureIl.
+ * With hxc's `-D dotnet` none of this runs: see configureIl. Nor with `--no-output`, a type check:
+ * Haxe calls onAfterGenerate without having generated, so `dotnet build` would compile the C# of
+ * the last real build against today's `native/*.cs`.
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
@@ -55,6 +57,9 @@ class Build {
 		if (Context.defined("haxeui_cs_android")) TouchPatches.init();
 		if (Context.defined("dotnet")) {
 			configureIl();
+			return;
+		}
+		if (Compiler.getConfiguration().args.indexOf("--no-output") >= 0) {
 			return;
 		}
 		Context.onGenerate(GenericInterfaceCast.gather);
