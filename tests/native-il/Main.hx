@@ -1,5 +1,6 @@
 import cs.NativeArray;
 import cs.types.UInt8;
+import haxe.ui.backend.cs.native.impl.ColorMatrix;
 import haxe.ui.backend.cs.native.impl.Deflate;
 import haxe.ui.backend.cs.native.impl.Inflate;
 
@@ -28,8 +29,20 @@ class Main {
 		check("a Deflate then Inflate round trip", same);
 	}
 
+	static function testColorMatrix() {
+		var m = new NativeArray<Single>(20);
+		for (i in [0, 6, 12, 18]) {
+			m[i] = 1;
+		}
+		for (argb in [0xFFFFFFFF, 0x80FFFFFF, 0xFF000001]) {
+			var colour:UInt = argb;
+			check("identity keeps " + StringTools.hex(argb, 8), ColorMatrix.Apply(m, colour) == colour);
+		}
+	}
+
 	static function main() {
 		testCompress();
+		testColorMatrix();
 		if (failed > 0) {
 			Sys.exit(1);
 		}

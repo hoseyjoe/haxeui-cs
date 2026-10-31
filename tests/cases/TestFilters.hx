@@ -1,6 +1,7 @@
 package cases;
 
 import haxe.ui.backend.cs.TestDriver;
+import haxe.ui.backend.cs.native.Native.ColorMatrix;
 import haxe.ui.components.Canvas;
 import haxe.ui.components.Image;
 import haxe.ui.components.Label;
@@ -15,6 +16,27 @@ import cases.Pixels.bright;
  * component's box. Each test's box is white on the white window, so any darker pixel is shadow.
  */
 class TestFilters extends utest.Test {
+	function identity():cs.NativeArray<Single> {
+		var m = new cs.NativeArray<Single>(20);
+		for (i in [0, 6, 12, 18]) {
+			m[i] = 1;
+		}
+		return m;
+	}
+
+	// A colour with the top alpha bit set stays a uint: never a negative or sign-extended channel.
+	function testHighAlphaSurvives() {
+		var m = identity();
+		for (argb in [0xFFFFFFFF, 0x80FFFFFF, 0xFF000001]) {
+			var colour:UInt = argb;
+			Assert.isTrue(ColorMatrix.Apply(m, colour) == colour, 'identity keeps ' + StringTools.hex(argb, 8));
+		}
+		m[18] = 0.5;
+		var half:UInt = 0x80FFFFFF;
+		var white:UInt = 0xFFFFFFFF;
+		Assert.isTrue(ColorMatrix.Apply(m, white) == half, "half alpha rounds 127.5 to even, 128");
+	}
+
 	function teardown() {
 		for (c in Screen.instance.rootComponents.copy()) {
 			Screen.instance.removeComponent(c);

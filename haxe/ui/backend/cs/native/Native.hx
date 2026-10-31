@@ -242,6 +242,8 @@ extern class UIFonts {
 	static function FromFile(path:String):String;
 }
 
+typedef ColorMatrix = haxe.ui.backend.cs.native.impl.ColorMatrix;
+
 typedef Inflate = haxe.ui.backend.cs.native.impl.Inflate;
 
 typedef Deflate = haxe.ui.backend.cs.native.impl.Deflate;

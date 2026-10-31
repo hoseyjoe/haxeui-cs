@@ -8,6 +8,14 @@ import cs.types.UInt8;
  * Externs for .NET's own types (`System.*`), written by hand as hxc binds them: each carries its real
  * name, and `@:overload` where .NET has more than one.
  */
+@:native("System.Collections.Generic.IReadOnlyCollection`1")
+extern class IReadOnlyCollection<T> {
+	var Count(default, never):Int;
+}
+
+@:native("System.Collections.Generic.IReadOnlyList`1")
+extern class IReadOnlyList<T> extends IReadOnlyCollection<T> implements ArrayAccess<T> {}
+
 @:native("System.IO.Stream")
 extern class Stream implements IDisposable {
 	@:overload function CopyTo(destination:Stream):Void;
