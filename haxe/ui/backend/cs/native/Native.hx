@@ -236,11 +236,7 @@ extern class UIText extends Control {
 	function LineBoxes():cs.NativeArray<Float>;
 }
 
-@:native("HaxeUICs.UIFonts")
-extern class UIFonts {
-	static function FromBytes(key:String, data:haxe.io.BytesData):String;
-	static function FromFile(path:String):String;
-}
+typedef UIFonts = haxe.ui.backend.cs.native.impl.UIFonts;
 
 typedef ColorMatrix = haxe.ui.backend.cs.native.impl.ColorMatrix;
 

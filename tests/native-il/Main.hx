@@ -3,6 +3,7 @@ import cs.types.UInt8;
 import haxe.ui.backend.cs.native.impl.ColorMatrix;
 import haxe.ui.backend.cs.native.impl.Deflate;
 import haxe.ui.backend.cs.native.impl.Inflate;
+import haxe.ui.backend.cs.native.impl.UIFonts;
 
 /** The ported C# under hxc, with no HaxeUI around it. Exits non-zero on a failed check. */
 class Main {
@@ -40,9 +41,15 @@ class Main {
 		}
 	}
 
+	static function testFonts() {
+		check("monospace resolves", UIFonts.ResolveFamily("monospace") != null);
+		check("bytes that are no font", UIFonts.FromBytes("not-a-font", new NativeArray<UInt8>(64)) == null);
+	}
+
 	static function main() {
 		testCompress();
 		testColorMatrix();
+		testFonts();
 		if (failed > 0) {
 			Sys.exit(1);
 		}

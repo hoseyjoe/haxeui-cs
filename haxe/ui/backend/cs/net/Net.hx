@@ -26,6 +26,7 @@ extern class Stream implements IDisposable {
 @:native("System.IO.MemoryStream")
 extern class MemoryStream extends Stream {
 	@:overload function new();
+	@:overload function new(buffer:NativeArray<UInt8>, writable:Bool);
 	@:overload function new(buffer:NativeArray<UInt8>, index:Int, count:Int, writable:Bool);
 	function ToArray():NativeArray<UInt8>;
 }
@@ -57,6 +58,7 @@ extern class DeflateStream extends Stream {
 extern class GZipStream extends Stream {
 	@:overload function new(stream:Stream, mode:CompressionMode);
 }
+
 
 /**
  * C#'s `using`, which Haxe has no `finally` to write: disposes `x` however the body ends. A body on

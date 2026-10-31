@@ -1,9 +1,12 @@
 package haxe.ui.backend.cs.net;
 
 import cs.NativeArray;
+import cs.Out;
 import cs.system.IDisposable;
 import cs.system.IntPtr;
 import cs.system.Nullable_1;
+import cs.system.Uri;
+import cs.system.collections.generic.IEnumerable_1;
 import cs.types.UInt8;
 import haxe.ui.backend.cs.net.Avalonia;
 import haxe.ui.backend.cs.net.Net;
@@ -68,6 +71,53 @@ extern class LinearGradientBrush implements IBrush {
 	var EndPoint:RelativePoint;
 	var GradientStops:GradientStops;
 	var Opacity:Float;
+}
+
+@:native("Avalonia.Media.FontFamily")
+extern class FontFamily {
+	@:overload function new(name:String);
+	static var Default(default, never):FontFamily;
+}
+
+@:native("Avalonia.Media.GlyphTypeface")
+extern class GlyphTypeface {
+	var FamilyName(default, never):String;
+}
+
+@:native("Avalonia.Media.Fonts.IFontCollection")
+extern interface IFontCollection {}
+
+@:native("Avalonia.Media.Fonts.FontCollectionBase")
+extern class FontCollectionBase implements IFontCollection {
+	private function new();
+	var Key(get, never):Uri;
+	function get_Key():Uri;
+	@:overload function TryAddGlyphTypeface(stream:Stream, typeface:Out<GlyphTypeface>):Bool;
+}
+
+@:native("Avalonia.Media.FontManager")
+extern class FontManager {
+	static var Current(default, never):FontManager;
+	function AddFontCollection(collection:IFontCollection):Void;
+}
+
+@:native("Avalonia.Media.TextDecoration")
+extern class TextDecoration {}
+
+@:native("Avalonia.Collections.AvaloniaList`1")
+extern class AvaloniaList<T> {
+	function AddRange(items:IEnumerable_1<T>):Void;
+}
+
+@:native("Avalonia.Media.TextDecorationCollection")
+extern class TextDecorationCollection extends AvaloniaList<TextDecoration> {
+	function new();
+}
+
+@:native("Avalonia.Media.TextDecorations")
+extern class TextDecorations {
+	static var Underline(default, never):TextDecorationCollection;
+	static var Strikethrough(default, never):TextDecorationCollection;
 }
 
 @:native("Avalonia.Platform.AlphaFormat")
