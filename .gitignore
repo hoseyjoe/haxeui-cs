@@ -6,6 +6,9 @@ bin/
 obj/
 out/
 
+# the suite's hxc build
+tests/bin-il/
+
 # the parity gallery's builds and pictures
 tools/gallery/out/
 tools/gallery/bin/
