@@ -6,6 +6,7 @@ import haxe.ui.backend.cs.native.impl.Inflate;
 import haxe.ui.backend.cs.native.impl.PickedFiles;
 import haxe.ui.backend.cs.native.impl.UIFonts;
 import haxe.ui.backend.cs.native.impl.UILayers;
+import haxe.ui.backend.cs.native.impl.UITextInput;
 import haxe.ui.backend.cs.net.Avalonia;
 import haxe.ui.backend.cs.net.Media;
 
@@ -77,12 +78,18 @@ class Main {
 		check("layers count", layers.Count == 2);
 	}
 
+	static function testTextInputCompiles() {
+		// A control needs a running app: that it compiles is the check here.
+		check("UITextInput is a class", Type.getClassName(UITextInput) != null);
+	}
+
 	static function main() {
 		testCompress();
 		testColorMatrix();
 		testFonts();
 		testPickedFiles();
 		testLayers();
+		testTextInputCompiles();
 		if (failed > 0) {
 			Sys.exit(1);
 		}

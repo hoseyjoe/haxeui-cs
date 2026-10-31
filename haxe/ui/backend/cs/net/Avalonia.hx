@@ -51,7 +51,22 @@ extern class Rect {
 	var Top(default, never):Float;
 	var Right(default, never):Float;
 	var Bottom(default, never):Float;
+	var Width(default, never):Float;
+	var Height(default, never):Float;
 	function Union(rect:Rect):Rect;
 	function Intersect(rect:Rect):Rect;
 	function TransformToAABB(matrix:Matrix):Rect;
+}
+
+@:native("Avalonia.Size")
+@:struct
+extern class Size {
+	var Width(default, never):Float;
+	var Height(default, never):Float;
+}
+
+@:native("Avalonia.Thickness")
+@:struct
+extern class Thickness {
+	@:overload function new(uniform:Float);
 }

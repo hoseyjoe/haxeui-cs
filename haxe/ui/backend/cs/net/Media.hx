@@ -121,6 +121,92 @@ extern class TextDecorations {
 	static var Strikethrough(default, never):TextDecorationCollection;
 }
 
+@:native("Avalonia.Media.FontStyle")
+extern enum FontStyle {
+	Normal;
+	Italic;
+	Oblique;
+}
+
+@:native("Avalonia.Media.FontWeight")
+extern enum FontWeight {
+	Normal;
+	Bold;
+}
+
+@:native("Avalonia.Media.TextAlignment")
+extern enum TextAlignment {
+	Center;
+	Right;
+	Justify;
+	Left;
+}
+
+@:native("Avalonia.Media.TextWrapping")
+extern enum TextWrapping {
+	NoWrap;
+	Wrap;
+}
+
+@:native("Avalonia.Media.Brushes")
+extern class Brushes {
+	static var Transparent(default, never):IBrush;
+}
+
+@:native("Avalonia.Media.IEffect")
+extern interface IEffect {}
+
+@:native("Avalonia.Media.DropShadowEffect")
+extern class DropShadowEffect implements IEffect {
+	function new();
+	var OffsetX:Float;
+	var OffsetY:Float;
+	var BlurRadius:Float;
+	var Color:Color;
+	var Opacity:Float;
+}
+
+@:native("Avalonia.Media.IDashStyle")
+extern interface IDashStyle {}
+
+@:native("Avalonia.Media.PenLineCap")
+extern enum PenLineCap {
+	Flat;
+}
+
+@:native("Avalonia.Media.PenLineJoin")
+extern enum PenLineJoin {
+	Miter;
+}
+
+@:native("Avalonia.Media.IPen")
+extern interface IPen {}
+
+@:native("Avalonia.Media.Pen")
+extern class Pen implements IPen {
+	@:overload function new(brush:IBrush, thickness:Float, dashStyle:IDashStyle, lineCap:PenLineCap, lineJoin:PenLineJoin, miterLimit:Float);
+	var Thickness(default, never):Float;
+}
+
+@:native("Avalonia.Media.TextFormatting.TextLine")
+extern class TextLine {
+	var Start(default, never):Float;
+	var Width(default, never):Float;
+	var Baseline(default, never):Float;
+	var Height(default, never):Float;
+}
+
+@:native("Avalonia.Media.TextFormatting.TextLayout")
+extern class TextLayout {
+	var TextLines(default, never):IReadOnlyList<TextLine>;
+}
+
+@:native("Avalonia.Media.DrawingContext.PushedState")
+@:struct
+extern class PushedState {
+	function Dispose():Void;
+}
+
 @:native("Avalonia.Media.ImmediateDrawingContext")
 extern class ImmediateDrawingContext {
 	function TryGetFeature(type:cs.system.Type):cs.system.Object;
@@ -136,6 +222,8 @@ extern interface ICustomDrawOperation extends IDisposable extends IEquatable_1<I
 @:native("Avalonia.Media.DrawingContext")
 extern class DrawingContext {
 	function Custom(custom:ICustomDrawOperation):Void;
+	@:overload function PushClip(clip:Rect):PushedState;
+	function DrawLine(pen:IPen, p1:Point, p2:Point):Void;
 }
 
 @:native("Avalonia.Platform.AlphaFormat")

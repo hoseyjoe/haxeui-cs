@@ -124,12 +124,7 @@ extern class FileDialogs {
 
 typedef PickedFiles = haxe.ui.backend.cs.native.impl.PickedFiles;
 
-/** Avalonia's base control: only ever passed back to C#. **/
-@:native("Avalonia.Controls.Control")
-extern class Control {
-	var IsVisible(default, null):Bool;
-	var IsHitTestVisible:Bool;
-}
+typedef Control = haxe.ui.backend.cs.net.Controls.Control;
 
 @:native("HaxeUICs.UIPanel")
 extern class UIPanel extends Control {
@@ -255,46 +250,9 @@ extern class UIImageView extends Control {
 	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
 }
 
-@:native("HaxeUICs.ITextInputListener")
-extern interface ITextInputListener {
-	function OnTextChanged():Void;
-	function OnScrollChanged():Void;
-	function OnFocus(focused:Bool):Void;
-}
+typedef ITextInputListener = haxe.ui.backend.cs.native.impl.UITextInput.ITextInputListener;
 
-@:native("HaxeUICs.UITextInput")
-extern class UITextInput extends Control {
-	function new():Void;
-
-	var Text(default, null):String;
-	var CaretIndex:Int;
-	var SelectionStart:Int;
-	var SelectionEnd:Int;
-	var IsEnabled:Bool;
-	var IsPassword(default, null):Bool;
-	var IsFocused(default, null):Bool;
-	var ScrollX(default, null):Float;
-	var ScrollY(default, null):Float;
-	var ExtentWidth(default, null):Float;
-	var ExtentHeight(default, null):Float;
-	var ViewportWidth(default, null):Float;
-	var ViewportHeight(default, null):Float;
-
-	function SetListener(listener:ITextInputListener):Void;
-	function SetText(text:String):Void;
-	function SetMultiline(multiline:Bool):Void;
-	function SetWordWrap(wrap:Bool):Void;
-	function SetPassword(password:Bool):Void;
-	function SetSelectionColor(argb:UInt):Void;
-	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool):Void;
-	function SetColor(argb:UInt):Void;
-	function SetAlign(align:Int):Void;
-	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;
-	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
-	function SetScroll(x:Float, y:Float):Void;
-	function Focus():Bool;
-	function Blur():Void;
-}
+typedef UITextInput = haxe.ui.backend.cs.native.impl.UITextInput;
 
 @:native("HaxeUICs.UIStyle")
 extern class UIStyle {
