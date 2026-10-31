@@ -29,21 +29,9 @@ typedef NativeEvents = haxe.ui.backend.cs.native.impl.UIEvents.NativeEvents;
 
 typedef KeyCodes = haxe.ui.backend.cs.native.impl.UIEvents.KeyCodes;
 
-@:native("HaxeUICs.IFileDialogListener")
-extern interface IFileDialogListener {
-	function OnFiles(paths:cs.NativeArray<String>):Void;
-	function OnCancelled():Void;
-	function OnFailed(message:String):Void;
-}
+typedef IFileDialogListener = haxe.ui.backend.cs.native.impl.FileDialogs.IFileDialogListener;
 
-@:native("HaxeUICs.FileDialogs")
-extern class FileDialogs {
-	static var TestResponse:cs.NativeArray<String>;
-
-	static function OpenFiles(title:String, multiple:Bool, patterns:cs.NativeArray<String>, patternNames:cs.NativeArray<String>, listener:IFileDialogListener):Void;
-	static function SaveFile(title:String, suggestedName:String, patterns:cs.NativeArray<String>, patternNames:cs.NativeArray<String>, listener:IFileDialogListener):Void;
-	static function OpenFolder(title:String, multiple:Bool, defaultPath:String, listener:IFileDialogListener):Void;
-}
+typedef FileDialogs = haxe.ui.backend.cs.native.impl.FileDialogs;
 
 typedef PickedFiles = haxe.ui.backend.cs.native.impl.PickedFiles;
 

@@ -227,6 +227,7 @@ extern class TopLevel extends TemplatedControl {
 	var ClientSize(default, never):Size;
 	var Content:cs.system.Object;
 	var InsetsManager(default, never):IInsetsManager;
+	var StorageProvider(default, never):haxe.ui.backend.cs.net.Storage.IStorageProvider;
 	@:event private var BackRequested:EventHandler_1<RoutedEventArgs>;
 	function add_BackRequested(value:EventHandler_1<RoutedEventArgs>):Void;
 	function remove_BackRequested(value:EventHandler_1<RoutedEventArgs>):Void;

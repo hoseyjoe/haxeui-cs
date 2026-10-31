@@ -40,6 +40,7 @@ class TestMain {
 			new cases.TestTextInput(),
 			new cases.TestGraphics(),
 			new cases.TestLayers(),
+			new cases.TestContinue(),
 			new cases.TestDialogs(),
 			new cases.TestGallery(),
 			new cases.TestKeys(),

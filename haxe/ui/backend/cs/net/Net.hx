@@ -89,7 +89,11 @@ extern enum TaskStatus {
 @:native("System.Threading.Tasks.Task")
 extern class Task {
 	@:overload static function Delay(milliseconds:Int):Task;
+	@:overload static function Run<TResult>(f:cs.system.Func_1<TResult>):Task_1<TResult>;
 	var IsCompleted(default, never):Bool;
+	var IsFaulted(default, never):Bool;
+	var IsCanceled(default, never):Bool;
+	var Exception(default, never):cs.system.AggregateException;
 	var Status(default, never):TaskStatus;
 	@:overload function ContinueWith(action:cs.system.Action_1<Task>, scheduler:TaskScheduler):Task;
 }
@@ -97,6 +101,15 @@ extern class Task {
 @:native("System.Threading.Tasks.Task`1")
 extern class Task_1<T> extends Task {
 	var Result(default, never):T;
+}
+
+@:native("System.Threading.Tasks.TaskCompletionSource`1")
+extern class TaskCompletionSource_1<T> {
+	@:overload function new();
+	var Task(default, never):Task_1<T>;
+	function SetResult(result:T):Void;
+	@:overload function SetException(exception:cs.system.Exception):Void;
+	function SetCanceled():Void;
 }
 
 @:native("System.Runtime.InteropServices.OSPlatform")
