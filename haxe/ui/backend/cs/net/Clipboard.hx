@@ -42,4 +42,5 @@ extern interface IClipboard {
 extern class ClipboardExtensions {
 	static function GetDataFormatsAsync(clipboard:IClipboard):Task_1<IReadOnlyList<DataFormat>>;
 	static function TryGetTextAsync(clipboard:IClipboard):Task_1<String>;
+	static function TryGetValueAsync<T>(clipboard:IClipboard, format:DataFormat_1<T>):Task_1<T>;
 }

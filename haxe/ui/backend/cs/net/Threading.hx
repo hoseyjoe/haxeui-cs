@@ -12,6 +12,7 @@ extern class DispatcherPriority {
 	static var Default(default, never):DispatcherPriority;
 	static var Normal(default, never):DispatcherPriority;
 	static var Send(default, never):DispatcherPriority;
+	static var SystemIdle(default, never):DispatcherPriority;
 }
 
 @:native("Avalonia.Threading.DispatcherFrame")
@@ -26,6 +27,7 @@ extern class Dispatcher {
 	@:overload function Post(action:Action, priority:DispatcherPriority):Void;
 	function PushFrame(frame:DispatcherFrame):Void;
 	function RunJobs(priority:Nullable_1<DispatcherPriority>):Void;
+	function MainLoop(token:cs.system.threading.CancellationToken):Void;
 }
 
 @:native("Avalonia.Threading.DispatcherTimer")

@@ -1,8 +1,8 @@
 package haxe.ui.backend.cs.native;
 
 /**
- * Externs for the C# side of haxeui-cs (`native/*.cs`, namespace HaxeUICs).
- * Each extern carries the name of the C# type it binds.
+ * The names the rest of haxeui-cs uses for its .NET-facing classes, which live in `impl`: a module
+ * here beside these typedefs would clash with them.
  */
 
 typedef ICallback = haxe.ui.backend.cs.native.impl.Host.ICallback;
@@ -64,22 +64,5 @@ typedef UITextInput = haxe.ui.backend.cs.native.impl.UITextInput;
 typedef UIStyle = haxe.ui.backend.cs.native.impl.UIStyle;
 
 #if haxeui_cs_headless
-@:native("HaxeUICs.HeadlessDriver")
-extern class HeadlessDriver {
-	static function Pump(frames:Int):Void;
-	static function ResizeWindow(width:Int, height:Int):Void;
-	static function Capture(path:String):Void;
-	static function PixelAt(x:Int, y:Int):Int;
-	static function PixelsAt(x:Int, y:Int, w:Int, h:Int):cs.NativeArray<Int>;
-	static function ClipboardFormat(name:String):String;
-	static function MouseMove(x:Float, y:Float):Void;
-	static function MouseDown(x:Float, y:Float, button:Int):Void;
-	static function MouseUp(x:Float, y:Float, button:Int):Void;
-	static function Wheel(x:Float, y:Float, deltaY:Float, deltaX:Float):Void;
-	static function KeyStroke(name:String, ctrl:Bool, shift:Bool):Void;
-	static function TypeText(text:String):Void;
-	static function StartHttpServer(root:String, delayMs:Int):Int;
-	static var HttpHits(default, null):Int;
-	static function StopHttpServer():Void;
-}
+typedef HeadlessDriver = haxe.ui.backend.cs.native.impl.TestDriver.HeadlessDriver;
 #end

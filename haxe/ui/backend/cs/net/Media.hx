@@ -444,19 +444,23 @@ extern enum AlphaFormat {
 extern class PixelFormat {
 	static var Bgra8888(default, never):PixelFormat;
 	static var Rgba8888(default, never):PixelFormat;
+	@:overload function Equals(other:PixelFormat):Bool;
 }
 
 @:native("Avalonia.Platform.ILockedFramebuffer")
 extern interface ILockedFramebuffer extends IDisposable {
 	var Address(default, never):IntPtr;
 	var RowBytes(default, never):Int;
+	var Size(default, never):PixelSize;
+	var Format(default, never):PixelFormat;
 }
 
 @:native("Avalonia.Media.IImage")
 extern interface IImage {}
 
 @:native("Avalonia.Media.Imaging.Bitmap")
-extern class Bitmap implements IImage {
+extern class Bitmap implements IImage implements IDisposable {
+	function Dispose():Void;
 	@:overload function Save(fileName:String, quality:Nullable_1<Int>):Void;
 	@:overload function new(stream:Stream);
 	var PixelSize(default, never):PixelSize;
@@ -469,7 +473,6 @@ extern class Bitmap implements IImage {
 extern class RenderTargetBitmap extends Bitmap {
 	@:overload function new(pixelSize:PixelSize);
 	function Render(visual:haxe.ui.backend.cs.net.Controls.Visual):Void;
-	function Dispose():Void;
 }
 
 @:native("Avalonia.Media.Imaging.WriteableBitmap")
@@ -480,6 +483,7 @@ extern class WriteableBitmap extends Bitmap {
 
 @:native("System.Runtime.InteropServices.Marshal")
 extern class Marshal {
+	@:overload static function ReadInt32(ptr:cs.system.IntPtr, ofs:Int):Int;
 	@:overload static function Copy(source:IntPtr, destination:NativeArray<UInt8>, startIndex:Int, length:Int):Void;
 	@:overload static function Copy(source:NativeArray<UInt8>, startIndex:Int, destination:IntPtr, length:Int):Void;
 	@:overload static function WriteByte(ptr:IntPtr, value:UInt8):Void;

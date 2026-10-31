@@ -34,11 +34,11 @@ import sys.io.File;
  * `--macro haxe.ui.backend.cs.macros.Build.addPackage("Name", "1.2.3")` adds a NuGet package
  * the app needs beside haxeui-cs's own (a SQLite provider, say), and
  * `--macro haxe.ui.backend.cs.macros.Build.addNative("path")` the app's own C# (a `.cs` file, or
- * every `.cs` in a folder), compiled with haxeui-cs's `native/*.cs`.
+ * every `.cs` in a folder), compiled with the generated C#.
  *
  * With hxc's `-D dotnet` none of this runs: see configureIl. Nor with `--no-output`, a type check:
  * Haxe calls onAfterGenerate without having generated, so `dotnet build` would compile the C# of
- * the last real build against today's `native/*.cs`.
+ * the last real build against today's sources.
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
@@ -174,7 +174,7 @@ class Build {
 			.split("::APP_ID::").join(StringTools.htmlEscape(id))
 			.split("::LABEL::").join(StringTools.htmlEscape(label))
 			.split("::RID::").join(rid)
-			.split("::NATIVE_DIR::").join(nativeItems(false).join("\n"))
+			.split("::NATIVE_DIR::").join(nativeItems().join("\n"))
 			.split("::RESOURCES::").join(resourceItems(out).join("\n"))
 			.split("::PACKAGES::").join(packageItems(packages).join("\n")));
 
@@ -262,19 +262,9 @@ class Build {
 		}
 	}
 
-	/** haxeui-cs's `native/*.cs` (TestDriver only headless) and the app's own, as Compile items. **/
-	static function nativeItems(headless:Bool):Array<String> {
-		var nativeDir = Path.join([libraryRoot(), "native"]);
-		var native = [];
-		for (file in FileSystem.readDirectory(nativeDir)) {
-			if (!StringTools.endsWith(file, ".cs")) continue;
-			if (file == "TestDriver.cs" && !headless) continue;
-			native.push('    <Compile Include="${Path.join([nativeDir, file])}" />');
-		}
-		for (path in appNatives) {
-			native.push('    <Compile Include="${FileSystem.isDirectory(path) ? Path.join([path, "*.cs"]) : path}" />');
-		}
-		return native;
+	/** The app's own C#, as Compile items. **/
+	static function nativeItems():Array<String> {
+		return [for (path in appNatives) '    <Compile Include="${FileSystem.isDirectory(path) ? Path.join([path, "*.cs"]) : path}" />'];
 	}
 
 	/** haxeui-cs's packages and then the app's, as PackageReference items. **/
@@ -290,7 +280,6 @@ class Build {
 	}
 
 	static function buildProject(name:String, headless:Bool, resources:Array<String>):String {
-		var native = nativeItems(headless);
 		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
 		if (headless) {
 			packages.push("Avalonia.Headless");
@@ -301,8 +290,7 @@ class Build {
 		return template
 			.split("::OUTPUT_TYPE::").join(outputType)
 			.split("::NAME::").join(name)
-			.split("::DEFINES::").join(headless ? ";HAXEUI_CS_HEADLESS" : "")
-			.split("::NATIVE_DIR::").join(native.join("\n"))
+			.split("::NATIVE_DIR::").join(nativeItems().join("\n"))
 			.split("::RESOURCES::").join(resources.join("\n"))
 			.split("::PACKAGES::").join(packageItems(packages).join("\n"));
 	}

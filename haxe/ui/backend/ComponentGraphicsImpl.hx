@@ -9,7 +9,7 @@ import haxe.ui.util.Variant;
 /**
  * Canvas drawing on the native panel. Like haxeui-heaps, commands wait in
  * ComponentGraphicsBase until the component first has a size, then replay;
- * fills follow heaps' Flash model (see native/UIGraphics.cs).
+ * fills follow heaps' Flash model (see native/impl/UIGraphics.hx).
  */
 class ComponentGraphicsImpl extends ComponentGraphicsBase {
     private var _hasSize:Bool = false;

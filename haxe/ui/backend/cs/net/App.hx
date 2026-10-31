@@ -116,9 +116,40 @@ extern class AvaloniaHeadlessPlatformExtensions {
 	static function UseHeadless(builder:AppBuilder, options:AvaloniaHeadlessPlatformOptions):AppBuilder;
 }
 
+@:native("Avalonia.Headless.AvaloniaHeadlessPlatform")
+extern class AvaloniaHeadlessPlatform {
+	static function ForceRenderTimerTick(count:Int):Void;
+}
+
+@:native("Avalonia.Input.RawInputModifiers")
+extern enum RawInputModifiers {
+	None;
+	Control;
+	Shift;
+	LeftMouseButton;
+	RightMouseButton;
+	MiddleMouseButton;
+}
+
+@:native("Avalonia.Input.PhysicalKey")
+extern enum PhysicalKey {
+	None;
+}
+
 @:native("Avalonia.Headless.HeadlessWindowExtensions")
 extern class HeadlessWindowExtensions {
 	static function CaptureRenderedFrame(topLevel:TopLevel):haxe.ui.backend.cs.net.Media.WriteableBitmap;
+	static function MouseMove(topLevel:TopLevel, point:haxe.ui.backend.cs.net.Avalonia.Point, modifiers:RawInputModifiers):Void;
+	static function MouseDown(topLevel:TopLevel, point:haxe.ui.backend.cs.net.Avalonia.Point, button:haxe.ui.backend.cs.net.Input.MouseButton,
+		modifiers:RawInputModifiers):Void;
+	static function MouseUp(topLevel:TopLevel, point:haxe.ui.backend.cs.net.Avalonia.Point, button:haxe.ui.backend.cs.net.Input.MouseButton,
+		modifiers:RawInputModifiers):Void;
+	static function MouseWheel(topLevel:TopLevel, point:haxe.ui.backend.cs.net.Avalonia.Point, delta:haxe.ui.backend.cs.net.Avalonia.Vector,
+		modifiers:RawInputModifiers):Void;
+	static function KeyPress(topLevel:TopLevel, key:haxe.ui.backend.cs.net.Input.Key, modifiers:RawInputModifiers, physicalKey:PhysicalKey, keySymbol:String):Void;
+	static function KeyRelease(topLevel:TopLevel, key:haxe.ui.backend.cs.net.Input.Key, modifiers:RawInputModifiers, physicalKey:PhysicalKey,
+		keySymbol:String):Void;
+	static function KeyTextInput(topLevel:TopLevel, text:String):Void;
 }
 #end
 
