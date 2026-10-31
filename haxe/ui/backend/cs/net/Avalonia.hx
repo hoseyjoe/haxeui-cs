@@ -35,6 +35,7 @@ extern class Point {
 	function new(x:Float, y:Float);
 	var X(default, never):Float;
 	var Y(default, never):Float;
+	@:overload function Equals(other:Point):Bool;
 }
 
 @:native("Avalonia.Matrix")

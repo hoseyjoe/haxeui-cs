@@ -108,6 +108,7 @@ extern class TextDecoration {}
 @:native("Avalonia.Collections.AvaloniaList`1")
 extern class AvaloniaList<T> {
 	function AddRange(items:IEnumerable_1<T>):Void;
+	function Add(item:T):Void;
 }
 
 @:native("Avalonia.Media.TextDecorationCollection")
@@ -241,6 +242,58 @@ extern class RectangleGeometry extends Geometry {
 	@:overload function new(rect:Rect);
 }
 
+@:native("Avalonia.Media.EllipseGeometry")
+extern class EllipseGeometry extends Geometry {
+	@:overload function new(rect:Rect);
+}
+
+@:native("Avalonia.Media.PathSegment")
+extern class PathSegment {}
+
+@:native("Avalonia.Media.PathSegments")
+extern class PathSegments extends AvaloniaList<PathSegment> {
+	function new();
+}
+
+@:native("Avalonia.Media.LineSegment")
+extern class LineSegment extends PathSegment {
+	function new();
+	var Point:Point;
+}
+
+@:native("Avalonia.Media.QuadraticBezierSegment")
+extern class QuadraticBezierSegment extends PathSegment {
+	function new();
+	var Point1:Point;
+	var Point2:Point;
+}
+
+@:native("Avalonia.Media.BezierSegment")
+extern class BezierSegment extends PathSegment {
+	function new();
+	var Point1:Point;
+	var Point2:Point;
+	var Point3:Point;
+}
+
+@:native("Avalonia.Media.PathFigure")
+extern class PathFigure {
+	function new();
+	var StartPoint:Point;
+	var IsClosed:Bool;
+	var IsFilled:Bool;
+	var Segments:PathSegments;
+}
+
+@:native("Avalonia.Media.PathFigures")
+extern class PathFigures extends AvaloniaList<PathFigure> {}
+
+@:native("Avalonia.Media.PathGeometry")
+extern class PathGeometry extends Geometry {
+	@:overload function new();
+	var Figures:PathFigures;
+}
+
 @:native("Avalonia.Media.Imaging.BitmapInterpolationMode")
 extern enum BitmapInterpolationMode {
 	Unspecified;
@@ -265,6 +318,8 @@ extern class DrawingContext {
 	@:overload function PushClip(clip:Rect):PushedState;
 	function DrawLine(pen:IPen, p1:Point, p2:Point):Void;
 	@:overload function DrawImage(source:IImage, sourceRect:Rect, destRect:Rect):Void;
+	@:overload function DrawImage(source:IImage, rect:Rect):Void;
+	function DrawGeometry(brush:IBrush, pen:IPen, geometry:Geometry):Void;
 }
 
 @:native("Avalonia.Platform.AlphaFormat")
@@ -278,6 +333,7 @@ extern enum AlphaFormat {
 @:struct
 extern class PixelFormat {
 	static var Bgra8888(default, never):PixelFormat;
+	static var Rgba8888(default, never):PixelFormat;
 }
 
 @:native("Avalonia.Platform.ILockedFramebuffer")
@@ -294,6 +350,7 @@ extern class Bitmap implements IImage {
 	@:overload function new(stream:Stream);
 	var PixelSize(default, never):PixelSize;
 	var Dpi(default, never):Vector;
+	var Size(default, never):Size;
 	@:overload function CopyPixels(buffer:ILockedFramebuffer):Void;
 }
 
@@ -307,6 +364,7 @@ extern class WriteableBitmap extends Bitmap {
 extern class Marshal {
 	@:overload static function Copy(source:IntPtr, destination:NativeArray<UInt8>, startIndex:Int, length:Int):Void;
 	@:overload static function Copy(source:NativeArray<UInt8>, startIndex:Int, destination:IntPtr, length:Int):Void;
+	@:overload static function WriteByte(ptr:IntPtr, value:UInt8):Void;
 }
 
 @:native("System.Runtime.CompilerServices.ConditionalWeakTable`2")
