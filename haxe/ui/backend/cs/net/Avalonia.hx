@@ -17,9 +17,17 @@ extern class Vector {
 	var Y(default, never):Float;
 }
 
+@:native("Avalonia.RelativeUnit")
+extern enum RelativeUnit {
+	Absolute;
+	Relative;
+}
+
 @:native("Avalonia.RelativePoint")
 @:struct
-extern class RelativePoint {}
+extern class RelativePoint {
+	@:overload function new(x:Float, y:Float, unit:RelativeUnit);
+}
 
 @:native("Avalonia.Point")
 @:struct

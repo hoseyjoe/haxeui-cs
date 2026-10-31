@@ -232,57 +232,7 @@ typedef ITextInputListener = haxe.ui.backend.cs.native.impl.UITextInput.ITextInp
 
 typedef UITextInput = haxe.ui.backend.cs.native.impl.UITextInput;
 
-@:native("HaxeUICs.UIStyle")
-extern class UIStyle {
-	function new():Void;
-
-	static function StandardCursorName(css:String):String;
-
-	var BackgroundColor:UInt;
-	var BackgroundColorEnd:UInt;
-	var GradientStyle:Int;
-	var BackgroundOpacity:Float;
-
-	var BorderLeft:Float;
-	var BorderTop:Float;
-	var BorderRight:Float;
-	var BorderBottom:Float;
-	var BorderLeftColor:UInt;
-	var BorderTopColor:UInt;
-	var BorderRightColor:UInt;
-	var BorderBottomColor:UInt;
-	var BorderOpacity:Float;
-	var BorderStyle:Int;
-
-	var RadiusTL:Float;
-	var RadiusTR:Float;
-	var RadiusBR:Float;
-	var RadiusBL:Float;
-
-	var Opacity:Float;
-	var Cursor:String;
-
-	var Blur:Float;
-
-	function ClearShadows():Void;
-	function AddShadow(offsetX:Float, offsetY:Float, blur:Float, spread:Float, argb:UInt, inset:Bool):Void;
-
-	var BackgroundImage:UIImage;
-	var ClipL:Float;
-	var ClipT:Float;
-	var ClipR:Float;
-	var ClipB:Float;
-	var SliceL:Float;
-	var SliceT:Float;
-	var SliceR:Float;
-	var SliceB:Float;
-	var Repeat:Int;
-	var BgWidth:Float;
-	var BgHeight:Float;
-	var BgWidthPercent:Float;
-	var BgHeightPercent:Float;
-	var Pixelated:Bool;
-}
+typedef UIStyle = haxe.ui.backend.cs.native.impl.UIStyle;
 
 #if haxeui_cs_headless
 @:native("HaxeUICs.HeadlessDriver")

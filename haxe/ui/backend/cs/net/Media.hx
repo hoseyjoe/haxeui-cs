@@ -169,9 +169,35 @@ extern class DropShadowEffect implements IEffect {
 @:native("Avalonia.Media.IDashStyle")
 extern interface IDashStyle {}
 
+@:native("Avalonia.Media.DashStyle")
+extern class DashStyle implements IDashStyle {
+	@:overload function new(dashes:IEnumerable_1<Float>, offset:Float);
+}
+
+@:native("Avalonia.Media.BoxShadow")
+@:struct
+extern class BoxShadow {
+	function new();
+	var OffsetX:Float;
+	var OffsetY:Float;
+	var Blur:Float;
+	var Spread:Float;
+	var Color:Color;
+	var IsInset:Bool;
+}
+
+@:native("Avalonia.Media.BoxShadows")
+@:struct
+extern class BoxShadows {
+	@:overload function new();
+	@:overload function new(shadow:BoxShadow);
+	@:overload function new(shadow:BoxShadow, rest:NativeArray<BoxShadow>);
+}
+
 @:native("Avalonia.Media.PenLineCap")
 extern enum PenLineCap {
 	Flat;
+	Round;
 }
 
 @:native("Avalonia.Media.PenLineJoin")
