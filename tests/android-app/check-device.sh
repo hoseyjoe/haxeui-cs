@@ -2,7 +2,7 @@
 # The Android check on a real device: builds, installs and drives tests/android-app on the device
 # ANDROID_SERIAL names, reading what the app reports from logcat. `bash tests/android-app/check-device.sh`
 # from the repo root. It uninstalls the app first (a clean files dir), and puts the device's
-# rotation settings back when it ends.
+# rotation settings back when it ends. An emulator needs ANDROID_ABI=x86_64.
 set -u
 : "${ANDROID_SERIAL:?set ANDROID_SERIAL to the device to test on (adb devices lists them)}"
 export ANDROID_SERIAL MSYS_NO_PATHCONV=1
@@ -38,7 +38,7 @@ tap_text() {
 
 adb uninstall "$id" > /dev/null 2>&1
 adb logcat -c
-haxe tests/android-app/build.hxml -D haxeui_cs_run > "$bin/device-build.log" 2>&1 || { tail -20 "$bin/device-build.log"; fail "build or install"; }
+haxe tests/android-app/build.hxml -D haxeui_cs_run ${ANDROID_ABI:+-D haxeui_cs_android_abi=$ANDROID_ABI} > "$bin/device-build.log" 2>&1 || { tail -20 "$bin/device-build.log"; fail "build or install"; }
 
 # 1. main runs in the files dir, then HaxeUI is ready with a real screen size at scale 1
 wait_for "^android-app: main ran 1 cwd /data/(data|user/0)/$id/files$"
@@ -50,6 +50,8 @@ pass "main ran once in the files dir; ready"
 
 # 2. a tap is a click
 wait_for "^android-app: at field [0-9]+ [0-9]+$"
+# An emulator without a GPU drops input for a moment after the first frame.
+sleep 3
 read -r x y < <(at tap)
 adb shell input tap "$x" "$y"
 wait_for "^android-app: clicked$"
@@ -91,7 +93,9 @@ wait_for "^android-app: main ran 2 cwd /data/(data|user/0)/$id/files$"
 pass "after a kill, main ran again and found its earlier run"
 
 # 6. full screen: the status bar is hidden (this API 36 phone lists it as an InsetsSource line)
-wait_for "^android-app: at field .*" # the relaunched run has laid out
+# The relaunched run has laid out: a second line, as the first run's is still in the log.
+for _ in $(seq 1 60); do [ "$(count '^android-app: at field ')" -ge 2 ] && break; sleep 0.5; done
+[ "$(count '^android-app: at field ')" -ge 2 ] || fail "the relaunched run never laid out"
 for _ in $(seq 1 20); do
   adb shell dumpsys window | grep -qE "InsetsSource id=[^ ]+ type=statusBars .*visible=false" && break
   sleep 0.5
@@ -100,7 +104,7 @@ adb shell dumpsys window | grep -qE "InsetsSource id=[^ ]+ type=statusBars .*vis
 pass "immersive: the status bar is hidden"
 
 # 7. back with a listener armed: the listener takes it, the app stays in front
-sleep 1
+sleep 3 # as after the first launch
 read -r x y < <(at trap)
 adb shell input tap "$x" "$y"
 wait_for "^android-app: back armed$"

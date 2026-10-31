@@ -19,6 +19,14 @@
 - Timing: **not measured yet, the phone was locked.** `sh D:/_github/_haxeui-cs-baseline/bench/run.sh baseline` times `EpubReader-native-baseline-bench.apk`'s build at any later point, so Task 19 runs it first. EpubReader at 06a6c27. The bench patches a copy of `MainView`, so EpubReader isn't edited, and runs as an app of its own, `...epubreader.csbench`, leaving the reader's position alone. Its first real run is at Task 19.
 - Timing, measured at Task 19 (2026-10-31, 66140DLDV000KB), `baseline` APK d026e526 against `t19` (commit 6516eac) APK f6543659, medians of a chapter walk: 111-page crossing 540 ms against 572 ms (one sample each; an earlier partial `t19` run gave 569), 71-page 372 against 360, 14-page 121 against 121, 1-page 45 against 46, total of medians 1,078 against 1,098 (+1.9%). No crossing is over the 10% limit, so no tuning pass. Before these runs the bench failed at launch because the phone's `\r` stayed on the activity name; `bench/run.sh` now strips it.
 
+**Results (Task 26, 2026-10-31):**
+- Windows: 685/685 on both compilers. `exit-app`, `early-add`, `window-app` pass on both. `clipboard-app` is C# only, as it needs `addNative`. `keys-app` builds on both.
+- Linux, under WSL: 688/689 under hxc and under C#, and `exit-app`, `early-add`, `window-app` exit 0 in real windows. The one failure, `testLinkBrokenOverLinesHasARectEach` (123.303 px against a limit of 121), also fails at `native-baseline` (662/663), so the port didn't cause it.
+- Gallery: `results.txt` and `results-dark.txt` match the baseline on both compilers. Pixels differ only inside the boxes Task 1 recorded as varying. `compare.py` exits 0.
+- Android: `tests/android-app/check-device.sh` passes all 11 steps on a throwaway x86_64 emulator, including back, pause and a picked document. On the phone, `tests/android-app` starts and draws, and EpubReader's bench build runs.
+- Final timing (66140DLDV000KB), `baseline` APK d026e526 against `final` APK 26eaeb76 (commit 2099233, same code as b714063), medians: 111-page 540 ms against 565 ms (one sample each), 71-page 372 against 363, 14-page 121 against 128, 1-page 45 against 34, total of medians 1,078 against 1,090 (+1.1%). No crossing is over the 10% limit.
+- JoeClash: Joeditor `accept: OK`, from a throwaway worktree.
+
 ## Global Constraints
 
 - No `cs.Syntax`, `untyped` or `__cs__` in anything ported. No `#if dotnet` in ported code, unless Task 4's fallback is used, at the one site it names.

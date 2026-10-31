@@ -195,8 +195,9 @@ keyboard. It uninstalls the app first and puts the rotation settings back.
 ### Linux
 
 The build output is plain `net10.0`, so a program built on Windows runs on Linux as it is:
-`dotnet <app>.dll` with a .NET 10 runtime. Verified under WSL2 Ubuntu 24.04 with WSLg: the whole
-headless suite, and exit-app, early-add and window-app in a real window. A real window needs
+`dotnet <app>.dll` with a .NET 10 runtime. Verified under WSL2 Ubuntu 24.04 with WSLg: the headless
+suite, and exit-app, early-add and window-app in a real window. One test fails there,
+`testLinkBrokenOverLinesHasARectEach`, because DejaVu is wider than its limit allows. A real window needs
 Avalonia's X11 libraries; a minimal Ubuntu lacks two of them, `sudo apt install libice6 libsm6`
 (or unpack those two packages anywhere and put their `lib` folder on `LD_LIBRARY_PATH`).
 
