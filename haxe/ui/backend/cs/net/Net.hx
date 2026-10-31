@@ -2,6 +2,7 @@ package haxe.ui.backend.cs.net;
 
 import cs.NativeArray;
 import cs.system.IDisposable;
+import cs.types.Int64;
 import cs.types.UInt8;
 
 /**
@@ -18,6 +19,11 @@ extern class IReadOnlyList<T> extends IReadOnlyCollection<T> implements ArrayAcc
 
 @:native("System.IO.Stream")
 extern class Stream implements IDisposable {
+	var Length(get, never):Int64;
+	function get_Length():Int64;
+	var Position(get, never):Int64;
+	function get_Position():Int64;
+	@:overload function Read(buffer:NativeArray<UInt8>, offset:Int, count:Int):Int;
 	@:overload function CopyTo(destination:Stream):Void;
 	@:overload function Write(buffer:NativeArray<UInt8>, offset:Int, count:Int):Void;
 	function Dispose():Void;

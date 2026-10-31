@@ -3,6 +3,7 @@ import cs.types.UInt8;
 import haxe.ui.backend.cs.native.impl.ColorMatrix;
 import haxe.ui.backend.cs.native.impl.Deflate;
 import haxe.ui.backend.cs.native.impl.Inflate;
+import haxe.ui.backend.cs.native.impl.PickedFiles;
 import haxe.ui.backend.cs.native.impl.UIFonts;
 
 /** The ported C# under hxc, with no HaxeUI around it. Exits non-zero on a failed check. */
@@ -46,10 +47,28 @@ class Main {
 		check("bytes that are no font", UIFonts.FromBytes("not-a-font", new NativeArray<UInt8>(64)) == null);
 	}
 
+	static function testPickedFiles() {
+		var dir = cs.system.io.Path.Combine(cs.system.io.Path.GetTempPath(), "haxeui-cs-native-il-" + Math.ffloor(Date.now().getTime()));
+		var bytes = new NativeArray<UInt8>(10);
+		var path = PickedFiles.ImportBytes(dir, "Book.epub", bytes, true, -1);
+		check("an import lands under its name", haxe.io.Path.withoutDirectory(StringTools.replace(path, "\\", "/")) == "Book.epub");
+		var threw = false;
+		try {
+			PickedFiles.ImportBytes(dir, "Other.epub", bytes, true, 2);
+		} catch (e:Dynamic) {
+			threw = Std.isOfType(e, cs.system.io.IOException);
+		}
+		check("a failed read is an IOException", threw);
+		check("a failed import leaves nothing", sys.FileSystem.readDirectory(dir).length == 1);
+		sys.FileSystem.deleteFile(path);
+		sys.FileSystem.deleteDirectory(dir);
+	}
+
 	static function main() {
 		testCompress();
 		testColorMatrix();
 		testFonts();
+		testPickedFiles();
 		if (failed > 0) {
 			Sys.exit(1);
 		}
