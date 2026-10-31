@@ -59,12 +59,12 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-D haxeui_cs_android` | an Android app instead (see Android) |
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
-hxc's `-D dotnet` writes the `.dll` itself, so none of the project steps run: no `.csproj`, no
-`dotnet build`, and `addPackage` and `addNative` do nothing. `haxeui_cs_run`, `haxeui_cs_publish` and
-`haxeui_cs_android` are refused. `native/*.cs` has to be built first into an assembly (with
-`HAXEUI_CS_HEADLESS` defined for a headless app) and given to hxc with `--net-lib`, with
-`Avalonia.Base.dll` and `Avalonia.Controls.dll` and `-D unsafe`, and it and its dependencies copied
-beside the program's `.dll` to run it.
+hxc's `-D dotnet` writes the `.dll` itself: `hxc app.hxml` needs the .NET SDK and leaves a folder to
+run with `dotnet App.dll` or `App.exe`, where `App` is the `-main` class unless `-D dll-name` says
+otherwise. A hidden project, built once in `.cache/il` in this library, fetches Avalonia and supplies
+it to hxc and to that folder. `addPackage` adds to that project, and hxc is given the `<name>.dll` of
+that package. `addNative` does nothing: an app's own C# has to be built first and given to hxc with
+`--net-lib`. `haxeui_cs_run`, `haxeui_cs_publish` and `haxeui_cs_android` are refused.
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
 `haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white
@@ -213,14 +213,16 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 
 ## How it fits together
 
-- `native/*.cs` (namespace `HaxeUICs`) is everything Avalonia: the host and its window, `UIPanel`
-  (one per component) and the `UIPainter` that paints its style and canvas drawing, text
-  (`UIText`), text input (`UITextInput`, a chrome-less TextBox), images, input routing, file
-  dialogs and the headless driver. It knows nothing of HaxeUI.
-- `haxe/ui/backend/*Impl.hx` are the 20 files haxeui-core expects, on externs to those classes
+- `haxe/ui/backend/cs/native/*.hx` is everything Avalonia: the host and its window, `UIPanel` (one
+  per component) and the `UIPainter` that paints its style and canvas drawing, text (`UIText`), text
+  input (`UITextInput`, a chrome-less TextBox), images, input routing, file dialogs and the headless
+  driver. It knows nothing of HaxeUI. The same source compiles under both compilers, on hand-written
+  externs in `haxe/ui/backend/cs/net/`; `sh tests/check-no-native.sh` keeps inline C# out.
+- `haxe/ui/backend/*Impl.hx` are the 20 files haxeui-core expects, on those classes
   (`haxe/ui/backend/cs/native/Native.hx`).
 - `haxe/ui/backend/cs/macros/Build.hx` turns Haxe's C# output into a .NET build
-  (`templates/App.csproj`).
+  (`templates/App.csproj`), and `IlLibraries.hx` gives an hxc build its libraries
+  (`templates/IlLibraries.csproj`).
 
 ## Behaviour worth knowing
 
@@ -312,5 +314,4 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
   at a scale other than 1 they stop short of the right and bottom edges, as on heaps.
 - `letter-spacing` is not a style haxeui-core has, so no backend draws it (`line-height` is a
   haxeui-cs directive, above).
-- Haxe's C# target puts its top-level classes in the global namespace, so native code writes
-  `System.Math` and `System.Array`. `-D erase-generics` breaks HaxeUI.
+- `-D erase-generics` breaks HaxeUI.

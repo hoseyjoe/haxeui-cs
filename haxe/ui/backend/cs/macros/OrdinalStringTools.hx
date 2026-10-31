@@ -27,8 +27,8 @@ class OrdinalStringTools {
 					var s = macro $i{fn.args[0].name};
 					var other = macro $i{fn.args[1].name};
 					fn.expr = field.name == "startsWith"
-						? macro return cs.Syntax.code("{0}.StartsWith({1}, global::System.StringComparison.Ordinal)", $s, $other)
-						: macro return cs.Syntax.code("{0}.EndsWith({1}, global::System.StringComparison.Ordinal)", $s, $other);
+						? macro return (cast $s : cs.system.String).StartsWith($other, cs.system.StringComparison.Ordinal)
+						: macro return (cast $s : cs.system.String).EndsWith($other, cs.system.StringComparison.Ordinal);
 				default:
 			}
 		}

@@ -36,13 +36,10 @@ if [ -f "$out/App.exe" ]; then
 	expect "App.exe" ready "$("$out/App.exe" 2>&1)"
 fi
 
-# Needs a .NET 10 runtime in the WSL distribution.
+# In WSL, with the .NET 10 and Avalonia native libraries the README's Linux section sets up.
 if command -v wsl.exe > /dev/null 2>&1; then
-	if wsl.exe -e dotnet --list-runtimes 2>/dev/null | tr -d '\0' | grep -q "Microsoft.NETCore.App 10\."; then
-		expect "on WSL" ready "$(wsl.exe -e dotnet "$(wsl.exe wslpath -a "$full" | tr -d '\0\r')/App.dll" 2>&1)"
-	else
-		echo "SKIPPED: on WSL: no .NET 10 runtime there"
-	fi
+	path=$(wsl.exe wslpath -a "$full" | tr -d '\000\r')
+	expect "on WSL" ready "$(wsl.exe -e sh -c "LD_LIBRARY_PATH=\$HOME/avalonia-libs \$HOME/.dotnet10/dotnet '$path/App.dll'" 2>&1)"
 fi
 
 rm -rf .cache/il
