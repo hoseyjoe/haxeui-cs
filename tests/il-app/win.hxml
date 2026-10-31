@@ -1,0 +1,8 @@
+# An app with a window, built for its Win.exe: see check.sh.
+-cp tests/il-app
+-main Win
+-lib haxeui-core
+-lib haxeui-cs
+-D dotnet
+--cs tests/il-app/bin with space/win
+-w -WAll

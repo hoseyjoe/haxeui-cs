@@ -33,7 +33,7 @@ class IlLibraries {
 		appName = name;
 		appHeadless = headless;
 		var packages = Build.packageItems(Build.basePackages(headless));
-		var key = name + "-" + (headless ? "headless-" : "") + haxe.crypto.Md5.encode(packages.join("\n"));
+		var key = name + "-" + (headless ? "headless-" : "") + haxe.crypto.Md5.encode(Build.outputType(headless) + "\n" + packages.join("\n"));
 		var dir = Path.join([Build.libraryRoot(), ".cache", "il", key]);
 		output = Path.join([dir, "out"]);
 		if (!FileSystem.exists(Path.join([output, COMPLETE]))) {
@@ -90,6 +90,11 @@ class IlLibraries {
 
 	public static function install(outDir:String):Void {
 		copy(output, outDir, [COMPLETE => true, '$appName.dll' => true, '$appName.pdb' => true, '$appName.runtimeconfig.json' => true]);
+		// The same size whichever output type it was built for, so copy never sees the change.
+		var exe = Path.join([output, '$appName.exe']);
+		if (FileSystem.exists(exe)) {
+			File.copy(exe, Path.join([outDir, '$appName.exe']));
+		}
 	}
 
 	static function copy(from:String, to:String, leave:Map<String, Bool>):Void {

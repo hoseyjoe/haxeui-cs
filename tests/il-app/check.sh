@@ -40,6 +40,35 @@ fi
 if command -v wsl.exe > /dev/null 2>&1; then
 	path=$(wsl.exe wslpath -a "$full" | tr -d '\000\r')
 	expect "on WSL" ready "$(wsl.exe -e sh -c "LD_LIBRARY_PATH=\$HOME/avalonia-libs \$HOME/.dotnet10/dotnet '$path/App.dll'" 2>&1)"
+
+	# Win.exe follows -debug on every build into the same folder: subsystem 2 is a window, 3 a
+	# console, read from the PE header.
+	win="$out/win/Win.exe"
+	subsystem() {
+		pe=$(od -An -tu4 -j60 -N4 "$win" | tr -d ' ')
+		od -An -tu2 -j$((pe + 92)) -N2 "$win" | tr -d ' '
+	}
+	"$HXC" tests/il-app/win.hxml > /dev/null 2>&1
+	expect "a release Win.exe is a window" 2 "$(subsystem)"
+	"$HXC" tests/il-app/win.hxml -debug > /dev/null 2>&1
+	expect "then a -debug Win.exe has a console" 3 "$(subsystem)"
+	"$HXC" tests/il-app/win.hxml > /dev/null 2>&1
+	expect "then a release Win.exe is a window again" 2 "$(subsystem)"
+fi
+
+# The library itself under a path with a space: the fetch's project and hxc's --net-libs live there.
+lib="$out/lib with space"
+mkdir -p "$lib"
+cp -r haxe templates "$lib/"
+spaced=$("$HXC" -cp tests/il-app -main App -lib haxeui-core -cp "$lib" -D no-compilation -D haxeui_cs \
+	--macro "haxe.ui.backend.cs.macros.Build.configure()" -D net-ver=45 -D haxeui_cs_headless -D dotnet \
+	--resource tests/il-app/note.txt@note --cs "$out/spaced" 2>&1)
+if [ $? -ne 0 ]; then
+	echo "FAILED: the build with the library under a path with a space:"
+	printf '%s\n' "$spaced" | tail -20
+	failed=1
+else
+	expect "the library under a path with a space" ready "$(dotnet "$out/spaced/App.dll" 2>&1)"
 fi
 
 rm -rf .cache/il
