@@ -10,6 +10,12 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-31-haxeui-cs-no-native-design.md`. Read it before any task. Its "What the probes showed" table is the source for how each C# shape is written.
 
+**Baselines (Task 1, tag `native-baseline`):**
+- Suite: 659 assertions, 659 passing, the same with `-D net-ver=45`.
+- Small apps: `exit-app`, `early-add`, `window-app` and `clipboard-app` exit 0. `keys-app` builds.
+- Gallery: `D:/_github/_haxeui-cs-baseline/gallery/run1` and `run2`, compared with `bench/pixdiff.py` there. Pages that differ between two runs: `page0` and `page4` (both themes), `page1`, `page5` and `tooltip` (light in that pair, so treat both themes as varying). Each differs only in a small box: under 300 pixels, apart from a 60x60 block at (184,160) on `page5` and `tooltip`. On these pages, a later difference outside those boxes is still a bug. `page2` and `page3` must match exactly.
+- Timing: **not measured yet, the phone was locked.** `sh D:/_github/_haxeui-cs-baseline/bench/run.sh baseline` times `EpubReader-native-baseline-bench.apk`'s build at any later point, so Task 19 runs it first. EpubReader at 06a6c27. The bench patches a copy of `MainView`, so EpubReader isn't edited, and runs as an app of its own, `...epubreader.csbench`, leaving the reader's position alone. Its first real run is at Task 19.
+
 ## Global Constraints
 
 - No `cs.Syntax`, `untyped` or `__cs__` in anything ported. No `#if dotnet` in ported code, unless Task 4's fallback is used, at the one site it names.
@@ -86,13 +92,13 @@ Tasks 7 to 23 each follow this. A task only adds what's particular to its file.
 **Files:**
 - Modify: `extraParams.hxml`, `docs/superpowers/plans/2026-10-31-haxeui-cs-no-native.md` (record results under the header)
 
-- [ ] **Step 1: Check the trees.** `git -C D:/_github/haxeui-cs status --short` is empty. If not, stop and tell Joe.
-- [ ] **Step 2: Run the suite.** `haxe tests/headless.hxml`. Record the pass count in this plan's header.
-- [ ] **Step 3: Add `-D net-ver=45` to `extraParams.hxml`** and rerun. Expected: the same count. If a difference appears, it comes from Haxe's std behaving differently at that version. Stop and tell Joe, since the design assumed this is harmless.
-- [ ] **Step 4: Small apps.** Run the `build.hxml` of `exit-app`, `early-add`, `window-app`, `keys-app` and `clipboard-app` under `tests/`, as the README describes, and note which pass today.
-- [ ] **Step 5: Gallery pictures.** Follow the README's gallery section with `tools/gallery/gallery.cs.hxml`, light and `--dark`. Run it twice, and record in this plan's header any page that differs between the two runs: those pages can't be compared pixel for pixel later. Copy `tools/gallery/out` to `D:/_github/_haxeui-cs-baseline/gallery`.
-- [ ] **Step 6: Keep a baseline APK and timings.** Tag `native-baseline` at this commit (a local tag, never pushed). Ask Joe to connect the phone, build EpubReader's Android app, and record tap-to-drawn for both chapter crossings of *At the Mountains of Madness* (111- and 71-page chapters), using on-device stage timers as the Android performance work did. Commit no temporary logging. Save the APK to `D:/_github/_haxeui-cs-baseline/`. Record the numbers in this plan's header. If the phone isn't available, record that and carry on until Task 19, which needs it.
-- [ ] **Step 7: Commit** `extraParams.hxml` and this plan.
+- [x] **Step 1: Check the trees.** `git -C D:/_github/haxeui-cs status --short` is empty. If not, stop and tell Joe.
+- [x] **Step 2: Run the suite.** `haxe tests/headless.hxml`. Record the pass count in this plan's header.
+- [x] **Step 3: Add `-D net-ver=45` to `extraParams.hxml`** and rerun. Expected: the same count. If a difference appears, it comes from Haxe's std behaving differently at that version. Stop and tell Joe, since the design assumed this is harmless.
+- [x] **Step 4: Small apps.** Run the `build.hxml` of `exit-app`, `early-add`, `window-app`, `keys-app` and `clipboard-app` under `tests/`, as the README describes, and note which pass today.
+- [x] **Step 5: Gallery pictures.** Follow the README's gallery section with `tools/gallery/gallery.cs.hxml`, light and `--dark`. Run it twice, and record in this plan's header any page that differs between the two runs: those pages can't be compared pixel for pixel later. Copy `tools/gallery/out` to `D:/_github/_haxeui-cs-baseline/gallery`.
+- [x] **Step 6: Keep a baseline APK and timings.** Tag `native-baseline` at this commit (a local tag, never pushed). Ask Joe to connect the phone, build EpubReader's Android app, and record tap-to-drawn for both chapter crossings of *At the Mountains of Madness* (111- and 71-page chapters), using on-device stage timers as the Android performance work did. Commit no temporary logging. Save the APK to `D:/_github/_haxeui-cs-baseline/`. Record the numbers in this plan's header. If the phone isn't available, record that and carry on until Task 19, which needs it.
+- [x] **Step 7: Commit** `extraParams.hxml` and this plan.
 
 ---
 
