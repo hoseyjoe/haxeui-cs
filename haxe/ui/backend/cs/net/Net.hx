@@ -76,6 +76,18 @@ extern class WebUtility {
 	@:overload static function HtmlDecode(value:String):String;
 }
 
+@:native("System.Runtime.InteropServices.OSPlatform")
+@:struct
+extern class OSPlatform {
+	static var OSX(default, never):OSPlatform;
+	static var Windows(default, never):OSPlatform;
+}
+
+@:native("System.Runtime.InteropServices.RuntimeInformation")
+extern class RuntimeInformation {
+	static function IsOSPlatform(platform:OSPlatform):Bool;
+}
+
 class Scope {
 	public static function run(x:IDisposable, body:() -> Void):Void {
 		try {

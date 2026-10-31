@@ -72,6 +72,7 @@ extern class Host {
 	static function RaiseBack():Bool;
 	static function RaisePause():Void;
 	static function SuppressNextClick():Void;
+	static function WakeEventsPump():Void;
 	static function CaptureWindow(path:String):Bool;
 	static function ListenScreen(kinds:Int, listener:IPanelListener):Void;
 	static function Exit(code:Int):Void;
@@ -89,22 +90,11 @@ extern class Host {
 	static var IsMaximized(default, null):Bool;
 }
 
-@:native("HaxeUICs.IPanelListener")
-extern interface IPanelListener {
-	function OnPointer(kind:Int, screenX:Float, screenY:Float, buttonDown:Bool, ctrl:Bool, shift:Bool, alt:Bool, wheelDelta:Float, nativeEvent:Dynamic):Void;
-	function OnKey(kind:Int, keyCode:Int, ctrl:Bool, shift:Bool, alt:Bool, nativeEvent:Dynamic):Void;
-}
+typedef IPanelListener = haxe.ui.backend.cs.native.impl.UIEvents.IPanelListener;
 
-@:native("HaxeUICs.NativeEvents")
-extern class NativeEvents {
-	static function Cancel(nativeEvent:Dynamic):Void;
-}
+typedef NativeEvents = haxe.ui.backend.cs.native.impl.UIEvents.NativeEvents;
 
-@:native("HaxeUICs.KeyCodes")
-extern class KeyCodes {
-	/** Whether these Avalonia KeyModifiers count as Ctrl: Cmd does on a Mac. **/
-	static function IsCtrl(modifiers:Int, isMac:Bool):Bool;
-}
+typedef KeyCodes = haxe.ui.backend.cs.native.impl.UIEvents.KeyCodes;
 
 @:native("HaxeUICs.IFileDialogListener")
 extern interface IFileDialogListener {

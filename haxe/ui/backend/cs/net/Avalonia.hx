@@ -55,6 +55,7 @@ extern class Matrix {
 @:native("Avalonia.Rect")
 @:struct
 extern class Rect {
+	@:overload function Contains(point:Point):Bool;
 	@:overload function new(x:Float, y:Float, width:Float, height:Float);
 	var X(default, never):Float;
 	var Y(default, never):Float;

@@ -78,8 +78,28 @@ extern class Layoutable extends Visual {
 	function remove_LayoutUpdated(value:EventHandler):Void;
 }
 
+@:native("Avalonia.Rendering.ICustomHitTest")
+extern interface ICustomHitTest {
+	function HitTest(point:Point):Bool;
+}
+
+@:native("Avalonia.Interactivity.Interactive")
+extern class Interactive extends Layoutable {
+	function AddHandler<T>(routedEvent:RoutedEvent_1<T>, handler:EventHandler_1<T>, routes:RoutingStrategies, handledEventsToo:Bool):Void;
+}
+
 @:native("Avalonia.Input.InputElement")
-extern class InputElement extends Layoutable implements IInputElement {
+extern class InputElement extends Interactive implements IInputElement {
+	static var PointerMovedEvent(default, never):RoutedEvent_1<PointerEventArgs>;
+	static var PointerEnteredEvent(default, never):RoutedEvent_1<PointerEventArgs>;
+	static var PointerExitedEvent(default, never):RoutedEvent_1<PointerEventArgs>;
+	static var PointerPressedEvent(default, never):RoutedEvent_1<PointerPressedEventArgs>;
+	static var PointerReleasedEvent(default, never):RoutedEvent_1<PointerReleasedEventArgs>;
+	static var PointerWheelChangedEvent(default, never):RoutedEvent_1<PointerWheelEventArgs>;
+	static var RightTappedEvent(default, never):RoutedEvent_1<TappedEventArgs>;
+	static var KeyDownEvent(default, never):RoutedEvent_1<KeyEventArgs>;
+	static var KeyUpEvent(default, never):RoutedEvent_1<KeyEventArgs>;
+	static var TextInputEvent(default, never):RoutedEvent_1<TextInputEventArgs>;
 	var IsEnabled:Bool;
 	var IsFocused(default, never):Bool;
 	var IsHitTestVisible:Bool;

@@ -3,7 +3,7 @@ package haxe.ui.backend.cs;
 import haxe.ui.events.KeyboardEvent;
 import haxe.ui.events.MouseEvent;
 
-/** HaxeUI event types against the native EventKind flags (native/UIEvents.cs). **/
+/** HaxeUI event types against the native EventKind flags (native/impl/UIEvents.hx). **/
 class EventMapper {
 	public static inline var MOVE = 1;
 	public static inline var OVER = 2;
