@@ -190,18 +190,7 @@ extern class UIGraphics {
 	var Layers(default, null):UILayers;
 }
 
-@:native("HaxeUICs.UILayers")
-extern class UILayers {
-	var Count(default, null):Int;
-
-	function AddGroup(parent:Int):Int;
-	function AddBitmap(parent:Int):Int;
-	function SetMatrix(layer:Int, a:Float, b:Float, c:Float, d:Float, e:Float, f:Float):Void;
-	function SetOpacity(layer:Int, opacity:Float):Void;
-	function SetVisible(layer:Int, visible:Bool):Void;
-	function SetPixels(layer:Int, rgba:haxe.io.BytesData, width:Int, height:Int, x:Float, y:Float, w:Float, h:Float):Void;
-	function Clear():Void;
-}
+typedef UILayers = haxe.ui.backend.cs.native.impl.UILayers;
 
 @:native("HaxeUICs.UIText")
 extern class UIText extends Control {

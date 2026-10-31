@@ -9,3 +9,4 @@
 --net-lib tests/bin/bin/Debug/net10.0/Avalonia.Base.dll
 --net-lib tests/bin/bin/Debug/net10.0/Avalonia.Controls.dll
 --net-lib tests/bin/bin/Debug/net10.0/SkiaSharp.dll
+--net-lib tests/bin/bin/Debug/net10.0/Avalonia.Skia.dll

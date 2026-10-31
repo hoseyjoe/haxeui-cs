@@ -5,6 +5,9 @@ import haxe.ui.backend.cs.native.impl.Deflate;
 import haxe.ui.backend.cs.native.impl.Inflate;
 import haxe.ui.backend.cs.native.impl.PickedFiles;
 import haxe.ui.backend.cs.native.impl.UIFonts;
+import haxe.ui.backend.cs.native.impl.UILayers;
+import haxe.ui.backend.cs.net.Avalonia;
+import haxe.ui.backend.cs.net.Media;
 
 /** The ported C# under hxc, with no HaxeUI around it. Exits non-zero on a failed check. */
 class Main {
@@ -64,11 +67,22 @@ class Main {
 		sys.FileSystem.deleteDirectory(dir);
 	}
 
+	static function testLayers() {
+		var draw:ICustomDrawOperation = new UILayersDraw(new NativeArray<UILayersNode>(0), new Rect(1, 2, 3, 4), null);
+		check("a draw's bounds through its interface", draw.Bounds.Right == 4);
+		var layers = new UILayers();
+		var group = layers.AddGroup(-1);
+		layers.AddBitmap(group);
+		layers.SetMatrix(group, 2, 0, 0, 2, 0, 0);
+		check("layers count", layers.Count == 2);
+	}
+
 	static function main() {
 		testCompress();
 		testColorMatrix();
 		testFonts();
 		testPickedFiles();
+		testLayers();
 		if (failed > 0) {
 			Sys.exit(1);
 		}

@@ -3,6 +3,7 @@ package haxe.ui.backend.cs.net;
 import cs.NativeArray;
 import cs.Out;
 import cs.system.IDisposable;
+import cs.system.IEquatable_1;
 import cs.system.IntPtr;
 import cs.system.Nullable_1;
 import cs.system.Uri;
@@ -118,6 +119,23 @@ extern class TextDecorationCollection extends AvaloniaList<TextDecoration> {
 extern class TextDecorations {
 	static var Underline(default, never):TextDecorationCollection;
 	static var Strikethrough(default, never):TextDecorationCollection;
+}
+
+@:native("Avalonia.Media.ImmediateDrawingContext")
+extern class ImmediateDrawingContext {
+	function TryGetFeature(type:cs.system.Type):cs.system.Object;
+}
+
+@:native("Avalonia.Rendering.SceneGraph.ICustomDrawOperation")
+extern interface ICustomDrawOperation extends IDisposable extends IEquatable_1<ICustomDrawOperation> {
+	@:property var Bounds(get, never):Rect;
+	function HitTest(p:Point):Bool;
+	function Render(context:ImmediateDrawingContext):Void;
+}
+
+@:native("Avalonia.Media.DrawingContext")
+extern class DrawingContext {
+	function Custom(custom:ICustomDrawOperation):Void;
 }
 
 @:native("Avalonia.Platform.AlphaFormat")
