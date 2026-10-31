@@ -29,7 +29,6 @@ class TestMain {
 	static function cases():Array<utest.Test> {
 		return [
 			new cases.TestBridge(),
-			new cases.TestHttp(),
 			new cases.TestCoreFixes(),
 			new cases.TestLayout(),
 			new cases.TestEventLoop(),

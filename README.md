@@ -218,8 +218,7 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
   per component) and the `UIPainter` that paints its style and canvas drawing, text (`UIText`), text
   input (`UITextInput`, a chrome-less TextBox), images, input routing, file dialogs and the headless
   driver. It knows nothing of HaxeUI. The same source compiles under both compilers, on hand-written
-  externs in `haxe/ui/backend/cs/net/`; `sh tests/check-no-native.sh` keeps inline C# out. Apps can
-  use those too: `net/Http.hx`, .NET's HTTP client, is there only for them.
+  externs in `haxe/ui/backend/cs/net/`; `sh tests/check-no-native.sh` keeps inline C# out.
 - `haxe/ui/backend/*Impl.hx` are the 20 files haxeui-core expects, on those classes
   (`haxe/ui/backend/cs/native/Native.hx`).
 - `haxe/ui/backend/cs/macros/Build.hx` turns Haxe's C# output into a .NET build
