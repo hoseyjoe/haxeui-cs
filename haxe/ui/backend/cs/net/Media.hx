@@ -106,7 +106,12 @@ extern class FontManager {
 extern class TextDecoration {}
 
 @:native("Avalonia.Collections.AvaloniaList`1")
-extern class AvaloniaList<T> {
+extern class AvaloniaList<T> implements ArrayAccess<T> {
+	var Count(default, never):Int;
+	function IndexOf(item:T):Int;
+	function Insert(index:Int, item:T):Void;
+	function Remove(item:T):Bool;
+	function RemoveAt(index:Int):Void;
 	function AddRange(items:IEnumerable_1<T>):Void;
 	function Add(item:T):Void;
 }
@@ -190,6 +195,7 @@ extern class BoxShadow {
 @:native("Avalonia.Media.BoxShadows")
 @:struct
 extern class BoxShadows {
+	var Count(default, never):Int;
 	@:overload function new();
 	@:overload function new(shadow:BoxShadow);
 	@:overload function new(shadow:BoxShadow, rest:NativeArray<BoxShadow>);
@@ -282,6 +288,72 @@ extern class EllipseGeometry extends Geometry {
 	@:overload function new(rect:Rect);
 }
 
+@:native("Avalonia.Media.SweepDirection")
+extern enum SweepDirection {
+	CounterClockwise;
+	Clockwise;
+}
+
+@:native("Avalonia.Media.StreamGeometryContext")
+extern class StreamGeometryContext {
+	function BeginFigure(startPoint:Point, isFilled:Bool):Void;
+	function LineTo(point:Point, isStroked:Bool):Void;
+	function ArcTo(point:Point, size:Size, rotationAngle:Float, isLargeArc:Bool, sweepDirection:SweepDirection, isStroked:Bool):Void;
+	function EndFigure(isClosed:Bool):Void;
+	function Dispose():Void;
+}
+
+@:native("Avalonia.Media.StreamGeometry")
+extern class StreamGeometry extends Geometry {
+	function new();
+	function Open():StreamGeometryContext;
+}
+
+@:native("Avalonia.Media.GeometryCombineMode")
+extern enum GeometryCombineMode {
+	Union;
+	Intersect;
+	Xor;
+	Exclude;
+}
+
+@:native("Avalonia.Media.CombinedGeometry")
+extern class CombinedGeometry extends Geometry {
+	@:overload function new(combineMode:GeometryCombineMode, geometry1:Geometry, geometry2:Geometry);
+}
+
+@:native("Avalonia.Media.ITransform")
+extern interface ITransform {}
+
+@:native("Avalonia.Media.Transform")
+extern class Transform implements ITransform {}
+
+@:native("Avalonia.Media.RotateTransform")
+extern class RotateTransform extends Transform {
+	@:overload function new(angle:Float);
+	@:overload function new(angle:Float, centerX:Float, centerY:Float);
+}
+
+@:native("Avalonia.Media.ScaleTransform")
+extern class ScaleTransform extends Transform {
+	@:overload function new(scaleX:Float, scaleY:Float);
+}
+
+@:native("Avalonia.Media.Transforms")
+extern class Transforms extends AvaloniaList<Transform> {}
+
+@:native("Avalonia.Media.TransformGroup")
+extern class TransformGroup extends Transform {
+	function new();
+	var Children:Transforms;
+}
+
+@:native("Avalonia.Media.BlurEffect")
+extern class BlurEffect implements IEffect {
+	function new();
+	var Radius:Float;
+}
+
 @:native("Avalonia.Media.PathSegment")
 extern class PathSegment {}
 
@@ -351,6 +423,9 @@ extern interface ICustomDrawOperation extends IDisposable extends IEquatable_1<I
 extern class DrawingContext {
 	function Custom(custom:ICustomDrawOperation):Void;
 	@:overload function PushClip(clip:Rect):PushedState;
+	function PushGeometryClip(clip:Geometry):PushedState;
+	@:overload function DrawRectangle(brush:IBrush, pen:IPen, rect:RoundedRect, boxShadows:BoxShadows):Void;
+	function FillRectangle(brush:IBrush, rect:Rect, cornerRadius:Single):Void;
 	function DrawLine(pen:IPen, p1:Point, p2:Point):Void;
 	@:overload function DrawImage(source:IImage, sourceRect:Rect, destRect:Rect):Void;
 	@:overload function DrawImage(source:IImage, rect:Rect):Void;

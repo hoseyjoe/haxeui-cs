@@ -52,9 +52,17 @@ extern class Matrix {
 	@:overload function Equals(other:Matrix):Bool;
 }
 
+@:native("Avalonia.RoundedRect")
+@:struct
+extern class RoundedRect {
+	@:overload function new(rect:Rect, topLeft:Float, topRight:Float, bottomRight:Float, bottomLeft:Float);
+}
+
 @:native("Avalonia.Rect")
 @:struct
 extern class Rect {
+	var Size(default, never):Size;
+	@:overload function Deflate(thickness:Float):Rect;
 	@:overload function Contains(point:Point):Bool;
 	@:overload function new(x:Float, y:Float, width:Float, height:Float);
 	var X(default, never):Float;

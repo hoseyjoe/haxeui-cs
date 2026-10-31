@@ -38,6 +38,9 @@ extern class Visual extends AvaloniaObject {
 	private function get_StyleKeyOverride():Type;
 	var Bounds(default, never):Rect;
 	var IsVisible:Bool;
+	var Opacity:Float;
+	var RenderTransform:ITransform;
+	var RenderTransformOrigin:RelativePoint;
 	var Effect:IEffect;
 	var Clip:Geometry;
 	function InvalidateVisual():Void;
@@ -100,6 +103,7 @@ extern class InputElement extends Interactive implements IInputElement {
 	static var KeyDownEvent(default, never):RoutedEvent_1<KeyEventArgs>;
 	static var KeyUpEvent(default, never):RoutedEvent_1<KeyEventArgs>;
 	static var TextInputEvent(default, never):RoutedEvent_1<TextInputEventArgs>;
+	var Cursor:Cursor;
 	var IsEnabled:Bool;
 	var IsFocused(default, never):Bool;
 	var IsHitTestVisible:Bool;
@@ -191,8 +195,17 @@ extern class ScrollViewer extends TemplatedControl {
 	function remove_ScrollChanged(value:EventHandler_1<ScrollChangedEventArgs>):Void;
 }
 
+@:native("Avalonia.Controls.Controls")
+extern class ControlList extends AvaloniaList<Control> {}
+
+@:native("Avalonia.Controls.Panel")
+extern class Panel extends Control {
+	var Children(default, never):ControlList;
+}
+
 @:native("Avalonia.Controls.Canvas")
-extern class Canvas {
+extern class Canvas extends Panel {
+	function new();
 	static var LeftProperty(default, never):AvaloniaProperty;
 	static var TopProperty(default, never):AvaloniaProperty;
 	static function SetLeft(element:AvaloniaObject, value:Float):Void;

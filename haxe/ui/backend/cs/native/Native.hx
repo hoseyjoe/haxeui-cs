@@ -112,44 +112,7 @@ typedef PickedFiles = haxe.ui.backend.cs.native.impl.PickedFiles;
 
 typedef Control = haxe.ui.backend.cs.net.Controls.Control;
 
-@:native("HaxeUICs.UIPanel")
-extern class UIPanel extends Control {
-	function new():Void;
-
-	function LinksChanged():Void;
-
-	var Left(default, null):Float;
-	var Top(default, null):Float;
-	var W(default, null):Float;
-	var H(default, null):Float;
-	var ClipEnabled(default, null):Bool;
-	var ClipLeft(default, null):Float;
-	var ClipTop(default, null):Float;
-	var ClipWidth(default, null):Float;
-	var ClipHeight(default, null):Float;
-	var ChildCount(default, null):Int;
-	var CursorName(default, null):String;
-
-	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
-	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
-	function SetVisible(visible:Bool):Void;
-	function InsertChild(child:Control, index:Int):Void;
-	function RemoveChild(child:Control):Void;
-	function MoveChild(child:Control, index:Int):Void;
-	function IndexOfChild(child:Control):Int;
-	function AddContent(content:Control):Void;
-	function ApplyStyle(style:UIStyle):Void;
-	function Listen(kinds:Int, listener:IPanelListener):Void;
-	function SetGraphics(graphics:UIGraphics):Void;
-	function SetCursorSuppressed(suppressed:Bool):Void;
-	function SetColorMatrix(matrix:cs.NativeArray<Single>):Void;
-	function SetRotation(degrees:Float):Void;
-	/** Drawn scaled about its top-left (layout and hit box untouched); composes with SetRotation. **/
-	function SetScale(scaleX:Float, scaleY:Float):Void;
-	/** A fade multiplied into the style's opacity. **/
-	function SetAlpha(alpha:Float):Void;
-	function SetClipInset(top:Float, right:Float, bottom:Float, left:Float):Void;
-}
+typedef UIPanel = haxe.ui.backend.cs.native.impl.UIPanel;
 
 typedef UIGraphics = haxe.ui.backend.cs.native.impl.UIGraphics;
 
