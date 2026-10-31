@@ -240,9 +240,9 @@ class Host {
 	 * What holds Root: the window on the desktop, the activity's view on Android (null until
 	 * Root is shown). The clipboard and the file pickers go through it.
 	 */
-	@:property public static var TopLevel(get, never):TopLevel;
+	public static var TopLevel(get, never):TopLevel;
 
-	static function get_TopLevel():TopLevel {
+	public static function get_TopLevel():TopLevel {
 		if (Window != null) {
 			return Window;
 		}

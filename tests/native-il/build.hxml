@@ -6,7 +6,14 @@
 -D dotnet
 -D unsafe
 -D net-ver=45
+-D haxeui_cs_headless
 --net-lib tests/bin/bin/Debug/net10.0/Avalonia.Base.dll
 --net-lib tests/bin/bin/Debug/net10.0/Avalonia.Controls.dll
 --net-lib tests/bin/bin/Debug/net10.0/SkiaSharp.dll
 --net-lib tests/bin/bin/Debug/net10.0/Avalonia.Skia.dll
+--net-lib tests/bin/bin/Debug/net10.0/Avalonia.Headless.dll
+--net-lib tests/bin/bin/Debug/net10.0/Avalonia.Themes.Simple.dll
+--net-lib tests/bin/bin/Debug/net10.0/Avalonia.Desktop.dll
+--net-lib tests/bin/bin/Debug/net10.0/Svg.Skia.dll
+--net-lib tests/bin/bin/Debug/net10.0/Svg.Custom.dll
+--net-lib tests/bin/bin/Debug/net10.0/ShimSkiaSharp.dll

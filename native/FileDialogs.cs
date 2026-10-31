@@ -33,7 +33,7 @@ namespace HaxeUICs
                     Answer(TestResponse, listener);
                     return;
                 }
-                var storage = Host.TopLevel?.StorageProvider;
+                var storage = Host.get_TopLevel()?.StorageProvider;
                 if (storage == null || !storage.CanOpen)
                 {
                     Cancel(listener);
@@ -78,7 +78,7 @@ namespace HaxeUICs
                 Cancel(listener);
                 return;
 #endif
-                var storage = Host.TopLevel?.StorageProvider;
+                var storage = Host.get_TopLevel()?.StorageProvider;
                 if (storage == null || !storage.CanSave)
                 {
                     Cancel(listener);
@@ -115,7 +115,7 @@ namespace HaxeUICs
                 Cancel(listener);
                 return;
 #endif
-                var storage = Host.TopLevel?.StorageProvider;
+                var storage = Host.get_TopLevel()?.StorageProvider;
                 if (storage == null || !storage.CanPickFolder)
                 {
                     Cancel(listener);

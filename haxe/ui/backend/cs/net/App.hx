@@ -115,6 +115,11 @@ extern class AvaloniaHeadlessPlatformOptions {
 extern class AvaloniaHeadlessPlatformExtensions {
 	static function UseHeadless(builder:AppBuilder, options:AvaloniaHeadlessPlatformOptions):AppBuilder;
 }
+
+@:native("Avalonia.Headless.HeadlessWindowExtensions")
+extern class HeadlessWindowExtensions {
+	static function CaptureRenderedFrame(topLevel:TopLevel):haxe.ui.backend.cs.net.Media.WriteableBitmap;
+}
 #end
 
 #if haxeui_cs_android
