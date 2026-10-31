@@ -54,6 +54,9 @@ class Build {
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeUncompress.build())", "haxe.zip.Uncompress");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeCompress.build())", "haxe.zip.Compress");
+		// A class only C# calls must still be generated, as HostApplication is for MainActivity.cs.
+		Compiler.include("haxe.ui.backend.cs.native");
+		Compiler.keep("haxe.ui.backend.cs.native");
 		if (Context.defined("haxeui_cs_android")) TouchPatches.init();
 		if (Context.defined("dotnet")) {
 			configureIl();

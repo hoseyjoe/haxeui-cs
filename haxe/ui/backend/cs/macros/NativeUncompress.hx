@@ -4,7 +4,7 @@ package haxe.ui.backend.cs.macros;
 import haxe.macro.Expr;
 
 /**
- * haxe.zip.Uncompress for C#, on .NET's System.IO.Compression (native/Inflate.cs). Haxe 4.3's C#
+ * haxe.zip.Uncompress for C#, on .NET's System.IO.Compression (native/impl/Inflate.hx). Haxe 4.3's C#
  * std has none (its constructor throws "Not implemented for this platform"), so
  * `haxe.zip.Reader.unzip`, and every zip, EPUB or PNG reader built on it, failed on the first
  * compressed entry.

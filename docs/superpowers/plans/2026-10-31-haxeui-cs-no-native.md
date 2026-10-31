@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-31-haxeui-cs-no-native-design.md`. Read it before any task. Its "What the probes showed" table is the source for how each C# shape is written.
 
+**Layout change (Task 7):** ported classes live in `haxe/ui/backend/cs/native/impl/X.hx`, package `haxe.ui.backend.cs.native.impl`, wherever this plan says `native/X.hx`. A type declared in `Native.hx` has the dotted name `haxe.ui.backend.cs.native.X`, which Haxe 4.3.7 refuses beside a module of that name. Haxe also has no `finally`, so the recipe's `using` is `Scope.get` or `Scope.run` in `net/Net.hx`, or an explicit catch-and-dispose where a closure can't be used (the render thread). `System.Math` resolves against hxcs's .NET 4.5 library, so a member newer than that (`Clamp`) is written by hand.
+
 **Baselines (Task 1, tag `native-baseline`):**
 - Suite: 659 assertions, 659 passing, the same with `-D net-ver=45`.
 - Small apps: `exit-app`, `early-add`, `window-app` and `clipboard-app` exit 0. `keys-app` builds.

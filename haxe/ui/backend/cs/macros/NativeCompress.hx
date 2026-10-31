@@ -4,7 +4,7 @@ package haxe.ui.backend.cs.macros;
 import haxe.macro.Expr;
 
 /**
- * haxe.zip.Compress for C#, on .NET's System.IO.Compression (native/Deflate.cs): the twin of
+ * haxe.zip.Compress for C#, on .NET's System.IO.Compression (native/impl/Deflate.hx): the twin of
  * NativeUncompress. Haxe 4.3's C# std has none (it throws "Not implemented for this platform"), so
  * nothing that writes compressed data could run: a KDBX database, a zip, a PNG.
  *

@@ -242,15 +242,9 @@ extern class UIFonts {
 	static function FromFile(path:String):String;
 }
 
-@:native("HaxeUICs.Inflate")
-extern class Inflate {
-	static function Run(data:haxe.io.BytesData, offset:Int, length:Int, windowBits:Int):haxe.io.BytesData;
-}
+typedef Inflate = haxe.ui.backend.cs.native.impl.Inflate;
 
-@:native("HaxeUICs.Deflate")
-extern class Deflate {
-	static function Run(data:haxe.io.BytesData, offset:Int, length:Int, level:Int):haxe.io.BytesData;
-}
+typedef Deflate = haxe.ui.backend.cs.native.impl.Deflate;
 
 @:native("HaxeUICs.UIImage")
 extern class UIImage {
