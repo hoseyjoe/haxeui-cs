@@ -207,6 +207,20 @@ extern class PushedState {
 	function Dispose():Void;
 }
 
+@:native("Avalonia.Media.Geometry")
+extern class Geometry {}
+
+@:native("Avalonia.Media.RectangleGeometry")
+extern class RectangleGeometry extends Geometry {
+	@:overload function new(rect:Rect);
+}
+
+@:native("Avalonia.Media.Imaging.BitmapInterpolationMode")
+extern enum BitmapInterpolationMode {
+	Unspecified;
+	None;
+}
+
 @:native("Avalonia.Media.ImmediateDrawingContext")
 extern class ImmediateDrawingContext {
 	function TryGetFeature(type:cs.system.Type):cs.system.Object;
@@ -224,6 +238,7 @@ extern class DrawingContext {
 	function Custom(custom:ICustomDrawOperation):Void;
 	@:overload function PushClip(clip:Rect):PushedState;
 	function DrawLine(pen:IPen, p1:Point, p2:Point):Void;
+	@:overload function DrawImage(source:IImage, sourceRect:Rect, destRect:Rect):Void;
 }
 
 @:native("Avalonia.Platform.AlphaFormat")
@@ -245,8 +260,12 @@ extern interface ILockedFramebuffer extends IDisposable {
 	var RowBytes(default, never):Int;
 }
 
+@:native("Avalonia.Media.IImage")
+extern interface IImage {}
+
 @:native("Avalonia.Media.Imaging.Bitmap")
-extern class Bitmap {
+extern class Bitmap implements IImage {
+	@:overload function new(stream:Stream);
 	var PixelSize(default, never):PixelSize;
 	var Dpi(default, never):Vector;
 	@:overload function CopyPixels(buffer:ILockedFramebuffer):Void;

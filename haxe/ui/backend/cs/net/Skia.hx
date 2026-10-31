@@ -4,16 +4,19 @@ import cs.NativeArray;
 import cs.Ref;
 import cs.system.IDisposable;
 import cs.types.UInt8;
+import haxe.ui.backend.cs.net.Net;
 
 /** Externs for SkiaSharp and Avalonia's lease of its canvas, written by hand as hxc binds them. */
 @:native("SkiaSharp.SKColorType")
 extern enum SKColorType {
 	Rgba8888;
+	Bgra8888;
 }
 
 @:native("SkiaSharp.SKAlphaType")
 extern enum SKAlphaType {
 	Unpremul;
+	Premul;
 }
 
 @:native("SkiaSharp.SKFilterMode")
@@ -46,6 +49,10 @@ extern class SKImageInfo {
 @:struct
 extern class SKRect {
 	function new(left:Single, top:Single, right:Single, bottom:Single);
+	var Left(default, never):Single;
+	var Top(default, never):Single;
+	var Width(default, never):Single;
+	var Height(default, never):Single;
 }
 
 @:native("SkiaSharp.SKMatrix")
@@ -87,8 +94,41 @@ extern class SKPaint {
 	function Dispose():Void;
 }
 
+@:native("SkiaSharp.SKColors")
+@:struct
+extern class SKColors {
+	static var Transparent(default, never):SKColor;
+}
+
+@:native("SkiaSharp.SKPicture")
+extern class SKPicture {
+	var CullRect(default, never):SKRect;
+}
+
+@:native("SkiaSharp.SKBitmap")
+extern class SKBitmap implements IDisposable {
+	@:overload function new(info:SKImageInfo);
+	var Bytes(default, never):NativeArray<UInt8>;
+	var RowBytes(default, never):Int;
+	function Dispose():Void;
+}
+
+@:native("Svg.Skia.SKSvg")
+extern class SKSvg implements IDisposable {
+	function new();
+	var Picture(default, never):SKPicture;
+	@:overload function Load(stream:Stream):SKPicture;
+	function Dispose():Void;
+}
+
 @:native("SkiaSharp.SKCanvas")
-extern class SKCanvas {
+extern class SKCanvas implements IDisposable {
+	@:overload function new(bitmap:SKBitmap);
+	@:overload function Clear(color:SKColor):Void;
+	@:overload function Scale(sx:Single, sy:Single):Void;
+	@:overload function Translate(dx:Single, dy:Single):Void;
+	@:overload function DrawPicture(picture:SKPicture, paint:SKPaint):Void;
+	function Dispose():Void;
 	function Save():Int;
 	@:overload function SaveLayer(limit:SKRect, paint:SKPaint):Int;
 	function RestoreToCount(count:Int):Void;

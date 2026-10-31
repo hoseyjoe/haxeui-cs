@@ -32,6 +32,7 @@ extern class Visual extends AvaloniaObject {
 	var Bounds(default, never):Rect;
 	var IsVisible:Bool;
 	var Effect:IEffect;
+	var Clip:Geometry;
 	function InvalidateVisual():Void;
 	function Render(context:DrawingContext):Void;
 }
@@ -39,6 +40,12 @@ extern class Visual extends AvaloniaObject {
 @:native("Avalonia.VisualExtensions")
 extern class VisualExtensions {
 	static function TranslatePoint(visual:Visual, point:Point, relativeTo:Visual):cs.system.Nullable_1<Point>;
+	static function TransformToVisual(from:Visual, to:Visual):cs.system.Nullable_1<Matrix>;
+}
+
+@:native("Avalonia.VisualTree.VisualExtensions")
+extern class VisualTreeExtensions {
+	static function GetVisualDescendants(visual:Visual):cs.system.collections.generic.IEnumerable_1<Visual>;
 }
 
 @:native("Avalonia.Layout.VerticalAlignment")
@@ -79,7 +86,15 @@ extern class InputElement extends Layoutable implements IInputElement {
 
 /** Avalonia's base control. **/
 @:native("Avalonia.Controls.Control")
-extern class Control extends InputElement {}
+extern class Control extends InputElement {
+	function new();
+}
+
+@:native("Avalonia.Media.RenderOptions")
+@:struct
+extern class RenderOptions {
+	static function SetBitmapInterpolationMode(visual:Visual, value:BitmapInterpolationMode):Void;
+}
 
 @:native("Avalonia.Controls.INameScope")
 extern interface INameScope {
@@ -155,6 +170,7 @@ extern class Canvas {
 extern class TopLevel extends TemplatedControl {
 	static function GetTopLevel(visual:Visual):TopLevel;
 	var FocusManager(default, never):IFocusManager;
+	var RenderScaling(default, never):Float;
 }
 
 @:native("Avalonia.Controls.Presenters.TextPresenter")

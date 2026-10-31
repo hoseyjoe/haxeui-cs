@@ -32,6 +32,7 @@ extern class Stream implements IDisposable {
 @:native("System.IO.MemoryStream")
 extern class MemoryStream extends Stream {
 	@:overload function new();
+	@:overload function new(buffer:NativeArray<UInt8>);
 	@:overload function new(buffer:NativeArray<UInt8>, writable:Bool);
 	@:overload function new(buffer:NativeArray<UInt8>, index:Int, count:Int, writable:Bool);
 	function ToArray():NativeArray<UInt8>;

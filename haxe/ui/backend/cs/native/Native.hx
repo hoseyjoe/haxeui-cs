@@ -224,31 +224,9 @@ typedef Inflate = haxe.ui.backend.cs.native.impl.Inflate;
 
 typedef Deflate = haxe.ui.backend.cs.native.impl.Deflate;
 
-@:native("HaxeUICs.UIImage")
-extern class UIImage {
-	var Width(default, null):Int;
-	var Height(default, null):Int;
-	static function SetPalette(from:cs.NativeArray<Int>, to:cs.NativeArray<Int>):Void;
+typedef UIImage = haxe.ui.backend.cs.native.impl.UIImage;
 
-	static function FromBytes(data:haxe.io.BytesData):UIImage;
-	static function DeviceScale(visual:Control):Float;
-
-	var CachedSizes(default, null):Int;
-	function BitmapFor(pixelWidth:Float, pixelHeight:Float):Dynamic;
-}
-
-@:native("HaxeUICs.UIImageView")
-extern class UIImageView extends Control {
-	function new():Void;
-
-	var W(default, null):Float;
-	var H(default, null):Float;
-
-	function SetImage(image:UIImage):Void;
-	function SetPixelated(pixelated:Bool):Void;
-	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
-	function SetClip(enabled:Bool, left:Float, top:Float, width:Float, height:Float):Void;
-}
+typedef UIImageView = haxe.ui.backend.cs.native.impl.UIImage.UIImageView;
 
 typedef ITextInputListener = haxe.ui.backend.cs.native.impl.UITextInput.ITextInputListener;
 
