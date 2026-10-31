@@ -37,16 +37,12 @@ extern interface IPauseListener {
 	function OnPause():Void;
 }
 
-@:native("HaxeUICs.UIClipboard")
-extern class UIClipboard {
-	static function SetText(text:String, sensitive:Bool):Bool;
-	static function GetText():String;
-	static function Clear():Bool;
-}
+typedef UIClipboard = haxe.ui.backend.cs.native.impl.UIClipboard;
 
 @:native("HaxeUICs.Host")
 extern class Host {
 	static var Window(default, null):Dynamic;
+	static var TopLevel(default, null):haxe.ui.backend.cs.net.Controls.TopLevel;
 	static var Root(default, null):UIPanel;
 	static var Title:String;
 	static var ClientWidth(default, null):Float;

@@ -76,6 +76,29 @@ extern class WebUtility {
 	@:overload static function HtmlDecode(value:String):String;
 }
 
+@:native("System.Threading.Tasks.TaskScheduler")
+extern class TaskScheduler {
+	static var Default(default, never):TaskScheduler;
+}
+
+@:native("System.Threading.Tasks.TaskStatus")
+extern enum TaskStatus {
+	RanToCompletion;
+}
+
+@:native("System.Threading.Tasks.Task")
+extern class Task {
+	@:overload static function Delay(milliseconds:Int):Task;
+	var IsCompleted(default, never):Bool;
+	var Status(default, never):TaskStatus;
+	@:overload function ContinueWith(action:cs.system.Action_1<Task>, scheduler:TaskScheduler):Task;
+}
+
+@:native("System.Threading.Tasks.Task`1")
+extern class Task_1<T> extends Task {
+	var Result(default, never):T;
+}
+
 @:native("System.Runtime.InteropServices.OSPlatform")
 @:struct
 extern class OSPlatform {

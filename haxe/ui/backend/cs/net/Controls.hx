@@ -202,6 +202,7 @@ extern class Canvas {
 @:native("Avalonia.Controls.TopLevel")
 extern class TopLevel extends TemplatedControl {
 	static function GetTopLevel(visual:Visual):TopLevel;
+	var Clipboard(default, never):haxe.ui.backend.cs.net.Clipboard.IClipboard;
 	var FocusManager(default, never):IFocusManager;
 	var RenderScaling(default, never):Float;
 }
