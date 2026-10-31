@@ -129,7 +129,7 @@ All four are in hxc.
 | `UIEvents` | The largest user of routed handlers, about 12 `AddHandler` calls. `EventRouter` and `ClickState` stay internal in spirit. |
 | `UIFonts` | `Dictionary.TryGetValue`, and `LoadedFonts` needs hxc fix 1, and calls the protected `TryAddGlyphTypeface` with `out`. |
 | `UIGraphics`, `UIImage`, `UIStyle` | Plain drawing calls through externs. |
-| `UILayers` | `Draw` runs on the render thread. It must stay free of `Dynamic`, `trace` and anything that lazily initialises Haxe state. `using` becomes `try`/`finally` with `Dispose`. `TryGetFeature<T>()` has no argument to infer `T` from, so it needs a non-generic route or the reflection fallback. |
+| `UILayers` | `Draw` runs on the render thread. It must stay free of `Dynamic`, `trace` and anything that lazily initialises Haxe state. `using` becomes `try`/`finally` with `Dispose`. `TryGetFeature<T>()` becomes the public `TryGetFeature(Type)`, and the span overload of `SKImage.FromPixelCopy` becomes its `byte[]` one. |
 | `UIPanel` | Implements `ICustomHitTest`, and `Rect?` becomes a flag or a Haxe-side null, staying inside the class. |
 | `UIText`, `UITextInput` | Protected overrides, and `UITextInput` needs hxc fix 1. |
 
@@ -243,4 +243,4 @@ else moves.
 - The exact extern package name and file layout, and whether `Native.hx` stays as re-exports.
 - Whether a thread or continuations replace the test server's `await`s.
 - The cache location for the throwaway project's output, and how it handles the app's name.
-- How `FailingStream` and `TryGetFeature<T>` are finally solved, within the anti-goals.
+- How `FailingStream` is finally solved, within the anti-goals.
