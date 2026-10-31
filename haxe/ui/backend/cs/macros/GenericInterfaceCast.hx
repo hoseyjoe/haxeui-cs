@@ -50,7 +50,7 @@ class GenericInterfaceCast {
 
 	/** Puts right every gathered forwarder in the `.cs` under `dir`. **/
 	public static function fix(dir:String):Void {
-		// no .cs written: hxc's --cs only type-checks, or writes IL with -D dotnet
+		// no .cs written: hxc's --cs only type-checks
 		if (pairs.length == 0 || !FileSystem.exists(dir)) return;
 		var wanted = new Map<String, Array<{iface:String, cls:String, params:Array<String>}>>();
 		for (p in pairs) {

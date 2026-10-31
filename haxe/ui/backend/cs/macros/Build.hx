@@ -35,6 +35,8 @@ import sys.io.File;
  * the app needs beside haxeui-cs's own (a SQLite provider, say), and
  * `--macro haxe.ui.backend.cs.macros.Build.addNative("path")` the app's own C# (a `.cs` file, or
  * every `.cs` in a folder), compiled with haxeui-cs's `native/*.cs`.
+ *
+ * With hxc's `-D dotnet` none of this runs: see configureIl.
  */
 class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
@@ -51,8 +53,29 @@ class Build {
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeUncompress.build())", "haxe.zip.Uncompress");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeCompress.build())", "haxe.zip.Compress");
 		if (Context.defined("haxeui_cs_android")) TouchPatches.init();
+		if (Context.defined("dotnet")) {
+			configureIl();
+			return;
+		}
 		Context.onGenerate(GenericInterfaceCast.gather);
 		Context.onAfterGenerate(afterGenerate);
+	}
+
+	/**
+	 * hxc's `-D dotnet` writes the app's .dll itself, with no C# source, .csproj or `dotnet build`, so
+	 * nothing here runs after generating. `main` is marked with `[STAThread]` (see markEntryPointSta)
+	 * and hxc carries that to the entry point it writes. `native/*.cs` and the app's own C# have to
+	 * be built beforehand and given to hxc with `--net-lib`.
+	 */
+	static function configureIl():Void {
+		for (define in ["haxeui_cs_android", "haxeui_cs_publish", "haxeui_cs_run"]) {
+			if (Context.defined(define)) {
+				Context.fatalError('haxeui-cs: -D $define needs the C# build, not -D dotnet', Context.currentPos());
+			}
+		}
+		var name = mainClassName();
+		var main = Compiler.getConfiguration().mainClass;
+		Compiler.addMetadata("@:meta(System.STAThread())", main.pack.concat([name]).join("."), "main", true);
 	}
 
 	/** A NuGet package the app's own code needs, written into the generated .csproj. **/

@@ -59,6 +59,13 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-D haxeui_cs_android` | an Android app instead (see Android) |
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
+hxc's `-D dotnet` writes the `.dll` itself, so none of the project steps run: no `.csproj`, no
+`dotnet build`, and `addPackage` and `addNative` do nothing. `haxeui_cs_run`, `haxeui_cs_publish` and
+`haxeui_cs_android` are refused. `native/*.cs` has to be built first into an assembly (with
+`HAXEUI_CS_HEADLESS` defined for a headless app) and given to hxc with `--net-lib`, with
+`Avalonia.Base.dll` and `Avalonia.Controls.dll` and `-D unsafe`, and it and its dependencies copied
+beside the program's `.dll` to run it.
+
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
 `haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white
 until then); a dark theme sets its own, as an html5 app sets the page's background.
@@ -219,7 +226,8 @@ python -I tools/gallery/compare.py                      # needs Pillow and Micro
 
 - The generated `Main` is marked `[STAThread]`, as every Avalonia app's is: Windows' OLE (the
   clipboard, drag and drop) works only on a single-threaded apartment, and Haxe's entry point
-  leaves the main thread multi-threaded.
+  leaves the main thread multi-threaded. Under hxc's `-D dotnet`, `main` is marked instead, and hxc
+  carries that to the entry point it writes.
 - `callLater` runs with the next frame (about 60 a second), as html5's `requestAnimationFrame`.
   Haxe's own event loop (`haxe.Timer`, `haxe.MainLoop`) runs when it next needs to and straight
   after any frame, input or timer; an idle app is woken about four times a second, not a hundred.
