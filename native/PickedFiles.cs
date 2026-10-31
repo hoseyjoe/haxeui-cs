@@ -5,8 +5,8 @@ namespace HaxeUICs
     /// <summary>
     /// A document picked through Android's file picker, copied into the app's private storage so it
     /// has a real path: the picker hands back a content URI that sys.io.File cannot open, and that
-    /// may not outlive the pick. The rules are heaps-android's (MainActivity.kt importDocument), so a
-    /// book picked under either backend lands under the same name.
+    /// may not outlive the pick. The rules are heaps-android's (PickedFiles.kt), so a book picked
+    /// under either backend lands under the same name.
     /// </summary>
     public static class PickedFiles
     {
