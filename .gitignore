@@ -6,6 +6,10 @@ bin/
 obj/
 out/
 
+# hxc builds' fetched libraries, and the check's app
+.cache/
+tests/il-app/bin with space/
+
 # the suite's hxc build
 tests/bin-il/
 

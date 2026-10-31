@@ -1,4 +1,4 @@
-# The backend's test suite under hxc's -D dotnet, against the prebuilt C#: `sh tests/run-il.sh`.
+# The backend's test suite under hxc's -D dotnet: `sh tests/run-il.sh`.
 -cp tests
 -main TestMain
 -lib utest
@@ -17,10 +17,6 @@
 --macro include('haxe.ui.components')
 --macro include('haxe.ui.containers', true)
 -D dotnet
--D unsafe
 -D dll-name=TestMain
---net-lib tests/il-native/bin/Debug/net10.0/HaxeUICs.dll
---net-lib tests/il-native/bin/Debug/net10.0/Avalonia.Base.dll
---net-lib tests/il-native/bin/Debug/net10.0/Avalonia.Controls.dll
 --cs tests/bin-il
 -w -WAll

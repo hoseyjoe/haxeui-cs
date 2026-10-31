@@ -44,6 +44,7 @@ class Build {
 	static inline var AVALONIA_VERSION = "12.1.4";
 	static inline var SVG_SKIA_VERSION = "5.1.1";
 
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static var appPackages:Map<String, String> = [];
 	static var appNatives:Array<String> = [];
 
@@ -72,8 +73,9 @@ class Build {
 	/**
 	 * hxc's `-D dotnet` writes the app's .dll itself, with no C# source, .csproj or `dotnet build`, so
 	 * nothing here runs after generating. `main` is marked with `[STAThread]` (see markEntryPointSta)
-	 * and hxc carries that to the entry point it writes. `native/*.cs` and the app's own C# have to
-	 * be built beforehand and given to hxc with `--net-lib`.
+	 * and hxc carries that to the entry point it writes. IlLibraries fetches Avalonia and puts it
+	 * beside the app. The app is `<Main>.dll` unless `-D dll-name` says otherwise, as a C# build's is.
+	 * The app's own C#, if any, has to be built beforehand and given to hxc with `--net-lib`.
 	 */
 	static function configureIl():Void {
 		for (define in ["haxeui_cs_android", "haxeui_cs_publish", "haxeui_cs_run"]) {
@@ -84,11 +86,23 @@ class Build {
 		var name = mainClassName();
 		var main = Compiler.getConfiguration().mainClass;
 		Compiler.addMetadata("@:meta(System.STAThread())", main.pack.concat([name]).join("."), "main", true);
+		Compiler.define("unsafe");
+		var dll = Context.definedValue("dll-name");
+		if (dll == null) {
+			dll = name;
+			Compiler.define("dll-name", dll);
+		}
+		IlLibraries.prepare(dll, Context.defined("haxeui_cs_headless"));
+		if (Compiler.getConfiguration().args.indexOf("--no-output") < 0) {
+			Context.onAfterGenerate(() -> IlLibraries.install(Path.normalize(FileSystem.absolutePath(Compiler.getOutput()))));
+		}
 	}
 
 	/** A NuGet package the app's own code needs, written into the generated .csproj. **/
 	public static function addPackage(name:String, version:String):Void {
 		appPackages.set(name, version);
+		// `-lib haxeui-cs` usually comes first, so hxc's libraries are already prepared.
+		if (Context.defined("dotnet")) IlLibraries.packageAdded();
 	}
 
 	/** The app's own C#: a `.cs` file, or every `.cs` in a folder, relative to where Haxe runs. **/
@@ -268,6 +282,7 @@ class Build {
 	}
 
 	/** haxeui-cs's packages and then the app's, as PackageReference items. **/
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static function packageItems(packages:Array<String>):Array<String> {
 		// Svg.Skia draws SVG images: 5.1.1 is the newest on Avalonia's own SkiaSharp (3.119) and
 		// HarfBuzzSharp (8.3.1.3); later ones need SkiaSharp 4 and would pull it out from under Avalonia.
@@ -279,20 +294,28 @@ class Build {
 		return [for (p in packages) '    <PackageReference Include="$p" Version="${versions.exists(p) ? versions.get(p) : AVALONIA_VERSION}" />'];
 	}
 
-	static function buildProject(name:String, headless:Bool, resources:Array<String>):String {
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
+	static function basePackages(headless:Bool):Array<String> {
 		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
 		if (headless) {
 			packages.push("Avalonia.Headless");
 		}
+		return packages;
+	}
 
-		var outputType = (headless || Context.defined("debug")) ? "Exe" : "WinExe";
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
+	static function outputType(headless:Bool):String {
+		return (headless || Context.defined("debug")) ? "Exe" : "WinExe";
+	}
+
+	static function buildProject(name:String, headless:Bool, resources:Array<String>):String {
 		var template = File.getContent(Path.join([libraryRoot(), "templates", "App.csproj"]));
 		return template
-			.split("::OUTPUT_TYPE::").join(outputType)
+			.split("::OUTPUT_TYPE::").join(outputType(headless))
 			.split("::NAME::").join(name)
 			.split("::NATIVE_DIR::").join(nativeItems().join("\n"))
 			.split("::RESOURCES::").join(resources.join("\n"))
-			.split("::PACKAGES::").join(packageItems(packages).join("\n"));
+			.split("::PACKAGES::").join(packageItems(basePackages(headless)).join("\n"));
 	}
 
 	/**
@@ -350,6 +373,7 @@ class Build {
 	}
 
 	/** The haxeui-cs checkout, found through this file's own classpath entry. **/
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static function libraryRoot():String {
 		var self = Context.resolvePath("haxe/ui/backend/cs/macros/Build.hx");
 		return Path.normalize(Path.join([Path.directory(FileSystem.absolutePath(self)), "..", "..", "..", "..", ".."]));
