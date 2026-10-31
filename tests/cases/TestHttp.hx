@@ -37,6 +37,21 @@ class TestHttp extends utest.Test {
 		response.Dispose();
 	}
 
+	function testABodyReadsAsBytes() {
+		var response = post("note.txt");
+		var bytes = haxe.io.Bytes.ofData(response.Content.ReadAsByteArrayAsync().Result);
+		Assert.equals("héllo", bytes.toString());
+		response.Dispose();
+	}
+
+	function testAMethodCanBeNamed() {
+		var client = new HttpClient(new HttpClientHandler());
+		var response = client.Send(new HttpRequestMessage(new HttpMethod("PUT"), 'http://127.0.0.1:$port/note.txt'));
+		var status:Int = cast response.StatusCode;
+		Assert.equals(200, status);
+		response.Dispose();
+	}
+
 	function testAFailureIsAStatusNotAThrow() {
 		var response = post("missing.txt");
 		var status:Int = cast response.StatusCode;

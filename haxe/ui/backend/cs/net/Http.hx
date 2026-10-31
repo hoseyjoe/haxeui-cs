@@ -11,12 +11,14 @@ import haxe.ui.backend.cs.net.Net.Task_1;
  */
 @:native("System.Net.Http.HttpMethod")
 extern class HttpMethod {
+	@:overload function new(method:String);
 	static var Post(default, never):HttpMethod;
 }
 
 @:native("System.Net.Http.HttpContent")
 extern class HttpContent {
 	@:overload function ReadAsStringAsync():Task_1<String>;
+	@:overload function ReadAsByteArrayAsync():Task_1<cs.NativeArray<cs.types.UInt8>>;
 }
 
 @:native("System.Net.Http.StringContent")
