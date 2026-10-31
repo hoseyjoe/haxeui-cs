@@ -215,6 +215,35 @@ extern class Pen implements IPen {
 	var Thickness(default, never):Float;
 }
 
+@:native("Avalonia.Media.FontStretch")
+extern enum FontStretch {
+	Normal;
+}
+
+@:native("Avalonia.Media.FlowDirection")
+extern enum FlowDirection {
+	LeftToRight;
+}
+
+@:native("Avalonia.Media.TextTrimming")
+extern class TextTrimming {}
+
+@:native("Avalonia.Media.FontFeatureCollection")
+extern class FontFeatureCollection {}
+
+@:native("Avalonia.Media.TextFormatting.TextRunProperties")
+extern class TextRunProperties {}
+
+@:native("Avalonia.Utilities.ValueSpan`1")
+@:struct
+extern class ValueSpan<T> {}
+
+@:native("Avalonia.Media.Typeface")
+@:struct
+extern class Typeface {
+	@:overload function new(family:FontFamily, style:FontStyle, weight:FontWeight, stretch:FontStretch);
+}
+
 @:native("Avalonia.Media.TextFormatting.TextLine")
 extern class TextLine {
 	var Start(default, never):Float;
@@ -224,7 +253,13 @@ extern class TextLine {
 }
 
 @:native("Avalonia.Media.TextFormatting.TextLayout")
-extern class TextLayout {
+extern class TextLayout implements IDisposable {
+	@:overload function new(text:String, typeface:Typeface, fontSize:Float, foreground:IBrush, textAlignment:TextAlignment, textWrapping:TextWrapping,
+		textTrimming:TextTrimming, textDecorations:TextDecorationCollection, flowDirection:FlowDirection, maxWidth:Float, maxHeight:Float, lineHeight:Float,
+		letterSpacing:Float, maxLines:Int, fontFeatures:FontFeatureCollection, textStyleOverrides:IReadOnlyList<ValueSpan<TextRunProperties>>);
+	var Height(default, never):Float;
+	function HitTestTextRange(start:Int, length:Int):IEnumerable_1<Rect>;
+	function Dispose():Void;
 	var TextLines(default, never):IReadOnlyList<TextLine>;
 }
 

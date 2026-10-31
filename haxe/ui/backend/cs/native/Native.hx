@@ -130,6 +130,8 @@ typedef Control = haxe.ui.backend.cs.net.Controls.Control;
 extern class UIPanel extends Control {
 	function new():Void;
 
+	function LinksChanged():Void;
+
 	var Left(default, null):Float;
 	var Top(default, null):Float;
 	var W(default, null):Float;
@@ -167,34 +169,7 @@ typedef UIGraphics = haxe.ui.backend.cs.native.impl.UIGraphics;
 
 typedef UILayers = haxe.ui.backend.cs.native.impl.UILayers;
 
-@:native("HaxeUICs.UIText")
-extern class UIText extends Control {
-	function new():Void;
-
-	var Text:String;
-	var FontSize(default, null):Float;
-	var IsBold(default, null):Bool;
-	var MeasuredWidth(default, null):Float;
-	var MeasuredHeight(default, null):Float;
-	var MeasureLayouts(default, null):Int;
-	function MeasureOneLine():Void;
-
-	function SetFont(family:String, size:Float, bold:Bool, italic:Bool, underline:Bool, strikethrough:Bool):Void;
-	function SetColor(argb:UInt):Void;
-	function SetAlign(align:Int):Void;
-	function SetWrap(wrap:Bool):Void;
-	function SetHtml(html:String):Void;
-	function SetShadow(dx:Float, dy:Float, blur:Float, argb:UInt):Void;
-	function SetLineHeight(height:Float):Void;
-	function SetBounds(left:Float, top:Float, width:Float, height:Float):Void;
-	function MeasureText(maxWidth:Float):Void;
-
-	var LinkCount(default, null):Int;
-	function LinkHref(index:Int):String;
-	function LinkRects():cs.NativeArray<Float>;
-	function LinkAt(x:Float, y:Float):Int;
-	function LineBoxes():cs.NativeArray<Float>;
-}
+typedef UIText = haxe.ui.backend.cs.native.impl.UIText;
 
 typedef UIFonts = haxe.ui.backend.cs.native.impl.UIFonts;
 

@@ -20,13 +20,20 @@ extern class AvaloniaPropertyChangedEventArgs extends EventArgs {
 
 @:native("Avalonia.AvaloniaObject")
 extern class AvaloniaObject {
+	@:protected private function OnPropertyChanged(change:AvaloniaPropertyChangedEventArgs):Void;
 	@:event private var PropertyChanged:EventHandler_1<AvaloniaPropertyChangedEventArgs>;
 	function add_PropertyChanged(value:EventHandler_1<AvaloniaPropertyChangedEventArgs>):Void;
 	function remove_PropertyChanged(value:EventHandler_1<AvaloniaPropertyChangedEventArgs>):Void;
 }
 
+@:native("Avalonia.VisualTreeAttachmentEventArgs")
+extern class VisualTreeAttachmentEventArgs extends EventArgs {}
+
 @:native("Avalonia.Visual")
 extern class Visual extends AvaloniaObject {
+	static var BoundsProperty(default, never):AvaloniaProperty;
+	var Parent(default, never):cs.system.Object;
+	@:protected private function OnAttachedToVisualTree(e:VisualTreeAttachmentEventArgs):Void;
 	@:protected private var StyleKeyOverride(get, never):Type;
 	private function get_StyleKeyOverride():Type;
 	var Bounds(default, never):Rect;
@@ -58,6 +65,10 @@ extern enum VerticalAlignment {
 
 @:native("Avalonia.Layout.Layoutable")
 extern class Layoutable extends Visual {
+	static var WidthProperty(default, never):AvaloniaProperty;
+	static var HeightProperty(default, never):AvaloniaProperty;
+	var DesiredSize(default, never):Size;
+	function Measure(availableSize:Size):Void;
 	var Width:Float;
 	var Height:Float;
 	var MinWidth:Float;
@@ -162,6 +173,8 @@ extern class ScrollViewer extends TemplatedControl {
 
 @:native("Avalonia.Controls.Canvas")
 extern class Canvas {
+	static var LeftProperty(default, never):AvaloniaProperty;
+	static var TopProperty(default, never):AvaloniaProperty;
 	static function SetLeft(element:AvaloniaObject, value:Float):Void;
 	static function SetTop(element:AvaloniaObject, value:Float):Void;
 }
@@ -176,4 +189,47 @@ extern class TopLevel extends TemplatedControl {
 @:native("Avalonia.Controls.Presenters.TextPresenter")
 extern class TextPresenter extends Control {
 	var TextLayout(default, never):TextLayout;
+}
+
+@:native("Avalonia.Controls.Documents.Inline")
+extern class Inline extends AvaloniaObject {
+	var FontFamily:FontFamily;
+	var FontSize:Float;
+	var FontStyle:FontStyle;
+	var FontWeight:FontWeight;
+	var Foreground:IBrush;
+	var TextDecorations:TextDecorationCollection;
+}
+
+@:native("Avalonia.Controls.Documents.Run")
+extern class Run extends Inline {
+	@:overload function new(text:String);
+}
+
+@:native("Avalonia.Controls.Documents.LineBreak")
+extern class LineBreak extends Inline {
+	function new();
+}
+
+@:native("Avalonia.Controls.Documents.InlineCollection")
+extern class InlineCollection extends AvaloniaList<Inline> {
+	function new();
+}
+
+@:native("Avalonia.Controls.TextBlock")
+extern class TextBlock extends Control {
+	function new();
+	static var ForegroundProperty(default, never):AvaloniaProperty;
+	var Text:String;
+	var FontFamily:FontFamily;
+	var FontSize:Float;
+	var FontStyle:FontStyle;
+	var FontWeight:FontWeight;
+	var Foreground:IBrush;
+	var Inlines:InlineCollection;
+	var LineHeight:Float;
+	var TextAlignment:TextAlignment;
+	var TextDecorations:TextDecorationCollection;
+	var TextLayout(default, never):TextLayout;
+	var TextWrapping:TextWrapping;
 }

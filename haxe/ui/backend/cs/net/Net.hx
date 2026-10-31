@@ -71,6 +71,11 @@ extern class GZipStream extends Stream {
  * C#'s `using`, which Haxe has no `finally` to write: disposes `x` however the body ends. A body on
  * the render thread can't use these, as they take a closure.
  */
+@:native("System.Net.WebUtility")
+extern class WebUtility {
+	@:overload static function HtmlDecode(value:String):String;
+}
+
 class Scope {
 	public static function run(x:IDisposable, body:() -> Void):Void {
 		try {

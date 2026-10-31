@@ -141,6 +141,25 @@ class TestText extends utest.Test {
 		Assert.equals("Read the first and the second.", (cs.Syntax.code("{0}.Inlines.Text", text.textNative) : String), "the anchors' text is kept");
 	}
 
+	function testHtmlKeepsAstralCharacters() {
+		var style = "font-size: 20px;";
+		var l = html('<a href="x">a😀b</a> é', style);
+		var text = l.getTextDisplay();
+		Assert.equals("a😀b é", (cs.Syntax.code("{0}.Inlines.Text", text.textNative) : String));
+		Assert.equals(1, text.linkCount());
+		var withEmoji = html("a😀b", style).width;
+		Assert.isTrue(withEmoji > html("ab", style).width, "the emoji takes up room");
+		// The link's range counts UTF-16 units: one short of the emoji's two would leave the b out of the link.
+		var rects:cs.NativeArray<Float> = text.textNative.LinkRects();
+		var linked = 0.0;
+		var i = 0;
+		while (i < rects.Length) {
+			linked += rects[i + 3];
+			i += 5;
+		}
+		Assert.floatEquals(withEmoji, linked, 1.5);
+	}
+
 	function testHtmlAnchorWithoutHrefIsText() {
 		var l = html('<a name="here">anchor</a>');
 		Assert.equals(0, l.getTextDisplay().linkCount());

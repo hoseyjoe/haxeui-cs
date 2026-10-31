@@ -56,6 +56,8 @@ extern class Matrix {
 @:struct
 extern class Rect {
 	@:overload function new(x:Float, y:Float, width:Float, height:Float);
+	var X(default, never):Float;
+	var Y(default, never):Float;
 	var Left(default, never):Float;
 	var Top(default, never):Float;
 	var Right(default, never):Float;
@@ -70,6 +72,7 @@ extern class Rect {
 @:native("Avalonia.Size")
 @:struct
 extern class Size {
+	@:overload function new(width:Float, height:Float);
 	var Width(default, never):Float;
 	var Height(default, never):Float;
 }
