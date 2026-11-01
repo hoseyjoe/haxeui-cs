@@ -59,6 +59,9 @@ class TestMain {
 			new cases.TestLifecycle(),
 			new cases.TestDensity(),
 			new cases.TestTouchTooltips()
+			#if haxeui_cs_drive
+			, new cases.TestAppDriver()
+			#end
 		];
 	}
 }

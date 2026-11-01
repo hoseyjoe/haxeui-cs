@@ -17,6 +17,13 @@ extern class IReadOnlyCollection<T> {
 @:native("System.Collections.Generic.IReadOnlyList`1")
 extern class IReadOnlyList<T> extends IReadOnlyCollection<T> implements ArrayAccess<T> {}
 
+/** What Avalonia's Win32 window-styles callback returns: (style, exStyle). */
+@:native("System.ValueTuple`2")
+@:struct
+extern class ValueTuple2<T1, T2> {
+	function new(item1:T1, item2:T2);
+}
+
 @:native("System.IO.Stream")
 extern class Stream implements IDisposable {
 	var Length(get, never):Int64;

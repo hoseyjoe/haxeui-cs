@@ -16,6 +16,8 @@ import sys.io.File;
  * exit code ends the Haxe compile with that code.
  *
  * `-D haxeui_cs_headless`  headless Avalonia host + Avalonia.Headless (tests)
+ * `-D haxeui_cs_drive`     AppDriver: raw input and window capture for a driver (heaps-drive),
+ *                          handed straight to the window, never through the OS
  * `-D haxeui_cs_run`       run the program after building it
  * `-D haxeui_cs_no_dotnet` stop after writing the .csproj
  * `-D haxeui_cs_publish=<rid>` instead of a debug build, publish a release build for that

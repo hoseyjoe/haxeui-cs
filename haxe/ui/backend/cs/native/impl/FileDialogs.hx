@@ -46,6 +46,10 @@ class FileDialogs {
 				Answer(TestResponse, listener);
 				return;
 			}
+			#if haxeui_cs_drive
+			Refuse(title, listener);
+			return;
+			#end
 			var storage = Provider();
 			if (storage == null || !storage.CanOpen) {
 				Cancel(listener);
@@ -87,6 +91,10 @@ class FileDialogs {
 				Answer(TestResponse, listener);
 				return;
 			}
+			#if haxeui_cs_drive
+			Refuse(title, listener);
+			return;
+			#end
 			#if haxeui_cs_android
 			// Android's picker hands back a content URI, never a path to write to.
 			Cancel(listener);
@@ -121,6 +129,10 @@ class FileDialogs {
 				Answer(TestResponse, listener);
 				return;
 			}
+			#if haxeui_cs_drive
+			Refuse(title, listener);
+			return;
+			#end
 			#if haxeui_cs_android
 			// A picked folder is a content URI tree, never a path the app can list.
 			Cancel(listener);
@@ -151,6 +163,14 @@ class FileDialogs {
 		var top = Host.TopLevel;
 		return top != null ? top.StorageProvider : null;
 	}
+
+	#if haxeui_cs_drive
+	// A native picker takes the user's focus and needs their mouse, which a driven build never uses.
+	static function Refuse(title:String, listener:IFileDialogListener):Void {
+		Console.Error.WriteLine("haxeui-cs: a driven build opens no file picker (" + title + "): answered as cancelled");
+		Cancel(listener);
+	}
+	#end
 
 	#if !haxeui_cs_android
 	static function PickFolder(storage:IStorageProvider, title:String, multiple:Bool, start:IStorageFolder, listener:IFileDialogListener):Void {

@@ -1,0 +1,23 @@
+# Desktop check of AppDriver in a real window put off every display and never activated: input
+# injected through the window's platform impl reaches HaxeUI, with no focus taken from anyone.
+# `haxe tests/drive-window-app/build.hxml` from the repo root; exits 0, printing `drive-window-app: ok`.
+# Exit codes: 1 setup (the check itself was not set up as it needs), 2 on a display, 3 active,
+# 4 foreground is ours, 5 click, 6 capture, 7 resize, 9 watchdog (the run took over 30 s),
+# 8 a file picker was not answered as cancelled within a second, or the process's visible window count
+# changed (FileDialogs refuses to open one in a driven build), 10 keyboard focus, text or key did not reach the TextField, 11 the window lacks WS_EX_NOACTIVATE or
+# WS_EX_TOOLWINDOW (read before the input and again after Resize), 12 a visible window of the process
+# was on a display at any moment (a background thread, started first in main, polls for it from before
+# the window exists until the end; the position is in the message), or the watch completed fewer than
+# 100 polls by the time the window settled (so a watch that cannot work cannot pass).
+# 13 the app was told its window had closed before AppDriver.OnClosed's callback ran (the order a driver's cleanup needs).
+# It opens a window off screen for a few seconds.
+-cp tests/drive-window-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+--macro haxe.ui.backend.cs.macros.Build.addNative("tests/drive-window-app/Win32Probe.cs")
+-D haxeui_cs_drive
+-D haxeui_cs_run
+-debug
+-cs tests/drive-window-app/bin
+-w -WAll

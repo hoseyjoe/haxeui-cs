@@ -53,6 +53,7 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-D haxeui_cs_run` | run the program straight after building it |
 | `-D haxeui_cs_headless` | headless Avalonia (real Skia drawing, no OS window) plus `haxe.ui.backend.cs.TestDriver`, for tests |
 | `-D haxeui_cs_no_dotnet` | stop after writing the `.csproj` |
+| `-D haxeui_cs_drive` | `AppDriver`, for a driver such as heaps-drive: raw input and window capture, an off-screen window, file pickers answered as cancelled, an uncaught error ends the app (see Driving an app) |
 | `-D haxeui_cs_publish=<rid>` | publish a release build as one self-contained file instead (see Publishing) |
 | `-D haxeui_cs_trim` | with `haxeui_cs_publish`: trim the libraries that allow it, not the app's own (see Publishing) |
 | `-D haxeui_cs_compress` | with `haxeui_cs_publish`: compress the file, smaller and slower to start (see Publishing) |
@@ -175,7 +176,7 @@ haxe app.hxml -D haxeui_cs_android -D haxeui_cs_android_id=com.example.app -D ha
 `haxe tests/headless.hxml` builds and runs the backend's own suite headlessly (add
 `-D test=<Case>` for one case, `-D UTEST_PATTERN=<test>` for one test). `TestDriver` pumps the
 dispatcher, injects clicks, wheel, keys and typing at window coordinates, and reads back rendered
-pixels. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a repeating
+pixels. `haxe tests/headless-drive.hxml` is the same suite with `-D haxeui_cs_drive` (it adds `TestAppDriver`, and compiles `AppDriver` and the driven flows of `PumpEvents`, `StartTimer` and `FileDialogs`); `tests/headless.hxml` stays undriven, which is what ships, so run both. Under hxc, `sh tests/run-il.sh` runs the undriven suite and `HXML=tests/headless-drive-il.hxml sh tests/run-il.sh` the driven one. `haxe tests/exit-app/build.hxml` is the desktop check: a real window, a repeating
 `haxe.Timer`, and the process must exit by itself when the window closes.
 `haxe tests/early-add/build.hxml` checks that a component added before the window exists (as
 HaxeUIApp's preloader is) appears once it does. `haxe tests/window-app/build.hxml` opens a window
@@ -185,6 +186,11 @@ with every window option, checks an idle app stays idle, and ends itself with `a
 (`Get-Clipboard` on Windows). On Windows it reads a sensitive copy's formats back through Win32 and,
 with `history.ps1`, checks that clipboard history took a plain copy but not the sensitive one (with
 history off it says so and skips that).
+
+`haxe tests/drive-window-app/build.hxml` is `AppDriver`'s desktop check (see Driving an app): a real window off
+every display and never activated, with input, a capture, `Resize` and a refused file picker, and a check
+that nothing took the foreground. `haxe tests/drive-crash-app/build.hxml` checks that a driven app dies of
+an error nobody caught, rather than hanging.
 
 `bash tests/android-app/check-device.sh` (with `ANDROID_SERIAL` set) builds, installs and drives a
 small Android app on a device and reads what it reports from logcat: a tap is a click, rotation,
@@ -211,6 +217,29 @@ dotnet tools/gallery/bin/bin/Debug/net10.0/Gallery.dll   # and again with --dark
 haxe tools/gallery/gallery.html5.hxml
 python -I tools/gallery/compare.py                      # needs Pillow and Microsoft Edge
 ```
+
+## Driving an app
+
+`-D haxeui_cs_drive` compiles `haxe.ui.backend.cs.native.impl.AppDriver`, for a driver that runs the app
+from outside and must not touch the person at the machine (heaps-drive's C# backend is its user). It
+hands mouse, wheel, key and text events to the window as raw Avalonia events, takes PNG captures of the
+window, resizes it, and can put the window off every display without ever activating it
+(`SetWindow(true)`, before the window exists), so no click lands on, and no focus is taken from, the
+user's windows. Under the define, a file picker opens nothing and answers as cancelled (a line on stderr),
+and an error nobody caught in a timer or the event loop ends the app with exit 70, where Avalonia would
+swallow it and leave a hang. Without the define none of it is compiled: `AppDriver` is not in a shipped build.
+
+Everything in `AppDriver` is reflection on Avalonia's private input API, by design: the raw event
+classes, the platform impl and the keyboard device are not in the reference assemblies Haxe builds
+against, and a real window has no public way to be handed input except through the OS. Each member looked up is
+checked the first time it is used and fails with its name, but **an Avalonia upgrade may need attention
+here**: run `tests/drive-window-app` and `TestAppDriver` (in `haxe tests/headless-drive.hxml`) after one. On
+Windows it also hooks the window procedure (`Win32Properties.AddWndProcHookCallback`) to pin an
+off-screen window; elsewhere an off-screen window is only positioned there. Every driven real window,
+off-screen or visible (`SetWindow(false)`), gets `WS_EX_NOACTIVATE` and `WS_EX_TOOLWINDOW`; a visible
+one has never been run (it would put a window on a display), so for it that is read from the code.
+`AppDriver.OnClosed` callbacks run when the window closes, before the app is told of it (which ends
+the process), so a driver's cleanup runs on any close.
 
 ## How it fits together
 

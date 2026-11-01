@@ -1,0 +1,6 @@
+# The backend's test suite with -D haxeui_cs_drive (AppDriver, and the driven flows of PumpEvents,
+# StartTimer and FileDialogs), which adds TestAppDriver. `tests/headless.hxml` is the suite without
+# the define, i.e. what ships; run both. `haxe tests/headless-drive.hxml` from the repo root;
+# `-D test=TestAppDriver` for just that case.
+tests/headless.hxml
+-D haxeui_cs_drive

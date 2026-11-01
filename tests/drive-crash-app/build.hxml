@@ -1,0 +1,14 @@
+# A driven app that dies of an error nobody caught must end, not hang: a driver has nothing else to
+# tell it. `haxe tests/drive-crash-app/build.hxml` from the repo root; exits 0, printing `drive-crash-app: ok`.
+# It starts this same program twice more as a child, each opening a window off every display (never
+# activated) that throws from a haxe.Timer / from Host.StartTimer; each must exit non-zero within 10 s
+# with the message on stderr. A child still alive after that is killed by its PID and the check fails.
+-cp tests/drive-crash-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_drive
+-D haxeui_cs_run
+-debug
+-cs tests/drive-crash-app/bin
+-w -WAll

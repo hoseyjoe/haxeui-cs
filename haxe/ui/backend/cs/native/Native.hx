@@ -66,3 +66,7 @@ typedef UIStyle = haxe.ui.backend.cs.native.impl.UIStyle;
 #if haxeui_cs_headless
 typedef HeadlessDriver = haxe.ui.backend.cs.native.impl.TestDriver.HeadlessDriver;
 #end
+
+#if haxeui_cs_drive
+typedef AppDriver = haxe.ui.backend.cs.native.impl.AppDriver;
+#end

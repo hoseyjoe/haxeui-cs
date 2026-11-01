@@ -420,7 +420,8 @@ extern interface ICustomDrawOperation extends IDisposable extends IEquatable_1<I
 }
 
 @:native("Avalonia.Media.DrawingContext")
-extern class DrawingContext {
+extern class DrawingContext implements IDisposable {
+	function Dispose():Void;
 	function Custom(custom:ICustomDrawOperation):Void;
 	@:overload function PushClip(clip:Rect):PushedState;
 	function PushGeometryClip(clip:Geometry):PushedState;
@@ -462,6 +463,7 @@ extern interface IImage {}
 extern class Bitmap implements IImage implements IDisposable {
 	function Dispose():Void;
 	@:overload function Save(fileName:String, quality:Nullable_1<Int>):Void;
+	@:overload function Save(stream:Stream, quality:Nullable_1<Int>):Void;
 	@:overload function new(stream:Stream);
 	var PixelSize(default, never):PixelSize;
 	var Dpi(default, never):Vector;
@@ -473,6 +475,7 @@ extern class Bitmap implements IImage implements IDisposable {
 extern class RenderTargetBitmap extends Bitmap {
 	@:overload function new(pixelSize:PixelSize);
 	function Render(visual:haxe.ui.backend.cs.net.Controls.Visual):Void;
+	@:overload function CreateDrawingContext():DrawingContext;
 }
 
 @:native("Avalonia.Media.Imaging.WriteableBitmap")
@@ -487,6 +490,7 @@ extern class Marshal {
 	@:overload static function Copy(source:IntPtr, destination:NativeArray<UInt8>, startIndex:Int, length:Int):Void;
 	@:overload static function Copy(source:NativeArray<UInt8>, startIndex:Int, destination:IntPtr, length:Int):Void;
 	@:overload static function WriteByte(ptr:IntPtr, value:UInt8):Void;
+	@:overload static function WriteInt32(ptr:IntPtr, ofs:Int, val:Int):Void;
 }
 
 @:native("System.Runtime.CompilerServices.ConditionalWeakTable`2")

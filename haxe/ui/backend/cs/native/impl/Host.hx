@@ -425,6 +425,9 @@ class Host {
 		window.Background = new SolidColorBrush(Color.FromUInt32(_background), 1.0);
 		window.Content = cast Root;
 		ApplyOptions(window);
+		#if haxeui_cs_drive
+		AppDriver.ApplyWindow(window);
+		#end
 		var changed:EventHandler_1<AvaloniaPropertyChangedEventArgs> = function(s:Dynamic, e:AvaloniaPropertyChangedEventArgs) {
 			if (e.Property == TopLevelControl.ClientSizeProperty && Listener != null) {
 				Listener.OnResize(window.ClientSize.Width, window.ClientSize.Height);
@@ -442,6 +445,9 @@ class Host {
 		};
 		window.add_Closing(closing);
 		var closed:EventHandler = function(s:Dynamic, e:EventArgs) {
+			#if haxeui_cs_drive
+			AppDriver.RunClosed(); // a driver's cleanup first: Listener.OnClosed ends the process
+			#end
 			if (Listener != null) {
 				Listener.OnClosed();
 			}
@@ -570,10 +576,30 @@ class Host {
 
 	static function PumpEvents():Void {
 		EventsPumps++;
+		#if haxeui_cs_drive
+		var next = try _eventsPump.Pump() catch (e:Dynamic) {
+			Uncaught(e);
+			return;
+		}
+		#else
 		var next = _eventsPump.Pump();
+		#end
 		var wait = next < 0 ? IdleEventsPollMs : Math.max(1, Math.min(IdleEventsPollMs, next));
 		_eventsTimer.Interval = TimeSpan.FromMilliseconds(wait);
 	}
+
+	#if haxeui_cs_drive
+	/**
+	 * An error nobody caught in Haxe's event loop or a timer. Avalonia swallows it there and the
+	 * app goes on with no tick, no message and nothing for a driver to see but a hang; a driven app
+	 * ends instead, with the error on stderr, so the driver's socket closes under it.
+	 */
+	static function Uncaught(error:Dynamic):Void {
+		Console.Error.WriteLine("Unhandled exception. " + Std.string(error) + haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
+		Console.Error.Flush();
+		Exit(70);
+	}
+	#end
 
 	/** Gives the Haxe event loop a turn as soon as the dispatcher is free. */
 	public static function WakeEventsPump():Void {
@@ -587,7 +613,15 @@ class Host {
 
 	public static function StartTimer(milliseconds:Int, callback:ICallback):Dynamic {
 		var tick:EventHandler = function(s:Dynamic, e:EventArgs) {
+			#if haxeui_cs_drive
+			try {
+				callback.Invoke();
+			} catch (error:Dynamic) {
+				Uncaught(error);
+			}
+			#else
 			callback.Invoke();
+			#end
 			WakeEventsPump();
 		};
 		var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(milliseconds < 1 ? 1 : milliseconds), DispatcherPriority.Normal, tick);
