@@ -14,20 +14,27 @@ class FileDialogSupport {
 		return (file == "" || file == "." || file == "..") ? null : file;
 	}
 
-	/** HaxeUI extensions ("lor", ".lor" or "*.lor") as glob patterns, with their labels. **/
+	/**
+	 * HaxeUI extensions ("lor", ".lor" or "*.lor") as glob patterns, with their labels. One entry can
+	 * list several ("png, gif", as FileDialogTypes.IMAGES does): one filter, its patterns joined by ";".
+	 */
 	public static function filters(extensions:Array<FileDialogExtensionInfo>):{patterns:cs.NativeArray<String>, names:cs.NativeArray<String>} {
 		var list = extensions != null ? extensions.filter(e -> e != null && e.extension != null && e.extension != "") : [];
 		var patterns = new cs.NativeArray<String>(list.length);
 		var names = new cs.NativeArray<String>(list.length);
 		for (i in 0...list.length) {
-			var ext = list[i].extension;
-			while (StringTools.startsWith(ext, "*") || StringTools.startsWith(ext, ".")) {
-				ext = ext.substr(1);
-			}
-			patterns[i] = "*." + ext;
+			patterns[i] = [for (ext in list[i].extension.split(",")) pattern(ext)].join(";");
 			names[i] = list[i].label;
 		}
 		return {patterns: patterns, names: names};
+	}
+
+	static function pattern(extension:String):String {
+		var ext = StringTools.trim(extension);
+		while (StringTools.startsWith(ext, "*") || StringTools.startsWith(ext, ".")) {
+			ext = ext.substr(1);
+		}
+		return "*." + ext;
 	}
 }
 

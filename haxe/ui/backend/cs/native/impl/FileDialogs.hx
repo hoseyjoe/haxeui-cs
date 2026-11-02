@@ -36,8 +36,9 @@ class FileDialogs {
 	public static var TestResponse:NativeArray<String>;
 
 	/**
-	 * @param patterns Glob patterns such as "*.lor"; empty for any file.
-	 * @param patternNames A label for each pattern.
+	 * @param patterns Glob patterns such as "*.lor", one filter each ("*.png;*.gif" for a filter of
+	 *     several); empty for any file.
+	 * @param patternNames A label for each filter.
 	 */
 	public static function OpenFiles(title:String, multiple:Bool, patterns:NativeArray<String>, patternNames:NativeArray<String>,
 			listener:IFileDialogListener):Void {
@@ -336,9 +337,7 @@ class FileDialogs {
 		for (i in 0...patterns.Length) {
 			var name = names != null && i < names.Length && names[i] != null && names[i] != "" ? names[i] : patterns[i];
 			var filter = new FilePickerFileType(name);
-			var one = new NativeArray<String>(1);
-			one[0] = patterns[i];
-			filter.Patterns = cast one;
+			filter.Patterns = cast ToNative(patterns[i].split(";"));
 			filters[i] = filter;
 		}
 		return filters;

@@ -53,6 +53,27 @@ class TestDialogs extends utest.Test {
 		Assert.equals("saved text", sys.io.File.getContent(path));
 	}
 
+	function testExtensionsBecomeOneFilterEach() {
+		var filters = haxe.ui.backend.cs.FileDialogSupport.filters([
+			{extension: "lor", label: "Stories"},
+			{extension: "png, .gif,*.jpg", label: "Images"}
+		]);
+		Assert.equals(2, filters.patterns.length);
+		Assert.equals("*.lor", filters.patterns[0]);
+		Assert.equals("*.png;*.gif;*.jpg", filters.patterns[1]);
+		Assert.equals("Images", filters.names[1]);
+	}
+
+	function testFilterOfSeveralKeepsEachPattern() {
+		var patterns = new cs.NativeArray<String>(1);
+		patterns[0] = "*.png;*.gif";
+		var filter = @:privateAccess FileDialogs.Filters(patterns, null)[0];
+		var all:haxe.ui.backend.cs.net.Net.IReadOnlyCollection<String> = filter.Patterns; // Count is on the collection, as hxc binds it
+		Assert.equals(2, all.Count);
+		Assert.equals("*.png", filter.Patterns[0]);
+		Assert.equals("*.gif", filter.Patterns[1]);
+	}
+
 	function testSuggestedSaveNameIsOnlyAFileName() {
 		// a suggested name carrying directories ("../") must not steer the picker elsewhere
 		Assert.equals("story.lor", haxe.ui.backend.cs.FileDialogSupport.suggestedName("../../elsewhere/story.lor"));
