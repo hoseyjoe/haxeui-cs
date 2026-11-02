@@ -64,8 +64,10 @@ hxc's `-D dotnet` writes the `.dll` itself: `hxc app.hxml` needs the .NET SDK an
 run with `dotnet App.dll` or `App.exe`, where `App` is the `-main` class unless `-D dll-name` says
 otherwise. A hidden project, built once in `.cache/il` in this library, fetches Avalonia and supplies
 it to hxc and to that folder. `addPackage` adds to that project, and hxc is given the `<name>.dll` of
-that package. `addNative` does nothing: an app's own C# has to be built first and given to hxc with
-`--net-lib`. `haxeui_cs_run`, `haxeui_cs_publish` and `haxeui_cs_android` are refused.
+that package. `addNative` compiles the app's own C# there into `App.Native.dll`, again after any edit,
+for hxc and that folder alike. A library you give hxc yourself with `--net-lib` is not in
+`App.deps.json`, so the app can't load it: use `addNative` or `addPackage` instead.
+`haxeui_cs_run`, `haxeui_cs_publish` and `haxeui_cs_android` are refused.
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
 `haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white

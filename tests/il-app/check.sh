@@ -56,6 +56,22 @@ if command -v wsl.exe > /dev/null 2>&1; then
 	expect "then a release Win.exe is a window again" 2 "$(subsystem)"
 fi
 
+# C# of the app's own, given with addNative: it can use the packages, hxc builds against it, it runs
+# with the app, and an edit of the same size reaches the next build.
+mkdir -p "$out/own-src"
+own() {
+	printf 'namespace OwnNative { public static class Greeting { public static string Say() { return "%s " + typeof(Avalonia.Point).Name; } } }\n' "$1" > "$out/own-src/Greeting.cs"
+	built=$("$HXC" tests/il-app/own.hxml 2>&1)
+	if [ $? -ne 0 ]; then
+		echo "FAILED: the build with the app's own C#:"
+		printf '%s\n' "$built" | tail -20
+		failed=1
+	fi
+	expect "the app's own C#, saying $1" "$1 Point" "$(dotnet "$out/own/Own.dll" 2>&1)"
+}
+own first
+own other
+
 # The library itself under a path with a space: the fetch's project and hxc's --net-libs live there.
 lib="$out/lib with space"
 mkdir -p "$lib"

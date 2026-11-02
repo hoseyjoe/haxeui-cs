@@ -48,6 +48,7 @@ class Build {
 
 	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static var appPackages:Map<String, String> = [];
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static var appNatives:Array<String> = [];
 
 	public static function configure():Void {
@@ -76,8 +77,8 @@ class Build {
 	 * hxc's `-D dotnet` writes the app's .dll itself, with no C# source, .csproj or `dotnet build`, so
 	 * nothing here runs after generating. `main` is marked with `[STAThread]` (see markEntryPointSta)
 	 * and hxc carries that to the entry point it writes. IlLibraries fetches Avalonia and puts it
-	 * beside the app. The app is `<Main>.dll` unless `-D dll-name` says otherwise, as a C# build's is.
-	 * The app's own C#, if any, has to be built beforehand and given to hxc with `--net-lib`.
+	 * beside the app, with the app's own C# as a library. The app is `<Main>.dll` unless `-D dll-name`
+	 * says otherwise, as a C# build's is.
 	 */
 	static function configureIl():Void {
 		for (define in ["haxeui_cs_android", "haxeui_cs_publish", "haxeui_cs_run"]) {
@@ -104,7 +105,7 @@ class Build {
 	public static function addPackage(name:String, version:String):Void {
 		appPackages.set(name, version);
 		// `-lib haxeui-cs` usually comes first, so hxc's libraries are already prepared.
-		if (Context.defined("dotnet")) IlLibraries.packageAdded();
+		if (Context.defined("dotnet")) IlLibraries.appAdded();
 	}
 
 	/** The app's own C#: a `.cs` file, or every `.cs` in a folder, relative to where Haxe runs. **/
@@ -114,6 +115,7 @@ class Build {
 			Context.fatalError('haxeui-cs: addNative: $path does not exist', Context.currentPos());
 		}
 		if (appNatives.indexOf(full) < 0) appNatives.push(full);
+		if (Context.defined("dotnet")) IlLibraries.appAdded();
 	}
 
 	static function afterGenerate():Void {
@@ -279,6 +281,7 @@ class Build {
 	}
 
 	/** The app's own C#, as Compile items. **/
+	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static function nativeItems():Array<String> {
 		return [for (path in appNatives) '    <Compile Include="${FileSystem.isDirectory(path) ? Path.join([path, "*.cs"]) : path}" />'];
 	}

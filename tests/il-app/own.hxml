@@ -1,0 +1,10 @@
+# An app with C# of its own, given with addNative: see check.sh, which writes that C#.
+-cp tests/il-app
+-main Own
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_headless
+-D dotnet
+--macro haxe.ui.backend.cs.macros.Build.addNative("tests/il-app/bin with space/own-src")
+--cs tests/il-app/bin with space/own
+-w -WAll

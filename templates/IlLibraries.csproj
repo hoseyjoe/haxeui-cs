@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
+::NATIVE_PROJECT::
   </ItemGroup>
   <ItemGroup>
 ::PACKAGES::
