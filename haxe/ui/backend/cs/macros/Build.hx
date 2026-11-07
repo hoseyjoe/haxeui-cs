@@ -27,7 +27,8 @@ import sys.io.File;
  *                          trimmable (.NET's own, Avalonia's); the app's own code is kept whole
  * `-D haxeui_cs_compress`  with `haxeui_cs_publish`: compress the file (smaller, slower to start)
  * `-D haxeui_cs_android`   an Android app instead (`templates/AndroidApp.csproj` and
- *                          `templates/android/MainActivity.cs`): a debug APK, and with
+ *                          `templates/android/MainActivity.cs`): a debug APK (a Release one,
+ *                          partly trimmed, with `haxeui_cs_publish`), and with
  *                          `haxeui_cs_run` installed and launched on the device adb sees
  *                          (ANDROID_SERIAL picks one). Needs `-D haxeui_cs_android_id=<id>` and
  *                          `-D haxeui_cs_android_label=<label>`; `-D haxeui_cs_android_abi=`
@@ -93,11 +94,12 @@ class Build {
 	 */
 	static function configureIl():Void {
 		var android = Context.defined("haxeui_cs_android");
-		var refused = android ? ["haxeui_cs_publish"] : ["haxeui_cs_publish", "haxeui_cs_run"];
-		for (define in refused) {
-			if (Context.defined(define)) {
-				var why = android ? "is not supported with -D haxeui_cs_android yet" : "needs the C# build, not --dotnet";
-				Context.fatalError('haxeui-cs: -D $define $why', Context.currentPos());
+		// On Android both are the APK's: publish its Release build, run its install.
+		if (!android) {
+			for (define in ["haxeui_cs_publish", "haxeui_cs_run"]) {
+				if (Context.defined(define)) {
+					Context.fatalError('haxeui-cs: -D $define needs the C# build, not --dotnet', Context.currentPos());
+				}
 			}
 		}
 		// Before anything is fetched or compiled, as the C# build checks them before its dotnet build.
@@ -183,7 +185,7 @@ class Build {
 		var csproj = Path.join([out, name + ".csproj"]);
 		var sources = ['    <Compile Include="src/**/*.cs" />', '    <Compile Include="android/*.cs" />'];
 		File.saveContent(csproj, androidProject(name, target, sources, nativeItems(), resourceItems(out)));
-		buildAndroid(csproj, Path.join([out, "bin", "Debug", "net10.0-android", target.rid]), target);
+		buildAndroid(csproj, out, target);
 	}
 
 	/**
@@ -209,13 +211,19 @@ class Build {
 		}
 		var csproj = Path.join([dir, dll + ".Android.csproj"]);
 		File.saveContent(csproj, androidProject(dll + ".Android", target, sources, [], []));
-		buildAndroid(csproj, Path.join([dir, "bin", "Debug", "net10.0-android", target.rid]), target);
+		buildAndroid(csproj, dir, target);
 	}
 
-	/** The application id, label and runtime the defines name, or a compile error saying which is missing. **/
+	/**
+	 * The application id, label, runtime and configuration the defines name, or a compile error saying
+	 * which is wrong. `haxeui_cs_publish` is the Release build (the project's Release group says what
+	 * that is); it takes no runtime here, since `haxeui_cs_android_abi` names the one an APK is for.
+	 */
 	static function androidTarget():AndroidTarget {
-		if (Context.defined("haxeui_cs_publish")) {
-			Context.fatalError("haxeui-cs: -D haxeui_cs_publish is not supported with -D haxeui_cs_android yet", Context.currentPos());
+		var publish = Context.definedValue("haxeui_cs_publish");
+		if (publish != null && publish != "" && publish != "1") {
+			Context.fatalError('haxeui-cs: -D haxeui_cs_publish=$publish: with -D haxeui_cs_android it takes no runtime; -D haxeui_cs_android_abi picks the ABI',
+				Context.currentPos());
 		}
 		var id = definedText("haxeui_cs_android_id");
 		if (id == null) {
@@ -231,7 +239,7 @@ class Build {
 			case "x86_64": "android-x64";
 			case _: Context.fatalError('haxeui-cs: -D haxeui_cs_android_abi=$abi: arm64-v8a or x86_64', Context.currentPos());
 		}
-		return {id: id, label: label, rid: rid};
+		return {id: id, label: label, rid: rid, configuration: publish != null ? "Release" : "Debug"};
 	}
 
 	static function writeActivity(path:String):Void {
@@ -255,17 +263,24 @@ class Build {
 			.split("::PACKAGES::").join(packageItems(basePackages(false)).join("\n"));
 	}
 
-	/** `dotnet build` of an Android project whose APKs land in `apkDir`, then with `haxeui_cs_run` the install and launch. **/
-	static function buildAndroid(csproj:String, apkDir:String, target:AndroidTarget):Void {
+	/**
+	 * `dotnet build` of the Android project in `projectDir` for the target's configuration, then with
+	 * `haxeui_cs_run` the install and launch. The APK is `bin/<configuration>/net10.0-android/<rid>/
+	 * <id>-Signed.apk` there; a Release one is signed with the SDK's debug key, as a debug one is.
+	 */
+	static function buildAndroid(csproj:String, projectDir:String, target:AndroidTarget):Void {
 		if (Context.defined("haxeui_cs_no_dotnet")) {
 			return;
 		}
-		var code = Sys.command("dotnet", ["build", csproj, "-c", "Debug", "-nologo", "-v", "q"]);
+		var code = Sys.command("dotnet", ["build", csproj, "-c", target.configuration, "-nologo", "-v", "q"]);
 		if (code != 0) {
 			Sys.exit(code);
 		}
+		var apk = Path.join([projectDir, "bin", target.configuration, "net10.0-android", target.rid, target.id + "-Signed.apk"]);
+		if (target.configuration == "Release") {
+			Sys.println('haxeui-cs: $apk');
+		}
 		if (Context.defined("haxeui_cs_run")) {
-			var apk = Path.join([apkDir, target.id + "-Signed.apk"]);
 			// Not incremental: adb's incremental install has hung an emulator part way.
 			code = Sys.command("adb", ["install", "--no-incremental", "-r", apk]);
 			if (code != 0) {
@@ -449,5 +464,5 @@ class Build {
 	}
 }
 
-private typedef AndroidTarget = {id:String, label:String, rid:String};
+private typedef AndroidTarget = {id:String, label:String, rid:String, configuration:String};
 #end

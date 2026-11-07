@@ -67,8 +67,8 @@ it to hxc and to that folder. `addPackage` adds to that project, and hxc is give
 that package. `addNative` compiles the app's own C# there into `App.Native.dll`, again after any edit,
 for hxc and that folder alike. A library you give hxc yourself with `--net-lib` is not in
 `App.deps.json`, so the app can't load it: use `addNative` or `addPackage` instead.
-`haxeui_cs_run` (but see Android) and `haxeui_cs_publish` are refused, and so is `-D dotnet` without
-`--dotnet`.
+`haxeui_cs_run` and `haxeui_cs_publish` are refused, except for Android (see Android), and so is
+`-D dotnet` without `--dotnet`.
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
 `haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white
@@ -157,6 +157,18 @@ haxe app.hxml -D haxeui_cs_android -D haxeui_cs_android_id=com.example.app -D ha
 | `-D haxeui_cs_android_id=<id>` | the application id (required) |
 | `-D haxeui_cs_android_label=<label>` | the name under the launcher icon (required) |
 | `-D haxeui_cs_android_abi=<abi>` | `arm64-v8a`, a phone (the default), or `x86_64`, the emulator |
+| `-D haxeui_cs_publish` | the Release APK instead, with no runtime after it (the ABI is the one above) |
+
+The Release APK is about half the size of the debug one or less: `tests/android-app`'s 41 MB is
+16.5 MB, and most of what is left is .NET, Avalonia and Skia. A Release APK is not debuggable, so
+installing one restores the app's files folder from Android's backup of an earlier install, as a
+store install does. Only the libraries that declare themselves trimmable are
+trimmed (.NET's own, AndroidX's, Avalonia's), never the app's assembly, which Haxe's output and HaxeUI
+reach by name; so `haxeui_cs_trim` and `haxeui_cs_compress` have nothing to add (the assemblies are
+compressed in either build). There is no AOT, which Release would otherwise turn on: it adds 2 MB of
+machine code for a faster start. It is in `bin/Release/net10.0-android/<rid>/` beside the project, and
+is signed with the SDK's debug key, so `adb install -r` replaces a debug build with it; Google Play
+wants an `.aab` signed with your own key, which this does not make yet.
 
 Under hxc's `--dotnet` the same defines make the same app: hxc writes `<out>/<App>.dll`, compiled
 against Avalonia's Android libraries and `Mono.Android` (a library project in `.cache/il` fetches them,
@@ -181,7 +193,7 @@ one goes on to package an assembly it never wrote, and the reason is buried in M
 - `haxe.ui.backend.cs.Density.scaleFor(designWidth)` is the `Toolkit.scale` that gives `designWidth`
   units across the short edge in whole device pixels per unit, the same physical size as
   heaps-android. Set it before the first component.
-- Not yet: publishing (`haxeui_cs_publish`), so neither its trimming nor its compression.
+- Not yet: an `.aab`, or signing with a key of your own.
 
 ## Testing
 
@@ -205,7 +217,7 @@ that nothing took the foreground. `haxe tests/drive-crash-app/build.hxml` checks
 an error nobody caught, rather than hanging.
 
 `bash tests/android-app/check-device.sh` (with `ANDROID_SERIAL` set, and `HXC=<hxc binary>` for the
-`--dotnet` build, `tests/android-app/build-il.hxml`) builds, installs and drives a
+`--dotnet` build, `tests/android-app/build-il.hxml`, and `ANDROID_RELEASE=1` for the Release APK) builds, installs and drives a
 small Android app on a device and reads what it reports from logcat: a tap is a click, rotation,
 back with and without a listener, a kill and relaunch, full screen, a long-press tooltip, the system
 picker (it pushes a file to Downloads and picks it through the picker's own screens) and the

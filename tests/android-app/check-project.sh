@@ -24,6 +24,16 @@ grep -qF '[System.STAThread]' "$bin/src/Main.cs" && fail "the Android entry poin
 haxe tests/android-app/build.hxml -D haxeui_cs_no_dotnet -D haxeui_cs_android_abi=x86_64 > "$bin.log" 2>&1 || fail "the x86_64 build failed"
 grep -qF '<RuntimeIdentifier>android-x64</RuntimeIdentifier>' "$csproj" || fail "x86_64 is not android-x64"
 
+# A Release build (haxeui_cs_publish) is the project's Release group: partly trimmed, no AOT.
+haxe tests/android-app/build.hxml -D haxeui_cs_no_dotnet -D haxeui_cs_publish > "$bin.log" 2>&1 || { cat "$bin.log"; fail "the Release build failed"; }
+release=$(sed -n "/Condition=\"'\$(Configuration)' == 'Release'\"/,/<\/PropertyGroup>/p" "$csproj")
+for want in '<PublishTrimmed>true</PublishTrimmed>' '<TrimMode>partial</TrimMode>' '<RunAOTCompilation>false</RunAOTCompilation>'; do
+  echo "$release" | grep -qF "$want" || fail "$csproj's Release group lacks $want"
+done
+# The ABI picks the runtime, so publish takes none: the build must stop and say so.
+if haxe tests/android-app/build.hxml -D haxeui_cs_no_dotnet -D haxeui_cs_publish=win-x64 > "$bin.log" 2>&1; then fail "a Release build with a runtime succeeded"; fi
+grep -qF 'haxeui-cs: -D haxeui_cs_publish=win-x64: with -D haxeui_cs_android it takes no runtime' "$bin.log" || { cat "$bin.log"; fail "no clear error for a Release build with a runtime"; }
+
 # Without an application id the build must stop and say so.
 sed '/haxeui_cs_android_id/d' tests/android-app/build.hxml > "$bin-noid.hxml"
 if haxe "$bin-noid.hxml" -D haxeui_cs_no_dotnet > "$bin.log" 2>&1; then fail "a build without an application id succeeded"; fi

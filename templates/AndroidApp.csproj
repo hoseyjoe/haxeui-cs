@@ -16,7 +16,7 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- The assemblies go inside the APK, so `adb install` alone installs a working app. -->
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
-    <!-- Never trimmed: Haxe's output and HaxeUI find classes by name at run time. -->
+    <!-- A debug build is never trimmed (see the Release group below). -->
     <PublishTrimmed>false</PublishTrimmed>
     <AndroidLinkMode>None</AndroidLinkMode>
     <!-- JIT, not the Mono interpreter a debug build otherwise gets: the interpreter answers
@@ -29,6 +29,17 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefineConstants>$(DefineConstants);HAXEUI_CS_ANDROID</DefineConstants>
     <NoWarn>$(NoWarn);CS0108;CS0114;CS0162;CS0164;CS0168;CS0169;CS0219;CS0414;CS0649;CS0659;CS0661;CS1717;CS8981;CS0618</NoWarn>
+  </PropertyGroup>
+  <!-- `-D haxeui_cs_publish`: about half the size of a debug APK. Only the libraries that declare
+       themselves trimmable are trimmed (.NET's own, AndroidX's, Avalonia's); the app's assembly is
+       not one, so Haxe's output and HaxeUI still find every class by name. No AOT: Release turns
+       profiled AOT on, which adds 2 MB of machine code for a faster start; no symbols either. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
 ::SOURCES::
