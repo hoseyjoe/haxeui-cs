@@ -3,6 +3,5 @@
 -main Win
 -lib haxeui-core
 -lib haxeui-cs
--D dotnet
---cs tests/il-app/bin with space/win
+--dotnet tests/il-app/bin with space/win
 -w -WAll

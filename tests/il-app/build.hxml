@@ -4,7 +4,6 @@
 -lib haxeui-core
 -lib haxeui-cs
 -D haxeui_cs_headless
--D dotnet
 --resource tests/il-app/note.txt@note
---cs tests/il-app/bin with space
+--dotnet tests/il-app/bin with space
 -w -WAll

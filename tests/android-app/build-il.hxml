@@ -1,0 +1,12 @@
+# The Android check's app under hxc's --dotnet: `hxc tests/android-app/build-il.hxml` from the repo root
+# writes bin-il/Main.dll and builds the APK from bin-il/android/Main.Android.csproj. check-device.sh
+# builds this one with HXC set to an hxc binary.
+-cp tests/android-app
+-main Main
+-lib haxeui-core
+-lib haxeui-cs
+-D haxeui_cs_android
+-D haxeui_cs_android_id=org.haxeui.cs.androidapp
+-D haxeui_cs_android_label=android-app
+--dotnet tests/android-app/bin-il
+-w -WAll

@@ -1,4 +1,4 @@
-# The suite with -D haxeui_cs_drive, under hxc's -D dotnet: `HXML=tests/headless-drive-il.hxml sh tests/run-il.sh`
+# The suite with -D haxeui_cs_drive, under hxc's --dotnet: `HXML=tests/headless-drive-il.hxml sh tests/run-il.sh`
 # (see tests/headless-drive.hxml; tests/headless-il.hxml is the undriven one).
 tests/headless-il.hxml
 -D haxeui_cs_drive

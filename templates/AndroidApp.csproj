@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0-android</TargetFramework>
     <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
-    <AssemblyName>::NAME::</AssemblyName>
+    <AssemblyName>::ASSEMBLY::</AssemblyName>
     <!-- Not the app's name: Android generates its Resource class in this namespace, and a
          namespace `Main` collides with Haxe's top-level class `Main`. -->
     <RootNamespace>HaxeUICs.App</RootNamespace>
@@ -31,8 +31,7 @@
     <NoWarn>$(NoWarn);CS0108;CS0114;CS0162;CS0164;CS0168;CS0169;CS0219;CS0414;CS0649;CS0659;CS0661;CS1717;CS8981;CS0618</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src/**/*.cs" />
-    <Compile Include="android/*.cs" />
+::SOURCES::
 ::NATIVE_DIR::
 ::RESOURCES::
   </ItemGroup>

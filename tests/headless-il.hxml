@@ -1,4 +1,4 @@
-# The backend's test suite under hxc's -D dotnet: `sh tests/run-il.sh`.
+# The backend's test suite under hxc's --dotnet: `sh tests/run-il.sh`.
 -cp tests
 -main TestMain
 -lib utest
@@ -16,7 +16,6 @@
 # Every core component and container, used or not, so the build covers them all.
 --macro include('haxe.ui.components')
 --macro include('haxe.ui.containers', true)
--D dotnet
 -D dll-name=TestMain
---cs tests/bin-il
+--dotnet tests/bin-il
 -w -WAll

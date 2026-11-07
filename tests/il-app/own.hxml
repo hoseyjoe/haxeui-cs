@@ -4,7 +4,6 @@
 -lib haxeui-core
 -lib haxeui-cs
 -D haxeui_cs_headless
--D dotnet
 --macro haxe.ui.backend.cs.macros.Build.addNative("tests/il-app/bin with space/own-src")
---cs tests/il-app/bin with space/own
+--dotnet tests/il-app/bin with space/own
 -w -WAll

@@ -77,8 +77,8 @@ lib="$out/lib with space"
 mkdir -p "$lib"
 cp -r haxe templates "$lib/"
 spaced=$("$HXC" -cp tests/il-app -main App -lib haxeui-core -cp "$lib" -D no-compilation -D haxeui_cs \
-	--macro "haxe.ui.backend.cs.macros.Build.configure()" -D net-ver=45 -D haxeui_cs_headless -D dotnet \
-	--resource tests/il-app/note.txt@note --cs "$out/spaced" 2>&1)
+	--macro "haxe.ui.backend.cs.macros.Build.configure()" -D net-ver=45 -D haxeui_cs_headless \
+	--resource tests/il-app/note.txt@note --dotnet "$out/spaced" 2>&1)
 if [ $? -ne 0 ]; then
 	echo "FAILED: the build with the library under a path with a space:"
 	printf '%s\n' "$spaced" | tail -20
@@ -86,6 +86,15 @@ if [ $? -ne 0 ]; then
 else
 	expect "the library under a path with a space" ready "$(dotnet "$out/spaced/App.dll" 2>&1)"
 fi
+
+# Only --dotnet picks the IL build: -D dotnet with --cs is refused, and leaves no app behind.
+refused=$("$HXC" -cp tests/il-app -main App -lib haxeui-core -lib haxeui-cs -D haxeui_cs_headless -D dotnet \
+	--resource tests/il-app/note.txt@note --cs "$out/refused" 2>&1)
+if [ $? -eq 0 ] || [ -f "$out/refused/App.dll" ]; then
+	echo "FAILED: -D dotnet with --cs built an app"
+	failed=1
+fi
+expect "-D dotnet with --cs, says what to use" "needs --dotnet" "$refused"
 
 rm -rf .cache/il
 empty=$(mktemp -d)

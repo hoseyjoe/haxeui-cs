@@ -60,14 +60,15 @@ app's own C# files (a `.cs` file, or a folder of them) with
 | `-D haxeui_cs_android` | an Android app instead (see Android) |
 | `-debug` | console `Exe` instead of `WinExe` (headless builds are always `Exe`) |
 
-hxc's `-D dotnet` writes the `.dll` itself: `hxc app.hxml` needs the .NET SDK and leaves a folder to
+hxc's `--dotnet <dir>` writes the `.dll` itself: `hxc app.hxml` needs the .NET SDK and leaves a folder to
 run with `dotnet App.dll` or `App.exe`, where `App` is the `-main` class unless `-D dll-name` says
 otherwise. A hidden project, built once in `.cache/il` in this library, fetches Avalonia and supplies
 it to hxc and to that folder. `addPackage` adds to that project, and hxc is given the `<name>.dll` of
 that package. `addNative` compiles the app's own C# there into `App.Native.dll`, again after any edit,
 for hxc and that folder alike. A library you give hxc yourself with `--net-lib` is not in
 `App.deps.json`, so the app can't load it: use `addNative` or `addPackage` instead.
-`haxeui_cs_run`, `haxeui_cs_publish` and `haxeui_cs_android` are refused.
+`haxeui_cs_run` (but see Android) and `haxeui_cs_publish` are refused, and so is `-D dotnet` without
+`--dotnet`.
 
 `haxe.ui.backend.cs.WindowCapture.save(path)` photographs the window, desktop or headless.
 `haxe.ui.backend.cs.WindowBackground.set(0xRRGGBB)` sets what shows behind the components (white
@@ -157,6 +158,15 @@ haxe app.hxml -D haxeui_cs_android -D haxeui_cs_android_id=com.example.app -D ha
 | `-D haxeui_cs_android_label=<label>` | the name under the launcher icon (required) |
 | `-D haxeui_cs_android_abi=<abi>` | `arm64-v8a`, a phone (the default), or `x86_64`, the emulator |
 
+Under hxc's `--dotnet` the same defines make the same app: hxc writes `<out>/<App>.dll`, compiled
+against Avalonia's Android libraries and `Mono.Android` (a library project in `.cache/il` fetches them,
+as for the desktop), and the APK comes from `<out>/android/<App>.Android.csproj`, which holds only
+`MainActivity` and references that `.dll`; `haxeui_cs_run` installs and launches it. `MainActivity`
+calls `cs.Boot.init` and `main` in the `.dll`, not its entry point, which would go on to run the main
+thread's events forever on Avalonia's thread. `addNative` C# is built for Android, with
+`HAXEUI_CS_ANDROID`. It wants an hxc that skips `onAfterGenerate` after a generator error: an older
+one goes on to package an assembly it never wrote, and the reason is buried in MSBuild's warnings.
+
 - `main` runs from `MainActivity` once per process, with the app's private files folder as the
   working directory, so a relative path (a state file) lands there. `ready()` returns at once; its
   callback runs when the screen has a size. Rotating resizes the app (RESIZE), it never restarts it.
@@ -194,7 +204,8 @@ every display and never activated, with input, a capture, `Resize` and a refused
 that nothing took the foreground. `haxe tests/drive-crash-app/build.hxml` checks that a driven app dies of
 an error nobody caught, rather than hanging.
 
-`bash tests/android-app/check-device.sh` (with `ANDROID_SERIAL` set) builds, installs and drives a
+`bash tests/android-app/check-device.sh` (with `ANDROID_SERIAL` set, and `HXC=<hxc binary>` for the
+`--dotnet` build, `tests/android-app/build-il.hxml`) builds, installs and drives a
 small Android app on a device and reads what it reports from logcat: a tap is a click, rotation,
 back with and without a listener, a kill and relaunch, full screen, a long-press tooltip, the system
 picker (it pushes a file to Downloads and picks it through the picker's own screens) and the
@@ -260,7 +271,7 @@ the process), so a driver's cleanup runs on any close.
 
 - The generated `Main` is marked `[STAThread]`, as every Avalonia app's is: Windows' OLE (the
   clipboard, drag and drop) works only on a single-threaded apartment, and Haxe's entry point
-  leaves the main thread multi-threaded. Under hxc's `-D dotnet`, `main` is marked instead, and hxc
+  leaves the main thread multi-threaded. Under hxc's `--dotnet`, `main` is marked instead, and hxc
   carries that to the entry point it writes.
 - `callLater` runs with the next frame (about 60 a second), as html5's `requestAnimationFrame`.
   Haxe's own event loop (`haxe.Timer`, `haxe.MainLoop`) runs when it next needs to and straight

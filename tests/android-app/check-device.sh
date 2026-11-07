@@ -2,7 +2,8 @@
 # The Android check on a real device: builds, installs and drives tests/android-app on the device
 # ANDROID_SERIAL names, reading what the app reports from logcat. `bash tests/android-app/check-device.sh`
 # from the repo root. It uninstalls the app first (a clean files dir), and puts the device's
-# rotation settings back when it ends. An emulator needs ANDROID_ABI=x86_64.
+# rotation settings back when it ends. An emulator needs ANDROID_ABI=x86_64. With HXC set to an hxc
+# binary it checks the same app built by hxc's --dotnet (build-il.hxml) instead of the C# build.
 set -u
 : "${ANDROID_SERIAL:?set ANDROID_SERIAL to the device to test on (adb devices lists them)}"
 export ANDROID_SERIAL MSYS_NO_PATHCONV=1
@@ -38,7 +39,13 @@ tap_text() {
 
 adb uninstall "$id" > /dev/null 2>&1
 adb logcat -c
-haxe tests/android-app/build.hxml -D haxeui_cs_run ${ANDROID_ABI:+-D haxeui_cs_android_abi=$ANDROID_ABI} > "$bin/device-build.log" 2>&1 || { tail -20 "$bin/device-build.log"; fail "build or install"; }
+if [ -n "${HXC:-}" ]; then
+  export HAXE_STD_PATH="${HAXE_STD_PATH:-C:/HaxeToolkit/haxe/std}"
+  build() { "$HXC" tests/android-app/build-il.hxml "$@"; }
+else
+  build() { haxe tests/android-app/build.hxml "$@"; }
+fi
+build -D haxeui_cs_run ${ANDROID_ABI:+-D haxeui_cs_android_abi=$ANDROID_ABI} > "$bin/device-build.log" 2>&1 || { tail -20 "$bin/device-build.log"; fail "build or install"; }
 
 # 1. main runs in the files dir, then HaxeUI is ready with a real screen size at scale 1
 wait_for "^android-app: main ran 1 cwd /data/(data|user/0)/$id/files$"

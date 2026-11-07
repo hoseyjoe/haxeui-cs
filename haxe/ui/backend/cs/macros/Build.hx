@@ -38,7 +38,7 @@ import sys.io.File;
  * `--macro haxe.ui.backend.cs.macros.Build.addNative("path")` the app's own C# (a `.cs` file, or
  * every `.cs` in a folder), compiled with the generated C#.
  *
- * With hxc's `-D dotnet` none of this runs: see configureIl. Nor with `--no-output`, a type check:
+ * With hxc's `--dotnet` none of this runs: see configureIl. Nor with `--no-output`, a type check:
  * Haxe calls onAfterGenerate without having generated, so `dotnet build` would compile the C# of
  * the last real build against today's sources.
  */
@@ -55,6 +55,10 @@ class Build {
 		if (Context.defined("haxeui_cs_android") && Context.defined("haxeui_cs_headless")) {
 			Context.fatalError("haxeui-cs: -D haxeui_cs_android and -D haxeui_cs_headless cannot be used together", Context.currentPos());
 		}
+		// The define alone would have hxc write IL and then the C# build run `dotnet build` on whatever C# was there.
+		if (Context.defined("dotnet") && !isIl()) {
+			Context.fatalError("haxeui-cs: -D dotnet needs --dotnet <dir> in place of --cs <dir>", Context.currentPos());
+		}
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.OrdinalStringTools.build())", "StringTools");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeUncompress.build())", "haxe.zip.Uncompress");
 		Compiler.addMetadata("@:build(haxe.ui.backend.cs.macros.NativeCompress.build())", "haxe.zip.Compress");
@@ -62,7 +66,7 @@ class Build {
 		Compiler.include("haxe.ui.backend.cs.native");
 		Compiler.keep("haxe.ui.backend.cs.native");
 		if (Context.defined("haxeui_cs_android")) TouchPatches.init();
-		if (Context.defined("dotnet")) {
+		if (isIl()) {
 			configureIl();
 			return;
 		}
@@ -73,22 +77,35 @@ class Build {
 		Context.onAfterGenerate(afterGenerate);
 	}
 
+	/** Whether the hxml asks hxc for IL. `--dotnet` sets the `dotnet` define too, but only the flag counts. **/
+	static function isIl():Bool {
+		return Compiler.getConfiguration().args.indexOf("--dotnet") >= 0;
+	}
+
 	/**
-	 * hxc's `-D dotnet` writes the app's .dll itself, with no C# source, .csproj or `dotnet build`, so
+	 * hxc's `--dotnet` writes the app's .dll itself, with no C# source, .csproj or `dotnet build`, so
 	 * nothing here runs after generating. `main` is marked with `[STAThread]` (see markEntryPointSta)
 	 * and hxc carries that to the entry point it writes. IlLibraries fetches Avalonia and puts it
 	 * beside the app, with the app's own C# as a library. The app is `<Main>.dll` unless `-D dll-name`
 	 * says otherwise, as a C# build's is.
+	 *
+	 * With `haxeui_cs_android` the .dll is the app's code and no more: see ilAndroid.
 	 */
 	static function configureIl():Void {
-		for (define in ["haxeui_cs_android", "haxeui_cs_publish", "haxeui_cs_run"]) {
+		var android = Context.defined("haxeui_cs_android");
+		var refused = android ? ["haxeui_cs_publish"] : ["haxeui_cs_publish", "haxeui_cs_run"];
+		for (define in refused) {
 			if (Context.defined(define)) {
-				Context.fatalError('haxeui-cs: -D $define needs the C# build, not -D dotnet', Context.currentPos());
+				var why = android ? "is not supported with -D haxeui_cs_android yet" : "needs the C# build, not --dotnet";
+				Context.fatalError('haxeui-cs: -D $define $why', Context.currentPos());
 			}
 		}
+		// Before anything is fetched or compiled, as the C# build checks them before its dotnet build.
+		var target = android ? androidTarget() : null;
 		var name = mainClassName();
 		var main = Compiler.getConfiguration().mainClass;
-		Compiler.addMetadata("@:meta(System.STAThread())", main.pack.concat([name]).join("."), "main", true);
+		// Android's main runs from MainActivity, on Avalonia's thread: there is no entry point to mark.
+		if (!android) Compiler.addMetadata("@:meta(System.STAThread())", main.pack.concat([name]).join("."), "main", true);
 		Compiler.define("unsafe");
 		var dll = Context.definedValue("dll-name");
 		if (dll == null) {
@@ -97,7 +114,8 @@ class Build {
 		}
 		IlLibraries.prepare(dll, Context.defined("haxeui_cs_headless"));
 		if (Compiler.getConfiguration().args.indexOf("--no-output") < 0) {
-			Context.onAfterGenerate(() -> IlLibraries.install(Path.normalize(FileSystem.absolutePath(Compiler.getOutput()))));
+			var out = Path.normalize(FileSystem.absolutePath(Compiler.getOutput()));
+			Context.onAfterGenerate(() -> android ? ilAndroid(out, dll, target) : IlLibraries.install(out));
 		}
 	}
 
@@ -105,7 +123,7 @@ class Build {
 	public static function addPackage(name:String, version:String):Void {
 		appPackages.set(name, version);
 		// `-lib haxeui-cs` usually comes first, so hxc's libraries are already prepared.
-		if (Context.defined("dotnet")) IlLibraries.appAdded();
+		if (isIl()) IlLibraries.appAdded();
 	}
 
 	/** The app's own C#: a `.cs` file, or every `.cs` in a folder, relative to where Haxe runs. **/
@@ -115,7 +133,7 @@ class Build {
 			Context.fatalError('haxeui-cs: addNative: $path does not exist', Context.currentPos());
 		}
 		if (appNatives.indexOf(full) < 0) appNatives.push(full);
-		if (Context.defined("dotnet")) IlLibraries.appAdded();
+		if (isIl()) IlLibraries.appAdded();
 	}
 
 	static function afterGenerate():Void {
@@ -159,6 +177,43 @@ class Build {
 	 * `[STAThread]` to add either.
 	 */
 	static function android(out:String, name:String):Void {
+		var target = androidTarget();
+		GenericInterfaceCast.fix(Path.join([out, "src"]));
+		writeActivity(Path.join([out, "android", "MainActivity.cs"]));
+		var csproj = Path.join([out, name + ".csproj"]);
+		var sources = ['    <Compile Include="src/**/*.cs" />', '    <Compile Include="android/*.cs" />'];
+		File.saveContent(csproj, androidProject(name, target, sources, nativeItems(), resourceItems(out)));
+		buildAndroid(csproj, Path.join([out, "bin", "Debug", "net10.0-android", target.rid]), target);
+	}
+
+	/**
+	 * The Android app under hxc's `--dotnet`. hxc has written `<dll>.dll`, the app's whole program with
+	 * its resources inside; Android's packaging (the manifest, MainActivity's Java side, the APK) has
+	 * only a `net10.0-android` project to give it, so the app is a library of a project of its own,
+	 * `<out>/android/<dll>.Android.csproj`, which holds nothing but MainActivity. That calls Haxe's
+	 * `cs.Boot.init` and `main` in the .dll as the C# build's calls them in its sources, and not the
+	 * .dll's entry point: after `main`, that runs the main thread's events until there are none,
+	 * which on Avalonia's thread is never. The app's own C# (`addNative`) is the `<dll>.Native.dll`
+	 * IlLibraries built for Android, with `HAXEUI_CS_ANDROID`; hxc compiled against IlLibraries'
+	 * Android libraries, the same ones this project's packages bring.
+	 */
+	static function ilAndroid(out:String, dll:String, target:AndroidTarget):Void {
+		var dir = Path.join([out, "android"]);
+		writeActivity(Path.join([dir, "MainActivity.cs"]));
+		var references = [Path.join([out, dll + ".dll"])];
+		var native = IlLibraries.nativeLibrary();
+		if (native != null) references.push(native);
+		var sources = ['    <Compile Include="MainActivity.cs" />'];
+		for (path in references) {
+			sources.push('    <Reference Include="${StringTools.htmlEscape(path, true)}" />');
+		}
+		var csproj = Path.join([dir, dll + ".Android.csproj"]);
+		File.saveContent(csproj, androidProject(dll + ".Android", target, sources, [], []));
+		buildAndroid(csproj, Path.join([dir, "bin", "Debug", "net10.0-android", target.rid]), target);
+	}
+
+	/** The application id, label and runtime the defines name, or a compile error saying which is missing. **/
+	static function androidTarget():AndroidTarget {
 		if (Context.defined("haxeui_cs_publish")) {
 			Context.fatalError("haxeui-cs: -D haxeui_cs_publish is not supported with -D haxeui_cs_android yet", Context.currentPos());
 		}
@@ -176,26 +231,32 @@ class Build {
 			case "x86_64": "android-x64";
 			case _: Context.fatalError('haxeui-cs: -D haxeui_cs_android_abi=$abi: arm64-v8a or x86_64', Context.currentPos());
 		}
-		GenericInterfaceCast.fix(Path.join([out, "src"]));
+		return {id: id, label: label, rid: rid};
+	}
 
+	static function writeActivity(path:String):Void {
 		var main = Compiler.getConfiguration().mainClass;
 		var activity = File.getContent(Path.join([libraryRoot(), "templates", "android", "MainActivity.cs"]))
-			.split("::LABEL::").join(csString(label))
+			.split("::LABEL::").join(csString(androidTarget().label))
 			.split("::MAIN::").join(main.pack.concat([main.name]).join("."));
-		FileSystem.createDirectory(Path.join([out, "android"]));
-		File.saveContent(Path.join([out, "android", "MainActivity.cs"]), activity);
+		FileSystem.createDirectory(Path.directory(path));
+		File.saveContent(path, activity);
+	}
 
-		var csproj = Path.join([out, name + ".csproj"]);
-		var packages = ["Avalonia", "Avalonia.Android", "Avalonia.Themes.Simple", "Svg.Skia"];
-		File.saveContent(csproj, File.getContent(Path.join([libraryRoot(), "templates", "AndroidApp.csproj"]))
-			.split("::NAME::").join(name)
-			.split("::APP_ID::").join(StringTools.htmlEscape(id))
-			.split("::LABEL::").join(StringTools.htmlEscape(label))
-			.split("::RID::").join(rid)
-			.split("::NATIVE_DIR::").join(nativeItems().join("\n"))
-			.split("::RESOURCES::").join(resourceItems(out).join("\n"))
-			.split("::PACKAGES::").join(packageItems(packages).join("\n")));
+	static function androidProject(assembly:String, target:AndroidTarget, sources:Array<String>, natives:Array<String>, resources:Array<String>):String {
+		return File.getContent(Path.join([libraryRoot(), "templates", "AndroidApp.csproj"]))
+			.split("::ASSEMBLY::").join(assembly)
+			.split("::APP_ID::").join(StringTools.htmlEscape(target.id))
+			.split("::LABEL::").join(StringTools.htmlEscape(target.label))
+			.split("::RID::").join(target.rid)
+			.split("::SOURCES::").join(sources.join("\n"))
+			.split("::NATIVE_DIR::").join(natives.join("\n"))
+			.split("::RESOURCES::").join(resources.join("\n"))
+			.split("::PACKAGES::").join(packageItems(basePackages(false)).join("\n"));
+	}
 
+	/** `dotnet build` of an Android project whose APKs land in `apkDir`, then with `haxeui_cs_run` the install and launch. **/
+	static function buildAndroid(csproj:String, apkDir:String, target:AndroidTarget):Void {
 		if (Context.defined("haxeui_cs_no_dotnet")) {
 			return;
 		}
@@ -204,13 +265,13 @@ class Build {
 			Sys.exit(code);
 		}
 		if (Context.defined("haxeui_cs_run")) {
-			var apk = Path.join([out, "bin", "Debug", "net10.0-android", rid, id + "-Signed.apk"]);
+			var apk = Path.join([apkDir, target.id + "-Signed.apk"]);
 			// Not incremental: adb's incremental install has hung an emulator part way.
 			code = Sys.command("adb", ["install", "--no-incremental", "-r", apk]);
 			if (code != 0) {
 				Sys.exit(code);
 			}
-			code = Sys.command("adb", ["shell", "monkey", "-p", id, "-c", "android.intent.category.LAUNCHER", "1"]);
+			code = Sys.command("adb", ["shell", "monkey", "-p", target.id, "-c", "android.intent.category.LAUNCHER", "1"]);
 			if (code != 0) {
 				Sys.exit(code);
 			}
@@ -301,6 +362,9 @@ class Build {
 
 	@:allow(haxe.ui.backend.cs.macros.IlLibraries)
 	static function basePackages(headless:Bool):Array<String> {
+		if (Context.defined("haxeui_cs_android")) {
+			return ["Avalonia", "Avalonia.Android", "Avalonia.Themes.Simple", "Svg.Skia"];
+		}
 		var packages = ["Avalonia", "Avalonia.Desktop", "Avalonia.Themes.Simple", "Svg.Skia"];
 		if (headless) {
 			packages.push("Avalonia.Headless");
@@ -384,4 +448,6 @@ class Build {
 		return Path.normalize(Path.join([Path.directory(FileSystem.absolutePath(self)), "..", "..", "..", "..", ".."]));
 	}
 }
+
+private typedef AndroidTarget = {id:String, label:String, rid:String};
 #end

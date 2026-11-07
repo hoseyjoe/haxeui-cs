@@ -10,8 +10,9 @@ out/
 .cache/
 tests/il-app/bin with space/
 
-# the suite's hxc build
+# the suite's hxc build, and the Android check's
 tests/bin-il/
+tests/android-app/bin-il/
 
 # the parity gallery's builds and pictures
 tools/gallery/out/
